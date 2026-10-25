@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "title": "Special thanks",
+  "title": "Credits",
   "entries": [
+    {
+      "who": "cidwel",
+      "what": "Secret of Mana DS: the AYN Thor, Nintendo 3DS and PC companion apps, the dual-screen interface, the widescreen mode and the decompilation behind them",
+      "license": "see LICENSE",
+      "url": "https://github.com/cidwel/secret-of-mana-ds"
+    },
     {
       "who": "Moppleton and contributors",
       "what": "Secret of Mana Randomizer and its Ancient Cave mode (libsomrando is a C port of their generator)",

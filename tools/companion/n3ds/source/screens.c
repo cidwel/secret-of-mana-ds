@@ -97,7 +97,7 @@ static void build_settings(struct sui_list *l, struct settings_ui *u) {
     }
   }
   sui_list_add(l, SUI_ROW_HEADER, "ABOUT", "", "")->id = 0;
-  sui_list_add(l, SUI_ROW_ITEM, "Credits", "", "Special thanks to the people who made this version possible.")->id = ID_CREDITS;
+  sui_list_add(l, SUI_ROW_ITEM, "Credits", "", "Who made this version and whose work it builds on.")->id = ID_CREDITS;
   snprintf(l->hint, sizeof l->hint, "D-PAD move  LEFT RIGHT change  A open  B back");
   l->sel = keep < l->n ? keep : 0;
   if (l->n && l->rows[l->sel].kind != SUI_ROW_ITEM) sui_list_move(l, 1);
@@ -166,7 +166,7 @@ static void build_pause(struct sui_list *l, struct pause_ui *u) {
   int usable = u->info.exists && u->info.rom_crc == u->p->rom_crc;
   sui_list_add(l, usable ? SUI_ROW_ITEM : SUI_ROW_DISABLED, "Load state", "", u->info.exists && !usable ? "This state belongs to another ROM or another set of gameplay options." : "Loads the slot and resumes there.")->id = P_LOAD;
   sui_list_add(l, SUI_ROW_ITEM, "Filter", n3_filter_name(u->p->settings->filter), "None, Smooth or Scanlines.")->id = P_FILTER;
-  sui_list_add(l, SUI_ROW_ITEM, "Credits", "", "Special thanks.")->id = P_CREDITS;
+  sui_list_add(l, SUI_ROW_ITEM, "Credits", "", "Who made this version.")->id = P_CREDITS;
   sui_list_add(l, SUI_ROW_ITEM, "Exit game", "", "Saves the battery RAM and leaves the app.")->id = P_EXIT;
   snprintf(l->hint, sizeof l->hint, "D-PAD move  LEFT RIGHT change  A select  B resume");
   l->sel = keep < l->n ? keep : 0;

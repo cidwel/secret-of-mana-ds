@@ -742,7 +742,12 @@ int somd_switch_hero(struct somd *d, const uint8_t *w, int hero) {
 #define NE_FLAGS 0xA20Au
 #define NE_GRID 0x9246u
 #define NE_BUF 0x9000u
-static int name_entry_up(const uint8_t *w) { return w[0x9C00] != 0xF8 && w[0x9C01] < 0xE0 && (w[0xA20A] & 0x10) && u8(w, 0xE4) == 0 && u16(w, 0xE184) == 0; }
+/* The new game's entry (no map yet) or one an event opens in game (the native menu on page $A202 = 3, close bit $A20A.0 clear, event VM $D0 busy). */
+static int name_entry_up(const uint8_t *w) {
+  if (!(w[0x9C00] != 0xF8 && w[0x9C01] < 0xE0 && (w[0xA20A] & 0x10))) return 0;
+  if (u8(w, 0xE4) == 0 && u16(w, 0xE184) == 0) return 1;
+  return u8(w, 0xD0) && !(w[0xA20A] & 1) && w[0xA202] == 3 && w[0xA22B] < 3;
+}
 static int name_limit(const struct somd *d) {
   return d->rom && d->rom_size > 0x319C && d->rom[0x319B] == 0xC9 ? d->rom[0x319C] : 6;   /* the CMP #n of the append routine */
 }

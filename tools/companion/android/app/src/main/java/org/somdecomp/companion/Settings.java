@@ -16,7 +16,7 @@ final class Settings {
     static final String[] FB_TEXT = {"NORMAL", "BLACK"};
     static final String[] CORE_TEXT = {"WIDE", "PLAIN"};
     /* option ids of ux/som_ui_draw.h enum som_ux_opt */
-    static final int WIDE = 0, FALLBACK = 1, HUD_HIDE = 2, CORE = 3, UI_SOUNDS = 4, HAPTICS = 5, LANGUAGE = 6, FIT = 7, SHADER = 8;
+    static final int WIDE = 0, FALLBACK = 1, HUD_HIDE = 2, CORE = 3, UI_SOUNDS = 4, HAPTICS = 5, LANGUAGE = 6, FIT = 7, SHADER = 8, FFWD = 9;
     /** Top-screen scaling (GameView): FILL CROP fills the screen with 8:7 pixels cutting the bottom rows, FIT (default) keeps the whole
      *  frame, INTEGER uses whole-number pixel factors, STRETCH fills the screen ignoring the aspect.  fullW = 256 + 2N of the chosen wide margin. */
     static final String[] FIT_TEXT = {"FIT", "FILL CROP", "INTEGER", "STRETCH"};
@@ -24,7 +24,8 @@ final class Settings {
     static final String[] SHADER_TEXT = {"NONE", "SHARP", "SCANLINES", "LCD GRID", "CRT"};
     static volatile int fit, fullW = 348, shader;
     private static int widthOf(String ws) { return ws.equals("17") ? 290 : ws.equals("27") ? 310 : ws.equals("46") ? 348 : 256; }
-    private static final int EV_OPT = 1 << 16, EV_TICK = 2 << 16;
+    static final int EV_OPT = 1 << 16, EV_TICK = 2 << 16, EV_MAIN_MENU = 3 << 16;
+    private boolean ffListen;   /* FAST FWD was tapped: the next pad key becomes the fast-forward button */
 
     private final SharedPreferences sp;
     static Settings current;
@@ -59,6 +60,7 @@ final class Settings {
         Native.setOption(UI_SOUNDS, sp.getBoolean("uisnd", true) ? 1 : 0, null);
         Native.setOption(HAPTICS, sp.getBoolean("haptic2", true) ? 1 : 0, null);
         Native.setOption(LANGUAGE, 0, "EN");
+        Native.setOption(FFWD, 0, ffName());
         Native.setUiSounds(sp.getBoolean("uisnd", true));
     }
 
@@ -90,7 +92,34 @@ final class Settings {
             case HAPTICS: e.putBoolean("haptic2", val != 0).apply(); Native.setOption(id, val != 0 ? 1 : 0, null); break;
             case FIT: { int i = val % FIT_TEXT.length; fit = i; e.putString("fit", FIT_TEXT[i]).apply(); Native.setOption(id, i, FIT_TEXT[i]); break; }
             case SHADER: { int i = val % SHADER_TEXT.length; shader = i; e.putInt("shader", i).apply(); Native.setOption(id, i, SHADER_TEXT[i]); break; }
+            case FFWD:   /* first tap: wait for a key; a tap while waiting clears the button */
+                if (ffListen) { ffListen = false; e.putInt("ffkey", 0).apply(); Native.setFastForward(false); }
+                else ffListen = true;
+                Native.setOption(FFWD, 0, ffListen ? "PRESS KEY" : ffName());
+                break;
             default: Native.setOption(LANGUAGE, 0, "EN"); break;
         }
+    }
+
+    private String ffName() {
+        int k = sp.getInt("ffkey", 0);
+        return k == 0 ? "NONE" : android.view.KeyEvent.keyCodeToString(k).replace("KEYCODE_BUTTON_", "").replace("KEYCODE_", "").replace('_', ' ');
+    }
+
+    /** Pad key hook: binds the fast-forward button while waiting for one, and holds 3x speed while it is down.  True when the key is used up here. */
+    boolean fastForwardKey(android.view.KeyEvent ev) {
+        int code = ev.getKeyCode(), act = ev.getAction();
+        if (act == android.view.KeyEvent.ACTION_MULTIPLE) return false;
+        if (ffListen) {
+            if (act == android.view.KeyEvent.ACTION_DOWN && ev.getRepeatCount() == 0) {
+                ffListen = false;
+                sp.edit().putInt("ffkey", code).apply();
+                Native.setOption(FFWD, 0, ffName());
+            }
+            return true;
+        }
+        if (code != sp.getInt("ffkey", 0)) return false;
+        Native.setFastForward(act == android.view.KeyEvent.ACTION_DOWN);
+        return true;
     }
 }

@@ -404,8 +404,9 @@ enum hit_kind {
   HK_LETTER, HK_NEXT, HK_KEYROW, HK_KEYS_SCROLL, HK_BIND_CANCEL, HK_BIND_CLEAR,
   HK_OPT, HK_OPTION, HK_OPT_NAV, HK_AVATAR, HK_QUICK, HK_BIND_ENTRY, HK_BIND_MENU, HK_QE_TAB, HK_QE_CELL, HK_QE_PAGE,
   HK_QE_CLEAR, HK_QE_KEY, HK_MAPVIEW, HK_POLICY, HK_POL_CANCEL, HK_QE_BACK, HK_REVIVE, HK_REV_CANCEL,
-  HK_ST_SLOT, HK_ST_SAVE, HK_ST_LOAD, HK_CR_SCROLL
+  HK_ST_SLOT, HK_ST_SAVE, HK_ST_LOAD, HK_CR_SCROLL, HK_NAME_LAST
 };
+typedef char hit_name_last_matches_public[(int)HK_NAME_LAST == (int)SOM_UX_HIT_NAME_LAST ? 1 : -1];
 typedef char hit_enum_matches_public[((int)HK_REV_CANCEL == (int)SOM_UX_HIT_REV_CANCEL && (int)HK_REVIVE == (int)SOM_UX_HIT_REVIVE && (int)HK_QE_BACK == (int)SOM_UX_HIT_QE_BACK && (int)HK_POLICY == (int)SOM_UX_HIT_POLICY && (int)HK_MAPVIEW == (int)SOM_UX_HIT_MAPVIEW && (int)HK_QE_KEY == (int)SOM_UX_HIT_QE_KEY && (int)HK_BIND_CLEAR == (int)SOM_UX_HIT_BIND_CLEAR && (int)HK_OPT == (int)SOM_UX_HIT_OPT && (int)HK_CR_SCROLL == (int)SOM_UX_HIT_CR_SCROLL) ? 1 : -1];
 struct hit { struct R r; uint8_t kind, a, b, enabled; };
 static int nav_selectable(const struct hit *t) { return t->enabled && t->kind != HK_NONE; }
@@ -565,15 +566,15 @@ static void qe_entry(const struct som_ux *ux, int cat, int idx, int *kind, int *
 static void layout_options(struct LAY *l, const struct som_ux *ux, int y0) {
   int vw = l->vw, vh = l->vh, bh = l->form == 0 ? 28 : (l->form == 2 && vh < 285 ? 31 : 34);
   if (ux->opt_ext && (ux->opt_page == SOM_UX_OPT_MAIN || ux->opt_page == SOM_UX_OPT_BINDINGS)) {
-    /* Thor: six rows of two.  LANGUAGE (a single value) makes room for SHADER, SAVE STATES and CREDITS. */
-    static const int8_t cells[12] = {SOM_UX_OPT_WIDE, SOM_UX_OPT_FALLBACK, SOM_UX_OPT_HUD_HIDE, SOM_UX_OPT_CORE, SOM_UX_OPT_UI_SOUNDS, SOM_UX_OPT_HAPTICS,
-                                     SOM_UX_OPT_FIT, SOM_UX_OPT_SHADER, -4, -5, -2, -1};
-    int rows = 6, rh = (vh - y0 - 2) / rows, cw = (vw - 4) / 2;
+    /* Thor: five rows of two options, then one row of four page buttons.  LANGUAGE (a single value) makes room for SHADER and FAST FWD. */
+    static const int8_t cells[14] = {SOM_UX_OPT_WIDE, SOM_UX_OPT_FALLBACK, SOM_UX_OPT_HUD_HIDE, SOM_UX_OPT_CORE, SOM_UX_OPT_UI_SOUNDS, SOM_UX_OPT_HAPTICS,
+                                     SOM_UX_OPT_FIT, SOM_UX_OPT_SHADER, SOM_UX_OPT_FFWD, -4, -2, -5, -6, -1};
+    int rows = 6, rh = (vh - y0 - 2) / rows, cw = (vw - 4) / 2, qw = (vw - 4) / 4;
     if (rh > 60) rh = 60;
-    for (int i = 0; i < 12; i++) {
-      int x = 2 + (i % 2) * cw, y = y0 + (i / 2) * rh;
-      if (cells[i] >= 0) add_hit(l, HK_OPTION, cells[i], 0, x, y, cw - 1, rh - 1, 1);
-      else add_hit(l, HK_OPT_NAV, cells[i] == -1 ? 0 : -cells[i], 0, x, y, cw - 1, rh - 1, 1);   /* 4 SAVE STATES, 5 CREDITS, 2 QUICK SLOTS, 0 BACK */
+    for (int i = 0; i < 14; i++) {
+      int x = i < 10 ? 2 + (i % 2) * cw : 2 + (i - 10) * qw, y = y0 + (i < 10 ? i / 2 : 5) * rh, w = i < 10 ? cw : qw;
+      if (cells[i] >= 0) add_hit(l, HK_OPTION, cells[i], 0, x, y, w - 1, rh - 1, 1);
+      else add_hit(l, HK_OPT_NAV, cells[i] == -1 ? 0 : -cells[i], 0, x, y, w - 1, rh - 1, 1);   /* 4 SAVE STATES, 2 QUICK SLOTS, 5 CREDITS, 6 MAIN MENU, 0 BACK */
     }
   } else if (ux->opt_page == SOM_UX_OPT_STATES) {
     int by = vh - bh - 2, hint = vh >= 200 ? 13 : 0, gy = y0 + 2, gh = by - hint - 3 - gy, rows = 4, cw = (vw - 6) / 2, ch = gh / rows;
@@ -706,7 +707,7 @@ static void layout_revive(struct LAY *l, const struct som_ux *ux, int y) {
  * the game select, in cutscenes and in the whole intro until the story flag $CF00 says the boy took the first sword (ux->armed); only the name entry (touch
  * input needed) and the overlays opened from a visible screen are drawn. */
 static int quiet_level(const struct som_ux *ux) {
-  if (ux->opt_page || ux->rev_wait || ux->pol_wait) return 0;
+  if (ux->opt_page || ux->rev_wait || ux->pol_wait || ux->fe_name_entry) return 0;
   if (ux->mode == SOM_UX_BOOT) return 1;
   if (ux->mode == SOM_UX_FRONTEND) return ux->fe_name_entry ? 0 : 1;
   if (!ux->armed) return 1;
@@ -737,7 +738,7 @@ static void build_layout(struct LAY *l, const struct som_ux *ux, int vw, int vh)
   if (ux->rev_wait) { layout_revive(l, ux, y); return; }
   if (ux->pol_wait) { layout_policy(l, ux, y); return; }
   if (ux->opt_page) { layout_options(l, ux, y0); return; }
-  switch (ux->mode) {
+  switch (ux->fe_name_entry ? SOM_UX_FRONTEND : ux->mode) {   /* an in-game name entry gets the new game's keyboard */
   case SOM_UX_BOOT: {
     static const int b[3] = {SOM_PAD_B, SOM_PAD_START, SOM_PAD_A};
     l->info.x = 6; l->info.y = y0 + 8; l->info.w = vw - 12; l->info.h = vh * 40 / 100;
@@ -752,7 +753,9 @@ static void build_layout(struct LAY *l, const struct som_ux *ux, int vw, int vh)
       for (int i = 0; i < 27; i++)
         add_hit(l, HK_LETTER, i, 0, 2 + (i % cols) * cw, ky + (i / cols) * rh, cw - 2, rh - 2, 1);
       static const int b[1] = {SOM_PAD_START};     /* letters are typed directly; START confirms */
-      layout_pad(l, b, 1, 1, 4, vh - (l->form == 0 ? 48 : 60), vw - 8, l->form == 0 ? 44 : 56);
+      int py = vh - (l->form == 0 ? 48 : 60), ph = l->form == 0 ? 44 : 56, hw = (vw - 8) / 2, hn = som_ux_name_hero(ux);
+      add_hit(l, HK_NAME_LAST, 0, 0, 4, py, hw - 2, ph - 2, hn >= 0 && ux->name_last[hn][0]);   /* the last name this hero was given (host-stored) */
+      layout_pad(l, b, 1, 1, 4 + hw, py, vw - 8 - hw, ph);
     } else {
       l->info.x = 6; l->info.y = y0 + 4; l->info.w = vw - 12; l->info.h = vh / 4;
       static const int b[6] = {SOM_PAD_UP, SOM_PAD_DOWN, SOM_PAD_B, SOM_PAD_A, SOM_PAD_START, SOM_PAD_SELECT};
@@ -1395,8 +1398,9 @@ static void draw_header(struct cv *c, const struct som_ux *ux, const struct som_
   static const char *const lab[SOM_UX_MODE_COUNT] = {"TITLE", "MENU", "FIELD", "EVENT", "WAIT", "RING", "SHOP", "FLAMMIE"};
   const char *l = lab[ux->mode];
   uint32_t col = C_GRN;
-  if (ux->mode == SOM_UX_FRONTEND && ux->fe_name_entry) l = "NAME";
-  if (ux->mode == SOM_UX_FIELD) { if (!ux->st.safe_to_inject) { l = "LOCKED"; col = C_RED; } else l = "READY"; }
+  if (ux->fe_name_entry) l = "NAME";
+  if (ux->fe_name_entry) col = C_CYAN;
+  else if (ux->mode == SOM_UX_FIELD) { if (!ux->st.safe_to_inject) { l = "LOCKED"; col = C_RED; } else l = "READY"; }
   else if (ux->mode == SOM_UX_EVENT || ux->mode == SOM_UX_TRANSITION) col = C_RED;
   else if (ux->mode == SOM_UX_RING || ux->mode == SOM_UX_SHOP) col = C_YEL;
   else col = C_CYAN;
@@ -1417,7 +1421,7 @@ static void draw_header(struct cv *c, const struct som_ux *ux, const struct som_
   if (m && m->result != SOM_RUNNING && m->frames) { text(c, x, ty, som_result_name(m->result), m->result == SOM_DONE ? C_GRN : C_RED, 0); x += text_w(c, som_result_name(m->result), 0) + 8; }
   else if (m && som_macro_busy(m)) { text(c, x, ty, "RUNNING", C_YEL, 0); x += text_w(c, "RUNNING", 0) + 8; }
   if (ux->notice_t && ux->notice_kind) { draw_notice(c, ux, hr.h, x, right); return; }
-  if (ux->st.valid && ux->mode >= SOM_UX_FIELD && !editing) {
+  if (ux->st.valid && ux->mode >= SOM_UX_FIELD && !editing && !ux->fe_name_entry) {
     snprintf(b, sizeof b, "%lu G", (unsigned long)ux->st.gold);
     int gwid = text_w(c, b, 0);
     text(c, right - gwid, ty, b, C_YEL, 0);
@@ -1533,6 +1537,7 @@ static void draw_boss_bar(struct cv *c, const struct som_ux *ux, struct R r) {
   snprintf(b, sizeof b, "%s", n ? n : "BOSS");
   text(c, r.x + 3, r.y + 1, b, C_PURPLE, 0);
   int nw = text_w(c, b, 0) + 8;
+  if (!ux->boss_analyzed) { text(c, r.x + r.w - text_w(c, "HP ???", 0) - 3, r.y + 1, "HP ???", C_DIM, 0); return; }   /* until Analyzer */
   snprintf(b, sizeof b, "%u/%u", a->hp, a->hp_max);
   int bw = text_w(c, b, 0);
   gauge(c, r.x + nw, r.y + 3, r.w - nw - bw - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
@@ -1561,7 +1566,7 @@ static void draw_enemy_list(struct cv *c, const struct som_ux *ux, struct R r) {
       draw_enemy_pic(c, ux, a->id, q.x + 3, q.y + (q.h - side) / 2, side);
       int tx = q.x + side + 6, tw = q.w - side - 9;
       text_fit(c, tx, q.y + q.h / 2 - 12, tw, nm ? nm : "ENEMY", ec, 0);
-      gauge(c, tx, q.y + q.h / 2 + 3, tw, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+      if (!a->boss || ux->boss_analyzed) gauge(c, tx, q.y + q.h / 2 + 3, tw, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     } else {                                         /* sprite on top; a long name takes two lines */
       char l1[40] = "", l2[40] = "";
       const char *full = nm ? nm : "ENEMY";
@@ -1578,7 +1583,7 @@ static void draw_enemy_list(struct cv *c, const struct som_ux *ux, struct R r) {
       if (side >= 16) { draw_enemy_pic(c, ux, a->id, q.x + (q.w - side) / 2, y, side); y += side + 1; }
       fit_center(c, q, y, q.w - 6, l1, ec); y += 12;
       if (l2[0]) { fit_center(c, q, y, q.w - 6, l2, ec); y += 12; }
-      gauge(c, q.x + 4, y + 1, q.w - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+      if (!a->boss || ux->boss_analyzed) gauge(c, q.x + 4, y + 1, q.w - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     }
   }
 }
@@ -1974,12 +1979,13 @@ int som_ux_hit_list(struct som_ux *ux, int w, int h, int max, struct som_ux_hitr
 }
 void som_ux_set_four_slots(struct som_ux *ux, int on) { if (ux) ux->qe_four = on ? 1 : 0; }
 
-static const char *const OPT_LABEL[SOM_UX_OPT_COUNT] = {"WIDE", "FALLBACK", "HUD HIDE", "CORE", "UI SOUNDS", "HAPTICS", "LANGUAGE", "TOP FIT", "SHADER"};
-static int opt_is_toggle(int id) { return id != SOM_UX_OPT_CORE && id != SOM_UX_OPT_LANGUAGE && id != SOM_UX_OPT_FIT && id != SOM_UX_OPT_WIDE && id != SOM_UX_OPT_SHADER;   /* WIDE: OFF / 17 / 27 / 46 */ }
+static const char *const OPT_LABEL[SOM_UX_OPT_COUNT] = {"WIDE", "FALLBACK", "HUD HIDE", "CORE", "UI SOUNDS", "HAPTICS", "LANGUAGE", "TOP FIT", "SHADER", "FAST FWD"};
+static int opt_is_toggle(int id) { return id != SOM_UX_OPT_CORE && id != SOM_UX_OPT_LANGUAGE && id != SOM_UX_OPT_FIT && id != SOM_UX_OPT_WIDE && id != SOM_UX_OPT_SHADER && id != SOM_UX_OPT_FFWD;   /* WIDE: OFF / 17 / 27 / 46 */ }
 
 static void draw_option(struct cv *c, const struct som_ux *ux, struct R r, int id) {
   win(c, r.x, r.y, r.w, r.h, 0);
   int M = lgm(c);
+  while (M > 1 && 4 + 13 + 11 * M + 4 > r.h) M--;           /* short cards (navigation bar shown): the value drops to normal size */
   text_fit(c, r.x + 6, r.y + 4, r.w - 12, OPT_LABEL[id], C_DIM, 0);
   int vy = r.y + 4 + 13 + (r.h - 4 - 13 - 11 * M - 3 > 0 ? (r.h - 4 - 13 - 11 * M - 3) / 2 : 0);
   if (opt_is_toggle(id)) {
@@ -2213,11 +2219,15 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
   case HK_MAPVIEW: break;                           /* drawn by draw_zone */
   case HK_OPTION: draw_option(c, ux, r, h->a); break;
   case HK_OPT_NAV: {
-    static const char *const n[6] = {"BACK", "", "QUICK SLOTS", "BACK", "SAVE STATES", "CREDITS"};
-    win(c, r.x, r.y, r.w, r.h, 0);
-    int M = (r.h >= 40 && lgm(c) == 2 && text_wm(c, n[h->a], 2) < r.w - 28) ? 2 : 1;
-    text_cm(c, r, r.y + (r.h - 11 * M) / 2, n[h->a], C_TXT, M);
-    if (h->a == 2 || h->a == 4 || h->a == 5) tri(c, r.x + r.w - 10, r.y + r.h / 2, 5, 1, 0, C_YEL);
+    static const char *const n[7] = {"BACK", "", "QUICK SLOTS", "BACK", "SAVE STATES", "CREDITS", "MAIN MENU"};
+    const char *t = h->a == 6 && ux->quit_armed ? "QUIT GAME?" : n[h->a];
+    int arrow = (h->a == 2 || h->a == 4 || h->a == 5) && r.w >= 100;   /* the narrow buttons of the bottom row go without */
+    win(c, r.x, r.y, r.w, r.h, h->a == 6 && ux->quit_armed ? 1 : 0);
+    int M = (r.h >= 40 && lgm(c) == 2 && text_wm(c, t, 2) < r.w - 28) ? 2 : 1;
+    struct R tr = r; if (arrow) tr.w -= 12;
+    if (M == 2) text_cm(c, tr, r.y + (r.h - 22) / 2, t, C_TXT, 2);
+    else fit_center(c, tr, r.y + (r.h - 11) / 2, tr.w - 8, t, h->a == 6 && ux->quit_armed ? C_YEL : C_TXT);
+    if (arrow) tri(c, r.x + r.w - 10, r.y + r.h / 2, 5, 1, 0, C_YEL);
     break;
   }
   case HK_ST_SLOT: draw_state_slot(c, ux, r, h->a); break;
@@ -2375,7 +2385,7 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
       y += side + 1;
     }
     fit_center(c, r, y, r.w - 6, n ? n : "ENEMY", ec); y += 12;
-    gauge(c, r.x + 4, y, r.w - 8, 6, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+    if (!a->boss || ux->boss_analyzed) gauge(c, r.x + 4, y, r.w - 8, 6, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     break;
   }
   case HK_T_ALL_ALLIES: case HK_T_ALL_ENEMIES: {
@@ -2395,6 +2405,12 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
     break;
   }
   case HK_NEXT: draw_btn(c, r, "NEXT (B)", 0); break;
+  case HK_NAME_LAST: {
+    int hn = som_ux_name_hero(ux);
+    char t[24]; snprintf(t, sizeof t, "LAST: %s", hn >= 0 ? ux->name_last[hn] : "");
+    draw_btn(c, r, h->enabled && text_w(c, t, 0) < r.w - 6 ? t : "LAST NAME", h->enabled ? 0 : 2);
+    break;
+  }
   default: break;
   }
   g_press = 0;
@@ -2474,10 +2490,12 @@ static uint32_t redraw_hash(const struct som_ux *ux) {
   p = (const uint8_t *)ux->actor;
   for (size_t i = 0; i < sizeof ux->actor; i++) { h ^= p[i]; h *= 16777619u; }
   uint8_t u[] = {ux->nav_on, ux->nav_kind, ux->nav_a, ux->mode, ux->tab, ux->hero, ux->spirit, ux->opt_page, ux->sflash_t, ux->pol_wait, ux->rev_wait, ux->pend_kind, ux->map_small, ux->qe_slot, ux->qe_cat,
-                 ux->qe_page, ux->qe_spirit, ux->quick_arm, ux->press_on, ux->press_kind, ux->fe_name_entry, (uint8_t)(ux->notice_t ? ux->notice_t : 0), ux->armed, ux->had_dialogue, ux->seen_w, ux->seen_s, (uint8_t)ux->seen_i, (uint8_t)(ux->seen_i >> 8), ux->opt_ext, ux->st_sel, (uint8_t)ux->cr_scroll, (uint8_t)(ux->cr_scroll >> 8)};
+                 ux->qe_page, ux->qe_spirit, ux->quick_arm, ux->press_on, ux->press_kind, ux->fe_name_entry, (uint8_t)(ux->notice_t ? ux->notice_t : 0), ux->armed, ux->had_dialogue, ux->seen_w, ux->seen_s, (uint8_t)ux->seen_i, (uint8_t)(ux->seen_i >> 8), ux->opt_ext, ux->st_sel, (uint8_t)ux->cr_scroll, (uint8_t)(ux->cr_scroll >> 8), ux->boss_analyzed, ux->quit_armed};
   for (int i = 0; i < SOM_UX_OPT_COUNT; i++) { h ^= ux->opt_val[i] + 1u; h *= 16777619u; h ^= (uint8_t)ux->opt_text[i][0]; h *= 16777619u; h ^= (uint8_t)ux->opt_text[i][1]; h *= 16777619u; }
   { const uint8_t *q = (const uint8_t *)ux->st_slot; for (size_t i = 0; i < sizeof ux->st_slot; i++) { h ^= q[i]; h *= 16777619u; } h ^= ux->st_gen; h *= 16777619u; }
   for (size_t i = 0; i < sizeof u; i++) { h ^= u[i]; h *= 16777619u; }
+  h ^= ux->name_hero; h *= 16777619u;
+  for (int i = 0; i < 3; i++) for (int k = 0; k < SOM_UX_LAST_NAME; k++) { h ^= (uint8_t)ux->name_last[i][k]; h *= 16777619u; }
   for (int i = 0; i < SOM_UX_QUICK_N; i++) { h ^= ux->flash_t[i] * 31u + ux->flash_kind[i]; h *= 16777619u; h ^= ux->quick[i].kind; h *= 16777619u; h ^= ux->quick[i].id; h *= 16777619u; }
   h ^= ux->line[0] ^ (uint32_t)ux->log_n << 8 ^ (uint32_t)ux->zone_sum; h *= 16777619u;
   for (int i = 0; i < 42; i++) { h ^= ux->spell_avail[i]; h *= 16777619u; }
@@ -2543,7 +2561,7 @@ void som_ux_draw(struct som_ux *ux, const struct som_macro *m, uint32_t *px, int
     if (l.info.h >= 11) text_fit(&c, l.info.x + 2, l.info.y + 1, l.info.w - 4, "R3+R1 SAVE  R3+L1 LOAD  R3+R2 NEXT", C_DIM, 0);
   } else if (ux->opt_page) {
     /* the options pages draw only their hit targets */
-    } else switch (ux->mode) {
+    } else switch (ux->fe_name_entry ? SOM_UX_FRONTEND : ux->mode) {
   case SOM_UX_BOOT:
     draw_title_block(&c, l.info, "SECRET OF MANA", "COMPANION SCREEN");
     text_c(&c, l.info, l.info.y + l.info.h - 22, "PRESS START ON THE GAME OR BELOW", C_DIM, 0);
@@ -2551,7 +2569,9 @@ void som_ux_draw(struct som_ux *ux, const struct som_macro *m, uint32_t *px, int
   case SOM_UX_FRONTEND:
     if (ux->fe_name_entry) {
       win(&c, l.info.x, l.info.y, l.info.w, l.info.h, 0);
-      text_c(&c, l.info, l.info.y + (l.info.h - 11) / 2, "TAP LETTERS TO TYPE THE NAME", C_TXT, 0);
+      int hn = som_ux_name_hero(ux);
+      if (hn > 0) { char t[40]; snprintf(t, sizeof t, "TAP LETTERS: NAME THE %s", hn == 1 ? "GIRL" : "SPRITE"); text_c(&c, l.info, l.info.y + (l.info.h - 11) / 2, t, C_TXT, 0); }
+      else text_c(&c, l.info, l.info.y + (l.info.h - 11) / 2, "TAP LETTERS TO TYPE THE NAME", C_TXT, 0);
     } else {
       draw_title_block(&c, l.info, "GAME SELECT", "UP / DOWN THEN OK");
     }
@@ -2632,7 +2652,7 @@ void som_ux_draw(struct som_ux *ux, const struct som_macro *m, uint32_t *px, int
     }
   }
   /* cutscenes, dialogue and warps: no message, the whole bottom window is simply darkened */
-  if (!ux->opt_page && ux->mode == SOM_UX_EVENT)
+  if (!ux->opt_page && ux->mode == SOM_UX_EVENT && !ux->fe_name_entry)
     brect(&c, 0, l.header.h, vw, vh - l.header.h, 0x03061Au, 120);
   ux_mark_drawn(ux, w, h);
 }
@@ -2827,6 +2847,7 @@ int som_ux_touch(struct som_ux *ux, int x, int y, int w, int h, struct som_ux_ac
     const struct hit *t = &l.h[i];
     if (!inr(&t->r, vx, vy)) continue;
     if (ux->quick_arm == 3 && t->kind != HK_QUICK) ux->quick_arm = 0;      /* a long-pressed entry waits for a slot tap only */
+    if (!(t->kind == HK_OPT_NAV && t->a == 6) && ux->quit_armed) { ux->quit_armed = 0; som_ux_notice_clear(ux); }
     switch (t->kind) {
     case HK_PARTY:
       if (ux->mode == SOM_UX_FIELD && t->enabled) {
@@ -2871,6 +2892,10 @@ int som_ux_touch(struct som_ux *ux, int x, int y, int w, int h, struct som_ux_ac
     case HK_OPT_NAV:
       if (t->a == 4) { ux->opt_page = SOM_UX_OPT_STATES; ux->opt_from_main = 1; ux->nav_kind = 0; }
       else if (t->a == 5) { ux->opt_page = SOM_UX_OPT_CREDITS; ux->opt_from_main = 1; ux->cr_scroll = 0; ux->nav_kind = 0; }
+      else if (t->a == 6) {                         /* MAIN MENU: the first tap arms, the second quits (the game in progress is lost) */
+        if (!ux->quit_armed) { ux->quit_armed = 1; som_ux_notice(ux, SOM_UX_NOTICE_INFO, "TAP AGAIN TO QUIT"); return 0; }
+        ux->quit_armed = 0; som_ux_notice_clear(ux); out->kind = SOM_UX_ACT_MAIN_MENU; return 1;
+      }
       else if (t->a == 0) ux->opt_page = SOM_UX_OPT_CLOSED;
       else if (t->a == 2) { ux->opt_page = SOM_UX_OPT_QUICK; ux->opt_from_main = 1; if (ux->qe_slot >= SOM_UX_QUICK_N) ux->qe_slot = 0; }
       else ux->opt_page = ux->opt_from_main ? SOM_UX_OPT_MAIN : SOM_UX_OPT_CLOSED;   /* BACK of the editor: previous screen only */
@@ -2989,6 +3014,10 @@ int som_ux_touch(struct som_ux *ux, int x, int y, int w, int h, struct som_ux_ac
       else { out->kind = SOM_UX_ACT_NAME_DELETE; }
       return 1;
     case HK_NEXT: out->kind = SOM_UX_ACT_PAD; out->pad = 1u << SOM_PAD_B; return 1;
+    case HK_NAME_LAST:
+      if (!t->enabled) return 0;
+      out->kind = SOM_UX_ACT_NAME_LAST; out->hero = (uint8_t)som_ux_name_hero(ux);
+      return 1;
     default: return 0;
     }
   }

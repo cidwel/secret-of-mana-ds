@@ -51,6 +51,8 @@ final class Native {
     static native int seenGet();                               /* discovered weapons / spirits / items, packed */
     static native void seenSet(int packed);
     static native void quickClear();
+    static native String nameConfirmed();                      /* one-shot "hero NAME" when a name entry was confirmed (A..Z names only), "" none */
+    static native void setLastName(int hero, String name);     /* LAST NAME key of the name entry: the last confirmed name of hero 0..2 ("" none) */
     /** Shows a short message in the bottom screen strip. */
     static native void toast(String s);
     static native String romVariant();
@@ -68,6 +70,7 @@ final class Native {
     static native boolean copyFrame(Bitmap bmp);
     /** Hide the HUD (core BG3 layer) during free field play; the frame geometry never changes. Default on. */
     static native void setHideHud(boolean on);
+    static native void setFastForward(boolean on);           /* 3x speed while true, extra frames muted */
     /** Widescreen core options: ws = disabled|17|27|46, fb = normal|black (ignored by the plain core). */
     static native void setWidescreen(String ws, String fb);
     /** Last 2-second performance line (core ms/frame, input latency, audio underruns, HUD-mask state, HP/MP). */

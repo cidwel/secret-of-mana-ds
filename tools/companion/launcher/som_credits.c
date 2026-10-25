@@ -109,7 +109,8 @@ int sc_format(const char *json, char *out, size_t n) {
 }
 
 const char *sc_fallback(void) {
-  return "Special thanks\n\n"
+  return "Credits\n\n"
+         "cidwel\nSecret of Mana DS: the AYN Thor, Nintendo 3DS and PC companion apps\nhttps://github.com/cidwel/secret-of-mana-ds\n\n"
          "Moppleton and contributors\nSecret of Mana Randomizer and its Ancient Cave mode. libsomrando is a C port of their generator.\nLicense: LGPL-2.1\nhttps://github.com/Moppu/SecretOfManaRandomizer\n\n"
          "The authors of the Secret of Mana QOL and bug-fix patches on romhacking.net\nhttps://www.romhacking.net/\n\n"
          "The Secret of Mana reverse-engineering and documentation community\n";

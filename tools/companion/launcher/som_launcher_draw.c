@@ -451,7 +451,7 @@ static void draw_list(struct cv *c, const struct sl_launcher *L, const struct sl
 }
 
 static void draw_saved(struct cv *c, const struct sl_launcher *L, const struct sl_metrics *m, const struct sl_hit *hits, int n) {
-  header(c, m, "SAVED RANDOMIZED", "Up to four games, newest first");
+  header(c, m, "SAVED RANDOMIZED", NULL);
   for (int i = 0; i < n; i++) {
     const struct sl_hit *h = &hits[i];
     if (h->kind == SH_SAVED_SLOT) {

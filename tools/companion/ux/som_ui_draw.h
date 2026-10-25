@@ -22,6 +22,7 @@
 #define SOM_UX_ENEMIES 10
 #define SOM_UX_NAMES 335
 #define SOM_UX_NAME_LEN 20
+#define SOM_UX_LAST_NAME 8                /* name entry letters + 1 (the game takes 6) */
 #define SOM_UX_WORLD 512
 #define SOM_UX_SPRITE_MAX 96               /* largest enemy sprite side in pixels (see som_ux_set_enemy_sprite) */
 #define SOM_UX_SPRITES 16                  /* sprites kept at once, one per enemy id */
@@ -49,7 +50,8 @@ enum som_ux_opt_page { SOM_UX_OPT_CLOSED = 0, SOM_UX_OPT_MAIN, SOM_UX_OPT_BINDIN
 enum som_ux_opt { SOM_UX_OPT_WIDE = 0 /* enumerated: text OFF / 17 / 27 / 46 */, SOM_UX_OPT_FALLBACK, SOM_UX_OPT_HUD_HIDE, SOM_UX_OPT_CORE, SOM_UX_OPT_UI_SOUNDS,
                   SOM_UX_OPT_HAPTICS, SOM_UX_OPT_LANGUAGE,
                   SOM_UX_OPT_FIT /* top-screen scaling: enumerated, text FILL / FIT / INTEGER / STRETCH */,
-                  SOM_UX_OPT_SHADER /* top-screen filter: enumerated, text NONE / SHARP / SCANLINES / LCD GRID / CRT (only on the extended page) */, SOM_UX_OPT_COUNT };
+                  SOM_UX_OPT_SHADER /* top-screen filter: enumerated, text NONE / SHARP / SCANLINES / LCD GRID / CRT (only on the extended page) */,
+                  SOM_UX_OPT_FFWD /* fast-forward button: text is the bound key or NONE; a tap asks the host to wait for a key (extended page) */, SOM_UX_OPT_COUNT };
 #define SOM_UX_STATE_SLOTS 8
 #define SOM_UX_THUMB_W 128
 #define SOM_UX_THUMB_H 72
@@ -124,13 +126,20 @@ struct som_ux {
   uint8_t n_enemies;                       /* enemy slots in `enemy_idx` */
   uint8_t enemy_idx[SOM_UX_ENEMIES];       /* actor[] indices of enemies, boss first, then by on-screen order */
   int8_t boss;                             /* actor index of a boss or -1 */
+  uint8_t boss_id, boss_analyzed;          /* the boss's HP is shown only once a hero cast Analyzer (spell 0x17) on it; reset when another boss appears */
+  uint8_t cast_prev[SOM_PARTY][11], cast_primed;   /* each hero's last cast record ($E170..$E17A): a change is a new cast */
   uint16_t fl_x, fl_y, fl_heading;         /* Flammie: $FA, $FC (8 units = 1 world map pixel), $F6 (1024 = one turn) */
   uint8_t fl_world_ok;                     /* position inside the 4096 x 4096 main world */
   char line[SOM_UX_LINE_CHARS + 1];        /* current dialogue line ($A1A4) */
   char log[SOM_UX_LOG_LINES][SOM_UX_LINE_CHARS + 1];   /* most recent first; log[0] is the newest distinct line */
   uint8_t log_n;
   uint8_t name_cursor;                     /* name entry: letter under the cursor (0..25), 0xFF unknown */
-  uint8_t fe_name_entry;                   /* FRONTEND: the name entry screen is showing (cursor sprite visible) */
+  uint8_t fe_name_entry;                   /* a name entry is showing: the new game's (FRONTEND) or one opened in game (EVENT) */
+  uint8_t name_hero;                       /* name entry: hero being named ($A22B, 0..2), 0xFF unknown */
+  uint8_t name_wait_hero, name_wait_t;     /* a name entry just closed: frames left to read the confirmed name of that hero */
+  uint8_t name_done;                       /* one-shot: hero + 1 whose name was confirmed (som_ux_name_confirmed) */
+  char name_done_text[SOM_UX_LAST_NAME];
+  char name_last[3][SOM_UX_LAST_NAME];     /* host-supplied last confirmed name per hero (A..Z, "" none): the LAST NAME key */
   uint16_t trail[32][2];                   /* Flammie: last positions in units, newest at trail[trail_n - 1] */
   uint8_t trail_n;
   /* ---- UI state (set by som_ux_touch) ---- */
@@ -183,6 +192,7 @@ struct som_ux {
   uint8_t qe_slot, qe_cat, qe_page;        /* quick-slot editor: slot being edited, picker category and page */
   uint8_t qe_four;                         /* PC: the quick-slot editor shows only the four shoulder slots (som_ux_set_four_slots) */
   uint8_t opt_page;                        /* enum som_ux_opt_page */
+  uint8_t quit_armed;                      /* MAIN MENU was tapped once: the next tap quits */
   uint8_t opt_from_main;                   /* the quick-slot editor was entered from the options page: BACK returns there, otherwise it closes */
   uint8_t opt_val[SOM_UX_OPT_COUNT];
   char opt_text[SOM_UX_OPT_COUNT][12];     /* value text of enumerated options (core name, language) */
@@ -219,7 +229,9 @@ enum som_ux_act_kind { SOM_UX_ACT_NONE = 0, SOM_UX_ACT_CMD, SOM_UX_ACT_PAD, SOM_
                        SOM_UX_ACT_CANCEL_QUEUED /* a queued spell button was tapped: drop bind_id (spell id) from the host's queue */,
                        SOM_UX_ACT_SWITCH_HERO /* hero: a living hero's card was tapped in the field: make it the controlled hero (somd_switch_hero) */,
                        SOM_UX_ACT_NAME_DELETE /* name entry: delete the last letter (somd_name_delete) */,
-                       SOM_UX_ACT_STATE /* save-state page: opt_id = 0 save, 1 load, 2 slot selected; opt_val = slot (the host does the work) */ };
+                       SOM_UX_ACT_STATE /* save-state page: opt_id = 0 save, 1 load, 2 slot selected; opt_val = slot (the host does the work) */,
+                       SOM_UX_ACT_MAIN_MENU /* options page, MAIN MENU tapped twice: the host ends the game and returns to the start menu */,
+                       SOM_UX_ACT_NAME_LAST /* name entry: hero = the hero being named; clear the typed letters, then type som_ux_last_name(hero) */ };
 
 /* Result of a tap.  ACT_NONE: the tap only changed UI state (tab, hero, pending target) or hit nothing. */
 struct som_ux_action {
@@ -292,6 +304,13 @@ const char *som_ux_name(const struct som_ux *ux, int index);
 /* Name entry helper: the pad mask for the next step towards `letter` (0..25) given the cursor; 0 when it is there.
  * The caller taps the returned LEFT/RIGHT, waits ~28 frames and calls again; when it returns 0 it taps B. */
 uint16_t som_ux_name_next_pad(const struct som_ux *ux, int letter);
+/* Hero being named (0..2) while a name entry shows, else -1. */
+int som_ux_name_hero(const struct som_ux *ux);
+/* LAST NAME key: the host keeps the last confirmed name per hero and gives it here (A..Z, up to 7 letters; NULL / "" / other characters clear it). */
+void som_ux_set_last_name(struct som_ux *ux, int hero, const char *name);
+const char *som_ux_last_name(const struct som_ux *ux, int hero);
+/* One-shot: a name was just confirmed in a name entry.  Returns the hero (0..2) and writes the name (A..Z) to out, or -1.  Names with other glyphs are not reported. */
+int som_ux_name_confirmed(struct som_ux *ux, char *out, int n);
 
 /* Read-only accessors for foreign-function callers.  what: 0 enemies, 1 boss actor (-1 none), 2 flammie x, 3 flammie y,
  * 4 flammie heading, 5 flammie in main world, 6 present heroes, 7 log lines. */
@@ -429,7 +448,8 @@ enum som_ux_hit { SOM_UX_HIT_NONE = 0, SOM_UX_HIT_PARTY, SOM_UX_HIT_TAB, SOM_UX_
                   SOM_UX_HIT_MAPVIEW /* the zone map: a tap toggles the large view and the small view with the enemy list */,
                   SOM_UX_HIT_POLICY /* a = enum som_ux_policy */, SOM_UX_HIT_POL_CANCEL, SOM_UX_HIT_QE_BACK /* spell picker: back to the spirits */,
                   SOM_UX_HIT_REVIVE /* a = option index of the REVIVE chooser */, SOM_UX_HIT_REV_CANCEL,
-                  SOM_UX_HIT_ST_SLOT, SOM_UX_HIT_ST_SAVE, SOM_UX_HIT_ST_LOAD, SOM_UX_HIT_CR_SCROLL /* a = 0 up, 1 down */ };
+                  SOM_UX_HIT_ST_SLOT, SOM_UX_HIT_ST_SAVE, SOM_UX_HIT_ST_LOAD, SOM_UX_HIT_CR_SCROLL /* a = 0 up, 1 down */,
+                  SOM_UX_HIT_NAME_LAST /* name entry: types the last name of the hero being named */ };
 /* Centre (device pixels) of the first enabled-or-not target of `hit` with parameter `a`; 1 when found. */
 int som_ux_target_center(struct som_ux *ux, int w, int h, int hit, int a, int *x, int *y);
 /* Smallest side in vp of the targets of one kind (0 when absent), for the touch-size audit. */

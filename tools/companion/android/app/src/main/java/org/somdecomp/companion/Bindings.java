@@ -27,10 +27,23 @@ final class Bindings {
         key = "";
         savedSeen = 0;
         Native.quickClear();   /* the pre-round-3 per-variant slots (prefs key quick_<variant>) are deliberately not read: they were the stale ones */
+        for (int h = 0; h < 3; h++) Native.setLastName(h, sp.getString("name_last_" + h, ""));
+    }
+
+    /** LAST NAME key: the last name confirmed for each hero (boy, girl, sprite), in any game and ROM variant. */
+    private void saveNames() {
+        String n = Native.nameConfirmed();
+        if (n.length() < 3 || n.charAt(1) != ' ') return;
+        int h = n.charAt(0) - '0';
+        String name = n.substring(2);
+        if (h < 0 || h > 2 || name.isEmpty()) return;
+        sp.edit().putString("name_last_" + h, name).apply();
+        Native.setLastName(h, name);
     }
 
     /** Called about every 60 ms: follows the game identity and stores what changed. */
     void saveIfDirty() {
+        saveNames();
         int ev = Native.gameEvent();
         String k = Native.gameKey();
         if (k.isEmpty()) {                                   /* title, game select, name entry: no game */

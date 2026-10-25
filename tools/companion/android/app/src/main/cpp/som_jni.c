@@ -159,9 +159,9 @@ static void audio_open(double rate) {
 }
 /* Audio meter (emulation thread only): what the core submits per stats interval, plus ring drops. */
 static double am_sq; static unsigned am_n, am_peak, am_drop, am_zero_run, am_zero_max;
-static volatile int audio_mute;
+static volatile int audio_mute, ff_mute, ff_on;   /* ff_on: the fast-forward button is held (Native.setFastForward) */
 static size_t audio_batch(const int16_t *d, size_t frames) {
-  if (audio_mute) return frames;
+  if (audio_mute || ff_mute) return frames;
   for (size_t i = 0; i < frames * 2; i++) {
     int v = d[i]; unsigned a = (unsigned)(v < 0 ? -v : v);
     am_sq += (double)v * v; am_n++; if (a > am_peak) am_peak = a;
@@ -207,7 +207,7 @@ static volatile int dbg_cmd_valid;
 static struct ux_dispatch after_close;
 static int after_close_valid, after_close_frames;
 /* Events for the Java side (options to persist, haptic ticks); popped by Native.pollEvent(). */
-enum { EV_OPT = 1 << 16, EV_TICK = 2 << 16 };
+enum { EV_OPT = 1 << 16, EV_TICK = 2 << 16, EV_MAIN_MENU = 3 << 16 };
 static int evq[16], evq_n;
 static void ev_push(int e) { if (evq_n < 16) evq[evq_n++] = e; }
 /* Menu quick actions and avatar taps jump straight to the target with the direct layer (no intermediate rings, video
@@ -383,6 +383,16 @@ static void ux_dispatch(const struct ux_dispatch *d) {
   case SOM_UX_ACT_NAME_DELETE:
     if (direct_ok && wram) { int e = somd_name_delete(&direct, (uint8_t *)wram); LOG("name entry: delete %s", somd_err_name((enum somd_err)e)); }
     break;
+  case SOM_UX_ACT_NAME_LAST:     /* the hero's last confirmed name (Bindings.java keeps it): clear what is typed, then type it letter by letter */
+    if (direct_ok && wram && ux_g && d->hero >= 0 && d->hero < 3) {
+      const char *nm = som_ux_last_name(ux_g, d->hero);
+      int e = SOMD_OK;
+      for (int k = 0; k < 16 && somd_name_delete(&direct, (uint8_t *)wram) == SOMD_OK; k++) {}
+      for (const char *q = nm; *q && e == SOMD_OK; q++) e = somd_name_letter(&direct, (uint8_t *)wram, *q - 'A');
+      LOG("name entry: last name %s for hero %d: %s", nm, d->hero, somd_err_name((enum somd_err)e));
+      ui_sfx(e == SOMD_OK && nm[0] ? SFX_OK : SFX_ERROR);
+    }
+    break;
   case SOM_UX_ACT_SWITCH_HERO:   /* a hero card was tapped: the game's own hero switch; refused (and ignored) outside free field play */
     if (direct_ok && wram) {
       int e = somd_switch_hero(&direct, wram, d->hero);
@@ -396,6 +406,7 @@ static void ux_dispatch(const struct ux_dispatch *d) {
     else if (d->opt_id == 1) { if (do_state_load(d->opt_val) == SST_OK) ui_sfx(SFX_OK); else ui_sfx(SFX_ERROR); }
     break;
   case SOM_UX_ACT_OPTION: ev_push(EV_OPT | (d->opt_id & 0xFF) << 8 | (d->opt_val & 0xFF)); ui_sfx(SFX_OK); break;
+  case SOM_UX_ACT_MAIN_MENU: ev_push(EV_MAIN_MENU); ui_sfx(SFX_OK); break;
   case SOM_UX_ACT_AVATAR: nav_menu(d->hero, 0xFF, 0xFF); ui_sfx(SFX_OK); break;
   case SOM_UX_ACT_OPEN_MENU:
     ui_sfx(SFX_OK);
@@ -653,6 +664,11 @@ static void *loop(void *arg) {
       }
       double t0 = now_ms();
       core_frame();
+      if (ff_on) {   /* fast forward: two more frames per tick (3x), heard as the normal one only */
+        ff_mute = 1;
+        for (int k = 0; k < 2; k++) { core_frame(); total_frames++; }
+        ff_mute = 0;
+      }
 #ifdef SOMD_HAS_MENU
       /* Round 3: a direct menu jump plays in real time; no emulated frame is skipped, hidden or muted (somd_hide_video is 0 by default). */
 #endif
@@ -810,6 +826,7 @@ JNIEXPORT void JNICALL Java_org_somdecomp_companion_Native_setPad(JNIEnv *e, jcl
   if (n & ~pad_in) { clock_gettime(CLOCK_MONOTONIC, &pad_t); pad_stamp = 1; pad_latch |= n & ~pad_in; latch_age = 0; }
   pad_in = n;
 }
+JNIEXPORT void JNICALL Java_org_somdecomp_companion_Native_setFastForward(JNIEnv *e, jclass c, jboolean on) { (void)e; (void)c; ff_on = on ? 1 : 0; }
 JNIEXPORT void JNICALL Java_org_somdecomp_companion_Native_setHideHud(JNIEnv *e, jclass c, jboolean on) { (void)e; (void)c; hide_hud = on; mask_dirty = 1; }
 JNIEXPORT void JNICALL Java_org_somdecomp_companion_Native_setWidescreen(JNIEnv *e, jclass c, jstring ws, jstring fb) {
   (void)c;
@@ -1166,6 +1183,24 @@ JNIEXPORT jint JNICALL Java_org_somdecomp_companion_Native_gameEvent(JNIEnv *e, 
   int ev = ux_g ? som_ux_game_event(ux_g) : 0;
   pthread_mutex_unlock(&mu);
   return ev;
+}
+/* LAST NAME key: the Java side stores the last confirmed name per hero (nameConfirmed, one-shot "hero NAME") and gives them back (setLastName). */
+JNIEXPORT jstring JNICALL Java_org_somdecomp_companion_Native_nameConfirmed(JNIEnv *e, jclass c) {
+  (void)c;
+  char nm[SOM_UX_LAST_NAME], b[SOM_UX_LAST_NAME + 4]; b[0] = 0;
+  pthread_mutex_lock(&mu);
+  int h = ux_g ? som_ux_name_confirmed(ux_g, nm, sizeof nm) : -1;
+  pthread_mutex_unlock(&mu);
+  if (h >= 0) snprintf(b, sizeof b, "%d %s", h, nm);
+  return (*e)->NewStringUTF(e, b);
+}
+JNIEXPORT void JNICALL Java_org_somdecomp_companion_Native_setLastName(JNIEnv *e, jclass c, jint hero, jstring name) {
+  (void)c;
+  const char *t = name ? (*e)->GetStringUTFChars(e, name, NULL) : NULL;
+  pthread_mutex_lock(&mu);
+  if (ux_g) som_ux_set_last_name(ux_g, hero, t);
+  pthread_mutex_unlock(&mu);
+  if (t) (*e)->ReleaseStringUTFChars(e, name, t);
 }
 JNIEXPORT jint JNICALL Java_org_somdecomp_companion_Native_seenGet(JNIEnv *e, jclass c) {
   (void)e; (void)c;

@@ -125,10 +125,12 @@ JNIEXPORT jboolean JNICALL FN(renderTop)(JNIEnv *e, jclass c, jobject bmp) {
   AndroidBitmap_unlockPixels(e, bmp);
   return JNI_TRUE;
 }
-/* Changes only when the top screen would look different: the wallpaper does not depend on the cursor of the main menu. */
+/* Changes only when the top screen would look different.  1000000 and up: the key art (main menu, starting the game, and the
+ * saved-games list while no saved game is highlighted), which does not depend on the cursor. */
 JNIEXPORT jint JNICALL FN(topRevision)(JNIEnv *e, jclass c) {
   (void)e; (void)c;
-  return (L.screen == SL_MAIN || L.screen == SL_PLAY) ? (jint)(1000000 + L.screen) : (jint)L.rev;
+  int empty_saved = L.screen == SL_SAVED && !(L.cursor < SL_SAVED_MAX && L.saved[L.cursor].used);
+  return (L.screen == SL_MAIN || L.screen == SL_PLAY || empty_saved) ? (jint)(1000000 + L.screen) : (jint)L.rev;
 }
 
 static jstring jstr(JNIEnv *e, const char *s) { return (*e)->NewStringUTF(e, s); }

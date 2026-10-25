@@ -489,11 +489,14 @@ static int step_cursor(struct sl_launcher *L, int dir) {
 
 /* Up and down walk a ring: the rows, then the footer buttons, then the first row again. */
 static void move_cursor(struct sl_launcher *L, int dir) {
-  if (L->focus != SF_LIST) {                      /* leave the footer: down wraps to the first row, up goes back to the row we left */
+  if (L->focus != SF_LIST) {                      /* leave the footer: down wraps to the first row, up to the last one */
     L->focus = SF_LIST;
     if (dir > 0) {
       L->cursor = -1; L->scroll = 0;
       if (!step_cursor(L, 1)) L->cursor = 0;
+    } else {
+      L->cursor = L->nrows;
+      if (!step_cursor(L, -1)) L->cursor = 0;
     }
     ensure_visible(L); touch(L);
     return;

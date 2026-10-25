@@ -163,6 +163,17 @@ int main(int argc, char **argv) {
   CHECK(ux->n_enemies == 2 && ux->boss == 4 && ux->enemy_idx[0] == 4);
   render(ux, "field_boss", 320, 240);
   render(ux, "field_boss", 1240, 1080);
+  CHECK(!ux->boss_analyzed);                                    /* the boss's HP stays hidden until Analyzer */
+  wram[0xE170 + 0x200] = 0x13; wram[0xE178 + 0x200] = 5; som_ux_update(ux, wram);    /* another spell on the boss */
+  CHECK(!ux->boss_analyzed);
+  wram[0xE170 + 0x200] = 0x17; wram[0xE178 + 0x200] = 4; som_ux_update(ux, wram);    /* Analyzer on the other enemy */
+  CHECK(!ux->boss_analyzed);
+  wram[0xE178 + 0x200] = 5; som_ux_update(ux, wram);                                  /* Analyzer on the boss (actor 4) */
+  CHECK(ux->boss_analyzed);
+  render(ux, "field_boss_analyzed", 1240, 1080);
+  enemy(4, 10, 400, 900, 150, 80, 1); som_ux_update(ux, wram);                          /* another boss: hidden again */
+  CHECK(!ux->boss_analyzed);
+  memset(wram + 0xE170 + 0x200, 0, 11);
 
   /* ---- event (round 3): the bottom screen is blank, with a faint LOOK UP while a dialogue line is on screen; nothing is tappable ---- */
   field(); wram[0xD0] = 0x81; som_ux_update(ux, wram);
@@ -951,6 +962,43 @@ int main(int argc, char **argv) {
     CHECK(!ux->fe_name_entry);
     som_ux_draw(ux, NULL, pa, 320, 320, 240);
     { long lit = lit_px(pa, 320 * 240); CHECK(lit == 0); }
+    /* In-game name entry (the girl's and sprite's join; every Ancient Cave start), bytes of a libsomrando Ancient Cave capture: the event ($D0 = 1, map $32)
+     * opened the native menu on the name page ($A202 = 3) for hero $A22B; cursor sprite on 'A' (x 19, y 96); $A20A = 10 open, 11 after START. */
+    { struct som_ux *g = som_ux_new(); struct som_ux_action an; char nm[SOM_UX_LAST_NAME];
+#define NE_GAME(hero_, flags_) do { field(); wram[0xCF00] = 0; w16(0xE184, 0x32); wram[0xD0] = 1; wram[0x9C00] = 0x13; wram[0x9C01] = 0x60; \
+                                    wram[0xA20A] = (flags_); wram[0xA202] = 3; wram[0xA22B] = (hero_); wram[0xCC00] = 0x9B; wram[0xCC01] = 0; } while (0)
+      NE_GAME(1, 0x10); som_ux_update(g, wram);
+      CHECK(g->mode == SOM_UX_EVENT && g->fe_name_entry && som_ux_name_hero(g) == 1 && g->name_cursor == 0 && som_ux_quiet(g) == 0);
+      CHECK(has_hit(g, 1240, 1080, SOM_UX_HIT_LETTER, 25) && has_hit(g, 1240, 1080, SOM_UX_HIT_PAD, SOM_PAD_START) && !has_hit(g, 1240, 1080, SOM_UX_HIT_NEXT, 0));
+      r3 = tap_hit(g, 1240, 1080, SOM_UX_HIT_LETTER, 1, &an); CHECK(r3 == 1 && an.kind == SOM_UX_ACT_NAME_LETTER && an.letter == 1);
+      /* LAST NAME: disabled until the host gives this hero's last name, then it asks the host to type it */
+      r3 = tap_hit(g, 1240, 1080, SOM_UX_HIT_NAME_LAST, 0, &an); CHECK(r3 == 0);
+      som_ux_set_last_name(g, 0, "RANDI"); r3 = tap_hit(g, 1240, 1080, SOM_UX_HIT_NAME_LAST, 0, &an); CHECK(r3 == 0);     /* the boy's name, not the girl's */
+      som_ux_set_last_name(g, 1, "primm"); CHECK(!strcmp(som_ux_last_name(g, 1), "PRIMM"));
+      r3 = tap_hit(g, 1240, 1080, SOM_UX_HIT_NAME_LAST, 0, &an); CHECK(r3 == 1 && an.kind == SOM_UX_ACT_NAME_LAST && an.hero == 1);
+      som_ux_set_last_name(g, 2, "R2-D2"); CHECK(som_ux_last_name(g, 2)[0] == 0);                                         /* not typeable: cleared */
+      NE_GAME(2, 0x10); som_ux_update(g, wram); CHECK(som_ux_name_hero(g) == 2 && tap_hit(g, 1240, 1080, SOM_UX_HIT_NAME_LAST, 0, &an) == 0);
+      /* START: the name is stored on the frame $A20A.0 sets; the keyboard goes and the name is reported once */
+      CHECK(som_ux_name_confirmed(g, nm, sizeof nm) == -1);
+      NE_GAME(2, 0x11); wram[0xCC18] = 0x9D; wram[0xCC19] = 0x9B; wram[0xCC1A] = 0; som_ux_update(g, wram);
+      CHECK(!g->fe_name_entry && som_ux_name_hero(g) == -1);
+      CHECK(som_ux_name_confirmed(g, nm, sizeof nm) == 2 && !strcmp(nm, "CA") && som_ux_name_confirmed(g, nm, sizeof nm) == -1);
+      /* stale flags after the menu closed: the field, an event, a native page (status = 7) opened from the ring or by an event: no keyboard */
+      NE_GAME(1, 0x11); wram[0xD0] = 0; som_ux_update(g, wram); CHECK(g->mode == SOM_UX_FIELD && !g->fe_name_entry);
+      NE_GAME(1, 0x11); som_ux_update(g, wram); CHECK(!g->fe_name_entry && som_ux_name_confirmed(g, nm, sizeof nm) == -1);
+      NE_GAME(1, 0x10); wram[0xA202] = 7; wram[0xD0] = 0; wram[0x7D] = 1; som_ux_update(g, wram); CHECK(!g->fe_name_entry);
+      NE_GAME(1, 0x10); wram[0xA202] = 7; som_ux_update(g, wram); CHECK(!g->fe_name_entry);
+      NE_GAME(1, 0x10); wram[0xA22B] = 3; som_ux_update(g, wram); CHECK(!g->fe_name_entry);
+      NE_GAME(1, 0x10); wram[0x9C00] = 0xF8; som_ux_update(g, wram); CHECK(!g->fe_name_entry);
+      /* a shop is not an event: no keyboard even with every name-page byte set */
+      NE_GAME(1, 0x10); wram[0xD0] = 0; wram[0x7D] = 1; wram[0x1847] = 1; som_ux_update(g, wram); CHECK(g->mode == SOM_UX_SHOP && !g->fe_name_entry);
+      /* the new game's entry (frontend) also names its hero and reports the boy's name */
+      memset(wram, 0, sizeof wram); wram[0xE000] = 1; wram[0x9C00] = 0x13; wram[0x9C01] = 0x60; wram[0xA20A] = 0x10; wram[0xA202] = 3; som_ux_update(g, wram);
+      CHECK(g->mode == SOM_UX_FRONTEND && som_ux_name_hero(g) == 0);
+      wram[0x9C00] = 0xF8; wram[0xA20A] = 0x11; wram[0xCC00] = 0x9B; wram[0xCC01] = 0; som_ux_update(g, wram);
+      CHECK(som_ux_name_confirmed(g, nm, sizeof nm) == 0 && !strcmp(nm, "A"));
+#undef NE_GAME
+      som_ux_delete(g); }
     /* item 9: new game = the name entry was seen; load = it was not; the key follows the three names */
     { struct som_ux *g = som_ux_new();
       memset(wram, 0, sizeof wram); wram[0xE000] = 1; wram[0x9C00] = 19; wram[0x9C01] = 96; wram[0xA20A] = 0x10; som_ux_update(g, wram);        /* name entry */
@@ -1037,6 +1085,14 @@ int main(int argc, char **argv) {
       CHECK(has_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 4) && has_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 5) && has_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 2) && has_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 0));
       r = tap_hit(ux, w, h, SOM_UX_HIT_OPTION, SOM_UX_OPT_SHADER, &act);
       CHECK(r == 1 && act.kind == SOM_UX_ACT_OPTION && act.opt_id == SOM_UX_OPT_SHADER && act.opt_val == 2);
+      CHECK(has_hit(ux, w, h, SOM_UX_HIT_OPTION, SOM_UX_OPT_FFWD) && has_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 6));
+      r = tap_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 6, &act);                  /* MAIN MENU: the first tap only arms */
+      CHECK(r == 0 && ux->quit_armed);
+      r = tap_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 6, &act);
+      CHECK(r == 1 && act.kind == SOM_UX_ACT_MAIN_MENU && !ux->quit_armed);
+      r = tap_hit(ux, w, h, SOM_UX_HIT_OPT_NAV, 6, &act);                  /* another tap in between disarms it */
+      tap_hit(ux, w, h, SOM_UX_HIT_OPTION, SOM_UX_OPT_FIT, &act);
+      CHECK(!ux->quit_armed);
       for (int y = 0; y < SOM_UX_THUMB_H; y++) for (int x = 0; x < SOM_UX_THUMB_W; x++) th[y * SOM_UX_THUMB_W + x] = 0xFF000000u | (uint32_t)(x * 2) << 16 | (uint32_t)(y * 3) << 8 | 0x60;
       som_ux_set_state_slot(ux, 0, 1, "10-20 18:30", th);
       som_ux_set_state_slot(ux, 3, 1, "10-19 09:05", th);

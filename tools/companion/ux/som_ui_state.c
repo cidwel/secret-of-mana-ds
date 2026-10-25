@@ -1,5 +1,6 @@
 /* som_ui_state: WRAM / ROM decoding for the companion UI (modes, actors, dialogue, Flammie flight, names, world map).
  * Everything here is read-only on the memory it is given.  Evidence for every address: docs/companion-ux-20261017.md. */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -215,7 +216,7 @@ size_t som_ux_sizeof(void) { return sizeof(struct som_ux); }
 
 void som_ux_init(struct som_ux *ux) {
   memset(ux, 0, sizeof *ux);
-  ux->tab = SOM_UX_TAB_WEAPON; ux->spirit = 0xFF; ux->boss = -1; ux->name_cursor = 0xFF;
+  ux->tab = SOM_UX_TAB_WEAPON; ux->spirit = 0xFF; ux->boss = -1; ux->name_cursor = 0xFF; ux->name_hero = 0xFF;
   for (int i = 0; i < 42; i++) ux->spell_class[i] = SOM_UX_TC_UNSUPPORTED;
   som_ux_set_shoulder_labels(ux, NULL, NULL, NULL, NULL);
 }
@@ -314,6 +315,17 @@ void som_ux_update(struct som_ux *ux, const uint8_t *w) {
       if (a->boss && ux->boss < 0) ux->boss = (int8_t)s;
     }
 
+  /* Analyzer: the caster's record holds the spell ($E170) and the targets as actor index + 1 ($E178..$E17A) */
+  if (ux->boss >= 0 && ux->actor[ux->boss].id != ux->boss_id) { ux->boss_id = ux->actor[ux->boss].id; ux->boss_analyzed = 0; }
+  for (int h = 0; h < SOM_PARTY; h++) {
+    const uint8_t *cr = w + 0xE170u + 0x200u * (unsigned)h;
+    if (!memcmp(ux->cast_prev[h], cr, sizeof ux->cast_prev[h])) continue;
+    memcpy(ux->cast_prev[h], cr, sizeof ux->cast_prev[h]);
+    if (ux->cast_primed && cr[0] == 0x17 && ux->boss >= 0)
+      for (int t = 0; t < 3; t++) if (cr[8 + t] == ux->boss + 1) ux->boss_analyzed = 1;
+  }
+  ux->cast_primed = 1;                               /* a record already there when the game is loaded is not a new cast */
+
   ux_decode_selection(ux, w);
   ux_zone_update(ux, w);
   if (ux->rev_wait && (ux->rev_hero >= SOM_PARTY || !ux->st.hero[ux->rev_hero].present || ux->st.hero[ux->rev_hero].alive)) ux->rev_wait = 0;   /* revived (or gone): the chooser closes */
@@ -341,12 +353,32 @@ void som_ux_update(struct som_ux *ux, const uint8_t *w) {
   if (n) memcpy(ux->line, cur, sizeof cur); else if (ux->mode != SOM_UX_EVENT) ux->line[0] = 0;
 
   /* name entry: sprite 0 of the OAM shadow is the letter cursor (x = 19 + 8 * letter) */
-  ux->fe_name_entry = 0; ux->name_cursor = 0xFF;
+  int was_hero = ux->fe_name_entry ? ux->name_hero : 0xFF;
+  ux->fe_name_entry = 0; ux->name_cursor = 0xFF; ux->name_hero = 0xFF;
   /* The title and game-select menus also put a cursor in sprite 0, so the sprite alone is not enough (round 3c): the name-entry flag $A20A bit 4 is set and no screen transition ($E4, $E184) is running. */
-  if (ux->mode == SOM_UX_FRONTEND && w[0x9C00] != 0xF8 && w[0x9C01] < 0xE0 && (w[0xA20A] & 0x10) && w[0xE4] == 0 && !(w[0xE184] | w[0xE185])) {
+  int ne = w[0x9C00] != 0xF8 && w[0x9C01] < 0xE0 && (w[0xA20A] & 0x10);
+  int fe = ux->mode == SOM_UX_FRONTEND && ne && w[0xE4] == 0 && !(w[0xE184] | w[0xE185]);
+  /* In game (the girl and sprite join, every Ancient Cave start) an event opens the native menu on the name page (C1:EB71): page $A202 = 3, its
+   * close bit $A20A.0 clear, the hero being named in $A22B.  $A202 and bit 4 stay behind after the menu closes, bit 0 does not. */
+  int ev = ux->mode == SOM_UX_EVENT && ne && !(w[0xA20A] & 1) && w[0xA202] == 3 && w[0xA22B] < 3;
+  if (fe || ev) {
     int x = w[0x9C00] - 19;
     ux->fe_name_entry = 1;
     if (x >= 0 && x % 8 == 0 && x / 8 < 26) ux->name_cursor = (uint8_t)(x / 8);
+    if (w[0xA22B] < 3) ux->name_hero = w[0xA22B];
+  }
+  /* confirmed name: the game stores it at $CC00 + 12 * hero on the START frame; looked for during a few frames after the page closes */
+  if (!ux->fe_name_entry && was_hero < 3) { ux->name_wait_hero = (uint8_t)was_hero; ux->name_wait_t = 8; }
+  if (ux->fe_name_entry) ux->name_wait_t = 0;
+  else if (ux->name_wait_t) {
+    ux->name_wait_t--;
+    char nm[SOM_UX_LAST_NAME]; int k = 0;
+    const uint8_t *g = w + 0xCC00 + 12 * ux->name_wait_hero;
+    while (k < SOM_UX_LAST_NAME - 1 && g[k] >= 0x9B && g[k] <= 0xB4) { nm[k] = (char)('A' + g[k] - 0x9B); k++; }
+    nm[k] = 0;
+    if (k && (g[k] == 0 || g[k] == 0xFF || k == SOM_UX_LAST_NAME - 1)) {     /* A..Z only: other glyphs cannot be typed back */
+      memcpy(ux->name_done_text, nm, sizeof nm); ux->name_done = (uint8_t)(ux->name_wait_hero + 1); ux->name_wait_t = 0;
+    }
   }
 
   /* round 3: playthrough bookkeeping */
@@ -380,6 +412,27 @@ void som_ux_flammie_map_pos(const struct som_ux *ux, int *mx, int *my, int *bear
   if (mx) *mx = ux->fl_x / 8;
   if (my) *my = ux->fl_y / 8;
   if (bearing) *bearing = (360 - (int)ux->fl_heading * 360 / 1024) % 360;
+}
+
+int som_ux_name_hero(const struct som_ux *ux) { return ux && ux->fe_name_entry && ux->name_hero < 3 ? ux->name_hero : -1; }
+void som_ux_set_last_name(struct som_ux *ux, int hero, const char *name) {
+  if (!ux || hero < 0 || hero > 2) return;
+  int k = 0;
+  for (; name && name[k] && k < SOM_UX_LAST_NAME - 1; k++) {
+    char ch = name[k];
+    if (ch >= 'a' && ch <= 'z') ch = (char)(ch - 32);
+    if (ch < 'A' || ch > 'Z') { k = 0; break; }
+    ux->name_last[hero][k] = ch;
+  }
+  ux->name_last[hero][k] = 0;
+}
+const char *som_ux_last_name(const struct som_ux *ux, int hero) { return ux && hero >= 0 && hero < 3 ? ux->name_last[hero] : ""; }
+int som_ux_name_confirmed(struct som_ux *ux, char *out, int n) {
+  if (!ux || !ux->name_done) return -1;
+  int h = ux->name_done - 1;
+  ux->name_done = 0;
+  if (out && n > 0) snprintf(out, (size_t)n, "%s", ux->name_done_text);
+  return h;
 }
 
 uint16_t som_ux_name_next_pad(const struct som_ux *ux, int letter) {

@@ -82,9 +82,9 @@ public final class MainActivity extends Activity {
         }
         info.postDelayed(new Runnable() {
             @Override public void run() {
-                String st = Native.stats();
-                if (!st.isEmpty()) info.setText(st);
-                info.postDelayed(this, 1000);
+                String st = Native.stats();   /* the core is running: the ROM message goes away, the performance line goes to logcat only */
+                if (!st.isEmpty()) { info.setVisibility(android.view.View.GONE); android.util.Log.d("somcompanion", st); }
+                info.postDelayed(this, st.isEmpty() ? 1000 : 10000);
             }
         }, 1000);
         /* start menu: rom_path is a generated ROM chosen there; otherwise the shortcut below applies */
@@ -222,6 +222,17 @@ public final class MainActivity extends Activity {
         super.onStop();
     }
 
+    /** Options > MAIN MENU: the game in progress ends (battery save kept) and the app starts over at the start menu.  The process is restarted so
+     *  the core and the bottom-screen layer begin clean, as on a cold launch. */
+    private void backToStartMenu() {
+        Native.flushSave();
+        Native.stop();
+        redirected = true;   /* onDestroy: already stopped */
+        startActivity(new Intent(this, LaunchActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
+        finish();
+        Runtime.getRuntime().exit(0);
+    }
+
     @Override protected void onDestroy() {
         if (!redirected) { Native.flushSave(); Native.stop(); }
         super.onDestroy();
@@ -250,7 +261,10 @@ public final class MainActivity extends Activity {
     private Settings settings;
     private final Runnable events = new Runnable() {   /* options, hotlink persistence and haptic ticks of the UX layer */
         @Override public void run() {
-            for (int ev; (ev = Native.pollEvent()) != -1; ) if (settings != null) settings.handle(ev);
+            for (int ev; (ev = Native.pollEvent()) != -1; ) {
+                if (ev == Settings.EV_MAIN_MENU) { backToStartMenu(); return; }
+                if (settings != null) settings.handle(ev);
+            }
             if (binds != null) binds.saveIfDirty();
             info.postDelayed(this, 60);
         }
@@ -355,6 +369,7 @@ public final class MainActivity extends Activity {
             if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) setPadPanel(!padPanel);
             return true;
         }
+        if (!padPanel && gamepadKey(code) && settings != null && settings.fastForwardKey(e)) return true;
         if (padPanel && gamepadKey(code) && e.getAction() != KeyEvent.ACTION_MULTIPLE) return navKey(e);
         if (!gamepadKey(code) || e.getAction() == KeyEvent.ACTION_MULTIPLE) return super.dispatchKeyEvent(e);
         int in = Native.bindKeyInput(code);

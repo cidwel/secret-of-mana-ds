@@ -88,8 +88,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pyinstaller
-      - run: pyinstaller --onefile --windowed --name som-ds som-ds.py
+      - run: pip install pyinstaller pillow
+      - run: pyinstaller --onefile --windowed --name som-ds --icon tools/companion/assets/icon/${{ runner.os == 'Windows' && 'icon.ico' || 'icon.png' }} --add-data tools/companion/assets/icon/icon.png:. som-ds.py
       - name: Rename
         shell: bash
         run: |

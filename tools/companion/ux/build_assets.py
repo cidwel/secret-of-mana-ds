@@ -73,7 +73,8 @@ class Packer:
 
 FONT = pathlib.Path(__file__).resolve().parent.parent / 'assets' / 'fonts' / 'IBMPlexSansCondensed-SemiBold.ttf'   # SIL OFL 1.1
 SCALES = (2, 3, 4, 6, 8)        # device pixels per vp the UI font is rasterised for (scale x text multiplier)
-CAP_VP = 8.5                    # capital height in vp; the line box is 11 vp
+CAP_VP = 7.0                    # capital height in vp; the line box is 11 vp, so lines keep air above and below
+TRACK_VP = 0.35                 # extra space between letters in vp
 
 
 def add_ui_font(pk):
@@ -94,7 +95,7 @@ def add_ui_font(pk):
             xs = 1.0 if face == 0 else 0.8              # face 1: condensed to 80 percent width
             for ch in range(32, 127):
                 rid = 0x4000 + si * 0x200 + face * 0x100 + ch
-                adv = round(f.getlength(chr(ch)) * xs)
+                adv = round(f.getlength(chr(ch)) * xs + TRACK_VP * k)
                 if ch == 32:
                     pk.add(rid, Image.new('RGBA', (1, 1)), 0, 0, adv)
                     continue

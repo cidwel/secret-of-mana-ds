@@ -154,6 +154,10 @@ def window():
 
     root = tk.Tk()
     root.title('Secret of Mana DS')
+    for base in (getattr(sys, '_MEIPASS', ''), str(ROOT / 'tools' / 'companion' / 'assets' / 'icon')):
+        if base and pathlib.Path(base, 'icon.png').is_file():
+            root.iconphoto(True, tk.PhotoImage(file=str(pathlib.Path(base, 'icon.png'))))
+            break
     root.resizable(False, False)
     frame = ttk.Frame(root, padding=16)
     frame.grid()

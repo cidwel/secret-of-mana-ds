@@ -1243,9 +1243,9 @@ static int split_ok(struct cv *c, const char *s, int at, int sq, int maxw, struc
   snprintf(p->l[0], sizeof p->l[0], "%s", a); snprintf(p->l[1], sizeof p->l[1], "%s", b);
   return 1;
 }
-static int plan_label(struct cv *c, const char *s, int maxw, int maxl, struct lbl *p) {
+static int plan_label_sq(struct cv *c, const char *s, int maxw, int maxl, int maxsq, struct lbl *p) {   /* maxsq: tightest face allowed */
   memset(p, 0, sizeof *p);
-  for (int sq = 0; sq <= 2; sq++) {
+  for (int sq = 0; sq <= maxsq; sq++) {
     int sv = c->sq; c->sq = sq;
     int w = text_w(c, s, 0);
     c->sq = sv;
@@ -1265,10 +1265,11 @@ static int plan_label(struct cv *c, const char *s, int maxw, int maxl, struct lb
   if (maxl >= 2 && !strchr(s, ' ') && strlen(s) >= 7 && strlen(s) < 26) {       /* last resort for narrow cells: break one long word with a hyphen */
     char h[28]; int n = (int)strlen(s), k = (n + 1) / 2;
     memcpy(h, s, (size_t)k); h[k] = '-'; memcpy(h + k + 1, s + k, (size_t)(n - k) + 1);
-    for (int sq = 0; sq <= 2; sq++) if (split_ok(c, h, k + 1, sq, maxw, p)) return 1;
+    for (int sq = 0; sq <= maxsq; sq++) if (split_ok(c, h, k + 1, sq, maxw, p)) return 1;
   }
   return 0;
 }
+static int plan_label(struct cv *c, const char *s, int maxw, int maxl, struct lbl *p) { return plan_label_sq(c, s, maxw, maxl, 2, p); }
 static void put_label(struct cv *c, int x, int y, int w, const struct lbl *p, uint32_t col, int center) {
   int sv = c->sq; c->sq = p->sq;
   for (int i = 0; i < p->n; i++) text(c, center ? x + (w - p->w[i]) / 2 : x, y + i * 11, p->l[i], col, 0);
@@ -1286,41 +1287,56 @@ static void draw_clock(struct cv *c, int cx, int cy, int r) {
   frect(c, cx, cy, r - 2, 1, C_YEL);
 }
 
-static void draw_cell(struct cv *c, struct R r, int ic, int kind, uint32_t tint, const char *label, const char *badge, int state, const char *bind) {
-  /* state: 0 disabled, 1 normal, 2 selected, 3 queued (normal with a clock badge on the icon).  Three shapes, chosen so the whole name always fits:
-   *   vertical: icon on top, up to two label lines below (tall cells), one line (shorter cells);
-   *   horizontal: icon and badge in a left column, up to two label lines on the right. */
+static void draw_cell(struct cv *c, struct R r, int ic, int kind, uint32_t tint, const char *label, const char *badge, int state, const char *bind,
+                      const char *note) {
+  /* state: 0 disabled, 1 normal, 2 selected, 3 queued (normal with a clock badge on the icon).  note: optional top-left text (weapon attack).
+   * Three shapes, chosen so the whole name fits and nothing overlaps (the frame is 3 vp thick, text keeps 1 vp off it):
+   *   vertical: icon on top, up to two label lines below;
+   *   horizontal: icon in a left column, up to two label lines on the right, the badge right-aligned;
+   *   header: badge and note on a top row, then the horizontal shape below it (cells too short for icon + label + top row). */
   int queued = state == 3;
   if (queued) state = 1;
   win(c, r.x, r.y, r.w, r.h, state == 2 || queued ? 1 : (state == 0 ? 2 : 0));
   uint32_t lc = state == 0 ? C_GREY : C_TXT;
-  int bw = badge && badge[0] ? text_w(c, badge, 0) : 0;
+  int bw = badge && badge[0] ? text_w(c, badge, 0) : 0, nw = note && note[0] ? text_w(c, note, 0) : 0;
   const char *lab = label ? label : "";
+  int in = r.w < 40 ? 3 : 4, lw0 = r.w - 2 * in;
   struct lbl p;
-  int iy = r.h >= 46 ? 4 : 1;
-  int maxl = (r.h - 2 - (iy + 16 - 4)) / 11; if (maxl > 2) maxl = 2;   /* the icon's bottom rows are mostly transparent */
-  int vert = 0;
-  if (!lab[0]) vert = 1;
-  else if (maxl >= 1 && plan_label(c, lab, r.w - (r.w < 56 ? 2 : 4), maxl, &p)) vert = 1;
-  if (vert) {
+  /* the icon may sit on the top row only when the badge and the note leave the middle 18 vp free */
+  int top = (bw && bw + in > r.w / 2 - 9) || (nw && nw + in > r.w / 2 - 9) ? 14 : 0;
+  int iy = top ? top : (r.h >= 46 ? 4 : 3);
+  int maxl = (r.h - 3 - (iy + 17)) / 11; if (maxl > 2) maxl = 2;
+  int hdr = (bw || nw) && r.h >= 14 + 24 ? 14 : 0;          /* header shape: badge and note move up, the label gets the full width */
+  int y0 = r.y + hdr, h0 = r.h - hdr;
+  int lx = r.x + in + 18, lw = r.x + r.w - in - lx - (!hdr && bw ? bw + 2 : 0);
+  int ol = r.w < 56 ? 1 : 2, oy = r.h >= 46 ? 4 : 1, om = (r.h - 2 - (oy + 12)) / 11; if (om > 2) om = 2;
+  if (!lab[0] || (maxl >= 1 && plan_label_sq(c, lab, lw0, maxl, 1, &p))) {
     if (ic >= 0) icon(c, r.x + (r.w - 16) / 2, r.y + iy, ic, kind, tint, state == 0);
     if (queued) draw_clock(c, r.x + (r.w - 16) / 2 + 2, r.y + iy + 11, 5);
-    if (lab[0]) put_label(c, r.x + (r.w < 56 ? 1 : 2), r.y + r.h - 2 - p.n * 11, r.w - (r.w < 56 ? 2 : 4), &p, lc, 1);
+    if (lab[0]) put_label(c, r.x + in, r.y + r.h - 3 - p.n * 11, lw0, &p, lc, 1);
+  } else if (lw > 0 && plan_label_sq(c, lab, lw, 2, 1, &p) && h0 >= p.n * 11 + 4) {
+    if (ic >= 0) icon(c, r.x + in - 1, y0 + (h0 - 16) / 2, ic, kind, tint, state == 0);
+    if (queued) draw_clock(c, r.x + in + 13, y0 + (h0 - 16) / 2 + 12, 5);
+    put_label(c, lx, y0 + (h0 - p.n * 11) / 2, lw, &p, lc, 0);
+    if (!hdr) {
+      if (bw) text(c, r.x + r.w - in - bw, r.y + (r.h - 11) / 2, badge, state == 0 ? C_GREY : C_YEL, 0);
+      bw = 0; nw = 0;
+    }
+  } else if (om >= 1 && plan_label(c, lab, r.w - 2 * ol, om, &p)) {   /* small cells (3DS): the icon's transparent bottom rows may touch the label */
+    if (ic >= 0) icon(c, r.x + (r.w - 16) / 2, r.y + oy, ic, kind, tint, state == 0);
+    if (queued) draw_clock(c, r.x + (r.w - 16) / 2 + 2, r.y + oy + 11, 5);
+    put_label(c, r.x + ol, r.y + r.h - 2 - p.n * 11, r.w - 2 * ol, &p, lc, 1);
     if (bw) text(c, r.x + r.w - bw - 3, r.y + 2, badge, state == 0 ? C_GREY : C_YEL, 0);
-    if (bind && bind[0]) draw_pill(c, r.x + 2, r.y + 2, bind);
-    return;
-  }
-  int lx = r.x + 22, lw = r.w - 22 - 3 - (bw ? bw + 2 : 0);
-  if (ic >= 0) icon(c, r.x + 3, r.y + (r.h - 16) / 2, ic, kind, tint, state == 0);
-  if (queued) draw_clock(c, r.x + 17, r.y + (r.h - 16) / 2 + 12, 5);
-  if (plan_label(c, lab, lw, 2, &p) && r.h >= 2 + p.n * 11 + 2) put_label(c, lx, r.y + (r.h - p.n * 11) / 2, lw, &p, lc, 0);
-  else {
+    bw = 0; nw = 0;
+  } else {
     audit("label does not fit", lab);
     struct lbl q; memset(&q, 0, sizeof q); q.sq = 2; q.n = 1; snprintf(q.l[0], sizeof q.l[0], "%.12s", lab);
-    put_label(c, lx, r.y + (r.h - 11) / 2, lw, &q, lc, 0);
+    if (ic >= 0) icon(c, r.x + in - 1, y0 + (h0 - 16) / 2, ic, kind, tint, state == 0);
+    put_label(c, lx, y0 + (h0 - 11) / 2, lw, &q, lc, 0);
   }
-  if (bw) text(c, r.x + r.w - bw - 3, r.y + (r.h - 11) / 2, badge, state == 0 ? C_GREY : C_YEL, 0);
-  if (bind && bind[0]) draw_pill(c, r.x + 1, r.y + r.h - 13, bind);
+  if (bw) text(c, r.x + r.w - in - bw, r.y + 3, badge, state == 0 ? C_GREY : C_YEL, 0);
+  if (nw && nw + bw + 6 + 2 * in <= r.w) text(c, r.x + in, r.y + 3, note, state == 0 ? C_GREY : C_ORG, 0);
+  if (bind && bind[0]) draw_pill(c, r.x + 2, r.y + 2, bind);
 }
 
 static void draw_btn(struct cv *c, struct R r, const char *label, int style) {
@@ -2235,10 +2251,10 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
     int ic = bind_icon(c, kind, id, &k, &tn);
     if (!som_ux_bind_name(ux, kind, id, nm, sizeof nm)) snprintf(nm, sizeof nm, "?");
     if (ic < 0) {                                   /* drawn kinds: gear or letter tile on a plain cell */
-      draw_cell(c, r, -1, 0, 0, nm, "", cur ? 2 : 1, NULL);
+      draw_cell(c, r, -1, 0, 0, nm, "", cur ? 2 : 1, NULL, NULL);
       entry_icon(c, r.x + (r.w - 16) / 2, r.y + (r.h < 36 ? 2 : 4), kind, id, 0);
     } else {
-      draw_cell(c, r, ic, k, tn, nm, "", cur ? 2 : 1, NULL);
+      draw_cell(c, r, ic, k, tn, nm, "", cur ? 2 : 1, NULL, NULL);
     }
     break;
   }
@@ -2302,21 +2318,21 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
       if (h->enabled && som_weapon_held_by(s, ux->hero, i)) st = 2;
       /* round 3: "level:progress" like 3:42 (docs/rom-combat.md 11.1: level 0..8, progress 0..99 to the next one) and the attack the swing deals */
       b[0] = 0; if (h->enabled) snprintf(b, sizeof b, "%d:%02d", s->hero[ux->hero].weapon_level[i], s->hero[ux->hero].weapon_prog[i] % 100);
-      draw_cell(c, r, ICON_WEAPON[i], 0, 0xA0A8D0u, h->enabled ? weapon_label(ux, i, b2) : WEAPON_FALLBACK[i], b, st, NULL);
+      char d[24]; d[0] = 0;
       { int atk = weapon_attack(ux, ux->hero, i);
         if (h->enabled && atk >= 0) {
-          char d[24]; snprintf(d, sizeof d, "ATK %d", atk);
-          if (text_w(c, d, 0) + text_w(c, b, 0) + 8 > r.w) snprintf(d, sizeof d, "%d", atk);
-          if (r.h >= 40 && text_w(c, d, 0) + text_w(c, b, 0) + 8 <= r.w) text(c, r.x + 3, r.y + 2, d, st == 0 ? C_GREY : C_ORG, 0);
+          snprintf(d, sizeof d, "ATK %d", atk);
+          if (text_w(c, d, 0) + text_w(c, b, 0) + 14 > r.w) snprintf(d, sizeof d, "%d", atk);
         } }
+      draw_cell(c, r, ICON_WEAPON[i], 0, 0xA0A8D0u, h->enabled ? weapon_label(ux, i, b2) : WEAPON_FALLBACK[i], b, st, NULL, r.h >= 40 ? d : NULL);
     } else if (ux->tab == SOM_UX_TAB_ITEM) {
       b[0] = 0;
       if (h->enabled) snprintf(b, sizeof b, "x%d", s->item[i].qty);
       int id = s->item[i].id;
-      draw_cell(c, r, h->enabled && id < 11 ? ICON_ITEM[id] : -1, 1, 0xF080C0u, h->enabled ? item_label(ux, id, b2) : "", b, st, NULL);
+      draw_cell(c, r, h->enabled && id < 11 ? ICON_ITEM[id] : -1, 1, 0xF080C0u, h->enabled ? item_label(ux, id, b2) : "", b, st, NULL, NULL);
     } else if (ux->spirit == 0xFF) {
       b[0] = 0; if (h->enabled) snprintf(b, sizeof b, "L%d", s->hero[ux->hero].spirit_level[i]);
-      draw_cell(c, r, ICON_SPIRIT[i], 2, SPIRIT_COL[i], SPIRIT_NAME[i], b, st, NULL);
+      draw_cell(c, r, ICON_SPIRIT[i], 2, SPIRIT_COL[i], SPIRIT_NAME[i], b, st, NULL, NULL);
     } else if (i < 3) {
       int id = spell_id(ux, ux->hero, ux->spirit, i), cost = spell_cost(ux, id);
       const char *n = som_ux_name(ux, NAME_SPELL + id);
@@ -2325,9 +2341,9 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
       if (n) snprintf(b2, sizeof b2, "%s", n); else snprintf(b2, sizeof b2, "SPELL %d", i + 1);
       int k; uint32_t tn;
       int ic = bind_icon(c, SOM_UX_BK_SPELL, id, &k, &tn);
-      draw_cell(c, r, ic, 2, SPIRIT_COL[ux->spirit & 7], b2, b, st, NULL);
+      draw_cell(c, r, ic, 2, SPIRIT_COL[ux->spirit & 7], b2, b, st, NULL, NULL);
       if (ux->sflash_t && ux->sflash_id == id) draw_flash(c, r, ux->sflash_t, SOM_UX_FLASH_CAST);
-    } else draw_cell(c, r, -1, 1, 0, "BACK", "", 1, NULL);
+    } else draw_cell(c, r, -1, 1, 0, "BACK", "", 1, NULL, NULL);
     break;
   }
   case HK_T_ALLY: {

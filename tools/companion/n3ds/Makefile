@@ -60,8 +60,8 @@ $(BUILD)/main.o $(BUILD)/menu.o: source/settings.h source/screens.h source/sui.h
 $(TARGET).elf: $(OBJ) Makefile
 	$(CC) $(LDFLAGS) $(OBJ) $(LIBS) -o $@
 
-$(TARGET).smdh:
-	$(TOOLS)/smdhtool --create "SoM Companion" "Dual-screen companion for the user's own ROM" "som-decomp" $(DEVKITPRO)/libctru/default_icon.png $@
+$(TARGET).smdh: $(COMP)/assets/icon/icon_3ds.png
+	$(TOOLS)/smdhtool --create "Secret of Mana DS" "Dual-screen companion for the user's own ROM" "cidwel" $(COMP)/assets/icon/icon_3ds.png $@
 
 $(TARGET).3dsx: $(TARGET).elf $(TARGET).smdh
 	$(TOOLS)/3dsxtool $< $@ --smdh=$(TARGET).smdh

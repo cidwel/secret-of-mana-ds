@@ -316,13 +316,15 @@ void som_ux_update(struct som_ux *ux, const uint8_t *w) {
     }
 
   /* Analyzer: the caster's record holds the spell ($E170) and the targets as actor index + 1 ($E178..$E17A) */
-  if (ux->boss >= 0 && ux->actor[ux->boss].id != ux->boss_id) { ux->boss_id = ux->actor[ux->boss].id; ux->boss_analyzed = 0; }
   for (int h = 0; h < SOM_PARTY; h++) {
     const uint8_t *cr = w + 0xE170u + 0x200u * (unsigned)h;
     if (!memcmp(ux->cast_prev[h], cr, sizeof ux->cast_prev[h])) continue;
     memcpy(ux->cast_prev[h], cr, sizeof ux->cast_prev[h]);
-    if (ux->cast_primed && cr[0] == 0x17 && ux->boss >= 0)
-      for (int t = 0; t < 3; t++) if (cr[8 + t] == ux->boss + 1) ux->boss_analyzed = 1;
+    if (ux->cast_primed && cr[0] == 0x17)
+      for (int t = 0; t < 3; t++) {
+        int s = cr[8 + t] - 1;
+        if (s >= SOM_PARTY && s < 16 && ux->actor[s].present) ux->analyzed[ux->actor[s].id >> 3] |= (uint8_t)(1u << (ux->actor[s].id & 7));
+      }
   }
   ux->cast_primed = 1;                               /* a record already there when the game is loaded is not a new cast */
 
@@ -385,6 +387,7 @@ void som_ux_update(struct som_ux *ux, const uint8_t *w) {
   ux->had_dialogue = ux->mode == SOM_UX_EVENT && ux->line[0];
   if (ux->mode == SOM_UX_BOOT || ux->mode == SOM_UX_FRONTEND) {            /* title, game select, name entry: nothing is owned yet */
     if (ux->mode == SOM_UX_BOOT) ux->fe_saw_name = 0;
+    memset(ux->analyzed, 0, sizeof ux->analyzed);                   /* what Analyzer revealed belongs to one game */
     if (ux->fe_name_entry) ux->fe_saw_name = 1;
     ux->armed = 0; ux->seen_w = ux->seen_s = 0; ux->seen_i = 0; ux->game_key = 0;
   } else {

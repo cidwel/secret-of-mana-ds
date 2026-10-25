@@ -16,7 +16,8 @@ final class Settings {
     static final String[] FB_TEXT = {"NORMAL", "BLACK"};
     static final String[] CORE_TEXT = {"WIDE", "PLAIN"};
     /* option ids of ux/som_ui_draw.h enum som_ux_opt */
-    static final int WIDE = 0, FALLBACK = 1, HUD_HIDE = 2, CORE = 3, UI_SOUNDS = 4, HAPTICS = 5, LANGUAGE = 6, FIT = 7, SHADER = 8, FFWD = 9;
+    static final int WIDE = 0, FALLBACK = 1, HUD_HIDE = 2, CORE = 3, UI_SOUNDS = 4, HAPTICS = 5, LANGUAGE = 6, FIT = 7, SHADER = 8, FFWD = 9, ENEMY_HP = 10;
+    static final String[] ENEMY_HP_TEXT = {"FAIR", "ALWAYS", "HIDDEN"};   /* FAIR: only enemies hit by Analyzer */
     /** Top-screen scaling (GameView): FILL CROP fills the screen with 8:7 pixels cutting the bottom rows, FIT (default) keeps the whole
      *  frame, INTEGER uses whole-number pixel factors, STRETCH fills the screen ignoring the aspect.  fullW = 256 + 2N of the chosen wide margin. */
     static final String[] FIT_TEXT = {"FIT", "FILL CROP", "INTEGER", "STRETCH"};
@@ -61,6 +62,7 @@ final class Settings {
         Native.setOption(HAPTICS, sp.getBoolean("haptic2", true) ? 1 : 0, null);
         Native.setOption(LANGUAGE, 0, "EN");
         Native.setOption(FFWD, 0, ffName());
+        { int i = sp.getInt("enemyhp", 0); Native.setOption(ENEMY_HP, i, ENEMY_HP_TEXT[i]); }
         Native.setUiSounds(sp.getBoolean("uisnd", true));
     }
 
@@ -97,6 +99,7 @@ final class Settings {
                 else ffListen = true;
                 Native.setOption(FFWD, 0, ffListen ? "PRESS KEY" : ffName());
                 break;
+            case ENEMY_HP: { int i = val % ENEMY_HP_TEXT.length; e.putInt("enemyhp", i).apply(); Native.setOption(id, i, ENEMY_HP_TEXT[i]); break; }
             default: Native.setOption(LANGUAGE, 0, "EN"); break;
         }
     }

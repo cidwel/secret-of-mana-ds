@@ -566,12 +566,12 @@ static void qe_entry(const struct som_ux *ux, int cat, int idx, int *kind, int *
 static void layout_options(struct LAY *l, const struct som_ux *ux, int y0) {
   int vw = l->vw, vh = l->vh, bh = l->form == 0 ? 28 : (l->form == 2 && vh < 285 ? 31 : 34);
   if (ux->opt_ext && (ux->opt_page == SOM_UX_OPT_MAIN || ux->opt_page == SOM_UX_OPT_BINDINGS)) {
-    /* Thor: five rows of two options, then one row of four page buttons.  LANGUAGE (a single value) makes room for SHADER and FAST FWD. */
-    static const int8_t cells[14] = {SOM_UX_OPT_WIDE, SOM_UX_OPT_FALLBACK, SOM_UX_OPT_HUD_HIDE, SOM_UX_OPT_CORE, SOM_UX_OPT_UI_SOUNDS, SOM_UX_OPT_HAPTICS,
-                                     SOM_UX_OPT_FIT, SOM_UX_OPT_SHADER, SOM_UX_OPT_FFWD, -4, -2, -5, -6, -1};
-    int rows = 6, rh = (vh - y0 - 2) / rows, cw = (vw - 4) / 2, qw = (vw - 4) / 4;
+    /* Thor: five rows of two options, then one row of five page buttons.  LANGUAGE (a single value) makes room for SHADER, FAST FWD and ENEMY HP. */
+    static const int8_t cells[15] = {SOM_UX_OPT_WIDE, SOM_UX_OPT_FALLBACK, SOM_UX_OPT_HUD_HIDE, SOM_UX_OPT_CORE, SOM_UX_OPT_UI_SOUNDS, SOM_UX_OPT_HAPTICS,
+                                     SOM_UX_OPT_FIT, SOM_UX_OPT_SHADER, SOM_UX_OPT_FFWD, SOM_UX_OPT_ENEMY_HP, -2, -4, -5, -6, -1};
+    int rows = 6, rh = (vh - y0 - 2) / rows, cw = (vw - 4) / 2, qw = (vw - 4) / 5;
     if (rh > 60) rh = 60;
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < 15; i++) {
       int x = i < 10 ? 2 + (i % 2) * cw : 2 + (i - 10) * qw, y = y0 + (i < 10 ? i / 2 : 5) * rh, w = i < 10 ? cw : qw;
       if (cells[i] >= 0) add_hit(l, HK_OPTION, cells[i], 0, x, y, w - 1, rh - 1, 1);
       else add_hit(l, HK_OPT_NAV, cells[i] == -1 ? 0 : -cells[i], 0, x, y, w - 1, rh - 1, 1);   /* 4 SAVE STATES, 2 QUICK SLOTS, 5 CREDITS, 6 MAIN MENU, 0 BACK */
@@ -1528,6 +1528,13 @@ static void draw_zone(struct cv *c, const struct som_ux *ux, struct R r) {
   }
 }
 
+/* Enemy HP is shown per the ENEMY HP option: FAIR (default) only for enemy kinds a hero cast Analyzer on, ALWAYS, or HIDDEN. */
+int som_ux_enemy_hp_shown(const struct som_ux *ux, int slot) {
+  if (slot < 0 || slot >= 16) return 0;
+  int o = ux->opt_val[SOM_UX_OPT_ENEMY_HP], id = ux->actor[slot].id;
+  return o == 1 || (o == 0 && (ux->analyzed[id >> 3] >> (id & 7) & 1));
+}
+
 static void draw_boss_bar(struct cv *c, const struct som_ux *ux, struct R r) {
   if (ux->boss < 0) return;
   const struct som_ux_actor *a = &ux->actor[ux->boss];
@@ -1537,7 +1544,7 @@ static void draw_boss_bar(struct cv *c, const struct som_ux *ux, struct R r) {
   snprintf(b, sizeof b, "%s", n ? n : "BOSS");
   text(c, r.x + 3, r.y + 1, b, C_PURPLE, 0);
   int nw = text_w(c, b, 0) + 8;
-  if (!ux->boss_analyzed) { text(c, r.x + r.w - text_w(c, "HP ???", 0) - 3, r.y + 1, "HP ???", C_DIM, 0); return; }   /* until Analyzer */
+  if (!som_ux_enemy_hp_shown(ux, ux->boss)) { text(c, r.x + r.w - text_w(c, "HP ???", 0) - 3, r.y + 1, "HP ???", C_DIM, 0); return; }   /* until Analyzer */
   snprintf(b, sizeof b, "%u/%u", a->hp, a->hp_max);
   int bw = text_w(c, b, 0);
   gauge(c, r.x + nw, r.y + 3, r.w - nw - bw - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
@@ -1566,7 +1573,7 @@ static void draw_enemy_list(struct cv *c, const struct som_ux *ux, struct R r) {
       draw_enemy_pic(c, ux, a->id, q.x + 3, q.y + (q.h - side) / 2, side);
       int tx = q.x + side + 6, tw = q.w - side - 9;
       text_fit(c, tx, q.y + q.h / 2 - 12, tw, nm ? nm : "ENEMY", ec, 0);
-      if (!a->boss || ux->boss_analyzed) gauge(c, tx, q.y + q.h / 2 + 3, tw, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+      if (som_ux_enemy_hp_shown(ux, a->slot)) gauge(c, tx, q.y + q.h / 2 + 3, tw, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     } else {                                         /* sprite on top; a long name takes two lines */
       char l1[40] = "", l2[40] = "";
       const char *full = nm ? nm : "ENEMY";
@@ -1583,7 +1590,7 @@ static void draw_enemy_list(struct cv *c, const struct som_ux *ux, struct R r) {
       if (side >= 16) { draw_enemy_pic(c, ux, a->id, q.x + (q.w - side) / 2, y, side); y += side + 1; }
       fit_center(c, q, y, q.w - 6, l1, ec); y += 12;
       if (l2[0]) { fit_center(c, q, y, q.w - 6, l2, ec); y += 12; }
-      if (!a->boss || ux->boss_analyzed) gauge(c, q.x + 4, y + 1, q.w - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+      if (som_ux_enemy_hp_shown(ux, a->slot)) gauge(c, q.x + 4, y + 1, q.w - 8, 7, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     }
   }
 }
@@ -1979,8 +1986,8 @@ int som_ux_hit_list(struct som_ux *ux, int w, int h, int max, struct som_ux_hitr
 }
 void som_ux_set_four_slots(struct som_ux *ux, int on) { if (ux) ux->qe_four = on ? 1 : 0; }
 
-static const char *const OPT_LABEL[SOM_UX_OPT_COUNT] = {"WIDE", "FALLBACK", "HUD HIDE", "CORE", "UI SOUNDS", "HAPTICS", "LANGUAGE", "TOP FIT", "SHADER", "FAST FWD"};
-static int opt_is_toggle(int id) { return id != SOM_UX_OPT_CORE && id != SOM_UX_OPT_LANGUAGE && id != SOM_UX_OPT_FIT && id != SOM_UX_OPT_WIDE && id != SOM_UX_OPT_SHADER && id != SOM_UX_OPT_FFWD;   /* WIDE: OFF / 17 / 27 / 46 */ }
+static const char *const OPT_LABEL[SOM_UX_OPT_COUNT] = {"WIDE", "FALLBACK", "HUD HIDE", "CORE", "UI SOUNDS", "HAPTICS", "LANGUAGE", "TOP FIT", "SHADER", "FAST FWD", "ENEMY HP"};
+static int opt_is_toggle(int id) { return id != SOM_UX_OPT_CORE && id != SOM_UX_OPT_LANGUAGE && id != SOM_UX_OPT_FIT && id != SOM_UX_OPT_WIDE && id != SOM_UX_OPT_SHADER && id != SOM_UX_OPT_FFWD && id != SOM_UX_OPT_ENEMY_HP;   /* WIDE: OFF / 17 / 27 / 46 */ }
 
 static void draw_option(struct cv *c, const struct som_ux *ux, struct R r, int id) {
   win(c, r.x, r.y, r.w, r.h, 0);
@@ -2219,8 +2226,10 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
   case HK_MAPVIEW: break;                           /* drawn by draw_zone */
   case HK_OPTION: draw_option(c, ux, r, h->a); break;
   case HK_OPT_NAV: {
-    static const char *const n[7] = {"BACK", "", "QUICK SLOTS", "BACK", "SAVE STATES", "CREDITS", "MAIN MENU"};
+    static const char *const n[7] = {"BACK", "", "QUICK SLOTS", "BACK", "SAVE STATES", "CREDITS", "MAIN MENU"},
+                             *sn[7] = {"BACK", "", "SLOTS", "BACK", "STATES", "CREDITS", "MENU"};   /* narrow buttons */
     const char *t = h->a == 6 && ux->quit_armed ? "QUIT GAME?" : n[h->a];
+    { int sv = c->sq; c->sq = 2; if (text_w(c, t, 0) > r.w - 8) t = h->a == 6 && ux->quit_armed ? "QUIT?" : sn[h->a]; c->sq = sv; }
     int arrow = (h->a == 2 || h->a == 4 || h->a == 5) && r.w >= 100;   /* the narrow buttons of the bottom row go without */
     win(c, r.x, r.y, r.w, r.h, h->a == 6 && ux->quit_armed ? 1 : 0);
     int M = (r.h >= 40 && lgm(c) == 2 && text_wm(c, t, 2) < r.w - 28) ? 2 : 1;
@@ -2385,7 +2394,7 @@ static void draw_hit(struct cv *c, struct som_ux *ux, const struct LAY *l, const
       y += side + 1;
     }
     fit_center(c, r, y, r.w - 6, n ? n : "ENEMY", ec); y += 12;
-    if (!a->boss || ux->boss_analyzed) gauge(c, r.x + 4, y, r.w - 8, 6, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
+    if (som_ux_enemy_hp_shown(ux, a->slot)) gauge(c, r.x + 4, y, r.w - 8, 6, a->hp, a->hp_max, hp_col(a->hp, a->hp_max));
     break;
   }
   case HK_T_ALL_ALLIES: case HK_T_ALL_ENEMIES: {
@@ -2490,7 +2499,8 @@ static uint32_t redraw_hash(const struct som_ux *ux) {
   p = (const uint8_t *)ux->actor;
   for (size_t i = 0; i < sizeof ux->actor; i++) { h ^= p[i]; h *= 16777619u; }
   uint8_t u[] = {ux->nav_on, ux->nav_kind, ux->nav_a, ux->mode, ux->tab, ux->hero, ux->spirit, ux->opt_page, ux->sflash_t, ux->pol_wait, ux->rev_wait, ux->pend_kind, ux->map_small, ux->qe_slot, ux->qe_cat,
-                 ux->qe_page, ux->qe_spirit, ux->quick_arm, ux->press_on, ux->press_kind, ux->fe_name_entry, (uint8_t)(ux->notice_t ? ux->notice_t : 0), ux->armed, ux->had_dialogue, ux->seen_w, ux->seen_s, (uint8_t)ux->seen_i, (uint8_t)(ux->seen_i >> 8), ux->opt_ext, ux->st_sel, (uint8_t)ux->cr_scroll, (uint8_t)(ux->cr_scroll >> 8), ux->boss_analyzed, ux->quit_armed};
+                 ux->qe_page, ux->qe_spirit, ux->quick_arm, ux->press_on, ux->press_kind, ux->fe_name_entry, (uint8_t)(ux->notice_t ? ux->notice_t : 0), ux->armed, ux->had_dialogue, ux->seen_w, ux->seen_s, (uint8_t)ux->seen_i, (uint8_t)(ux->seen_i >> 8), ux->opt_ext, ux->st_sel, (uint8_t)ux->cr_scroll, (uint8_t)(ux->cr_scroll >> 8), ux->quit_armed};
+  for (size_t i = 0; i < sizeof ux->analyzed; i++) { h ^= ux->analyzed[i]; h *= 16777619u; }
   for (int i = 0; i < SOM_UX_OPT_COUNT; i++) { h ^= ux->opt_val[i] + 1u; h *= 16777619u; h ^= (uint8_t)ux->opt_text[i][0]; h *= 16777619u; h ^= (uint8_t)ux->opt_text[i][1]; h *= 16777619u; }
   { const uint8_t *q = (const uint8_t *)ux->st_slot; for (size_t i = 0; i < sizeof ux->st_slot; i++) { h ^= q[i]; h *= 16777619u; } h ^= ux->st_gen; h *= 16777619u; }
   for (size_t i = 0; i < sizeof u; i++) { h ^= u[i]; h *= 16777619u; }

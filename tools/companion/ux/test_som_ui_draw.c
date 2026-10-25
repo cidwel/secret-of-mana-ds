@@ -163,16 +163,19 @@ int main(int argc, char **argv) {
   CHECK(ux->n_enemies == 2 && ux->boss == 4 && ux->enemy_idx[0] == 4);
   render(ux, "field_boss", 320, 240);
   render(ux, "field_boss", 1240, 1080);
-  CHECK(!ux->boss_analyzed);                                    /* the boss's HP stays hidden until Analyzer */
+  CHECK(!som_ux_enemy_hp_shown(ux, 4) && !som_ux_enemy_hp_shown(ux, 3));   /* FAIR (default): no enemy HP until Analyzer */
   wram[0xE170 + 0x200] = 0x13; wram[0xE178 + 0x200] = 5; som_ux_update(ux, wram);    /* another spell on the boss */
-  CHECK(!ux->boss_analyzed);
-  wram[0xE170 + 0x200] = 0x17; wram[0xE178 + 0x200] = 4; som_ux_update(ux, wram);    /* Analyzer on the other enemy */
-  CHECK(!ux->boss_analyzed);
+  CHECK(!som_ux_enemy_hp_shown(ux, 4));
+  wram[0xE170 + 0x200] = 0x17; wram[0xE178 + 0x200] = 4; som_ux_update(ux, wram);    /* Analyzer on the other enemy (actor 3) */
+  CHECK(som_ux_enemy_hp_shown(ux, 3) && !som_ux_enemy_hp_shown(ux, 4));
   wram[0xE178 + 0x200] = 5; som_ux_update(ux, wram);                                  /* Analyzer on the boss (actor 4) */
-  CHECK(ux->boss_analyzed);
+  CHECK(som_ux_enemy_hp_shown(ux, 4));
   render(ux, "field_boss_analyzed", 1240, 1080);
-  enemy(4, 10, 400, 900, 150, 80, 1); som_ux_update(ux, wram);                          /* another boss: hidden again */
-  CHECK(!ux->boss_analyzed);
+  enemy(4, 10, 400, 900, 150, 80, 1); som_ux_update(ux, wram);                          /* another kind of boss: hidden */
+  CHECK(!som_ux_enemy_hp_shown(ux, 4) && som_ux_enemy_hp_shown(ux, 3));
+  som_ux_set_option(ux, SOM_UX_OPT_ENEMY_HP, 1, "ALWAYS"); CHECK(som_ux_enemy_hp_shown(ux, 4));
+  som_ux_set_option(ux, SOM_UX_OPT_ENEMY_HP, 2, "HIDDEN"); CHECK(!som_ux_enemy_hp_shown(ux, 3));
+  som_ux_set_option(ux, SOM_UX_OPT_ENEMY_HP, 0, "FAIR");
   memset(wram + 0xE170 + 0x200, 0, 11);
 
   /* ---- event (round 3): the bottom screen is blank, with a faint LOOK UP while a dialogue line is on screen; nothing is tappable ---- */

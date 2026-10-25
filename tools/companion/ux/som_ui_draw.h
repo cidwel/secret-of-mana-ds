@@ -51,7 +51,8 @@ enum som_ux_opt { SOM_UX_OPT_WIDE = 0 /* enumerated: text OFF / 17 / 27 / 46 */,
                   SOM_UX_OPT_HAPTICS, SOM_UX_OPT_LANGUAGE,
                   SOM_UX_OPT_FIT /* top-screen scaling: enumerated, text FILL / FIT / INTEGER / STRETCH */,
                   SOM_UX_OPT_SHADER /* top-screen filter: enumerated, text NONE / SHARP / SCANLINES / LCD GRID / CRT (only on the extended page) */,
-                  SOM_UX_OPT_FFWD /* fast-forward button: text is the bound key or NONE; a tap asks the host to wait for a key (extended page) */, SOM_UX_OPT_COUNT };
+                  SOM_UX_OPT_FFWD /* fast-forward button: text is the bound key or NONE; a tap asks the host to wait for a key (extended page) */,
+                  SOM_UX_OPT_ENEMY_HP /* enemy HP bars: 0 FAIR (only enemies hit by Analyzer, the default), 1 ALWAYS, 2 HIDDEN */, SOM_UX_OPT_COUNT };
 #define SOM_UX_STATE_SLOTS 8
 #define SOM_UX_THUMB_W 128
 #define SOM_UX_THUMB_H 72
@@ -126,7 +127,7 @@ struct som_ux {
   uint8_t n_enemies;                       /* enemy slots in `enemy_idx` */
   uint8_t enemy_idx[SOM_UX_ENEMIES];       /* actor[] indices of enemies, boss first, then by on-screen order */
   int8_t boss;                             /* actor index of a boss or -1 */
-  uint8_t boss_id, boss_analyzed;          /* the boss's HP is shown only once a hero cast Analyzer (spell 0x17) on it; reset when another boss appears */
+  uint8_t analyzed[32];                    /* enemy ids (bit per id) a hero cast Analyzer (spell 0x17) on in this game: their HP may be shown (SOM_UX_OPT_ENEMY_HP) */
   uint8_t cast_prev[SOM_PARTY][11], cast_primed;   /* each hero's last cast record ($E170..$E17A): a change is a new cast */
   uint16_t fl_x, fl_y, fl_heading;         /* Flammie: $FA, $FC (8 units = 1 world map pixel), $F6 (1024 = one turn) */
   uint8_t fl_world_ok;                     /* position inside the 4096 x 4096 main world */
@@ -431,6 +432,8 @@ int som_ux_get_option(const struct som_ux *ux, int id);
  * `time` is a short label ("10-20 18:30"), `thumb` SOM_UX_THUMB_W x SOM_UX_THUMB_H 0xAARRGGBB pixels (NULL for an empty slot).  `text` of the
  * credits uses \n for line breaks and "# " for headings.  The page scrolls with the buttons or with the pad (nav up / down). */
 void som_ux_set_options_ext(struct som_ux *ux, int on);
+/* 1 when the HP of the enemy in actor slot `slot` may be shown (SOM_UX_OPT_ENEMY_HP and the Analyzer casts of this game). */
+int som_ux_enemy_hp_shown(const struct som_ux *ux, int slot);
 void som_ux_set_state_slot(struct som_ux *ux, int slot, int used, const char *time, const uint32_t *thumb);
 void som_ux_set_state_sel(struct som_ux *ux, int slot);
 int som_ux_state_sel(const struct som_ux *ux);

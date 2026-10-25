@@ -1134,9 +1134,9 @@ static void card_inner(struct cv *c, const struct som_ux *ux, int slot, struct R
     frect(c, tx, ky, kw, 13, C_LIGHT); text(c, tx + 4, ky + 1, "KO", C_DARK, 0);
     return;
   }
-  int Lc = L;                                           /* big rows drop to normal size when the card is too short for them */
-  if (tall && (has_mp ? 35 + 22 * Lc : 26 + 11 * Lc) > r.h) Lc = 1;
-  if (mid && (has_mp ? 35 + 11 * Lc : 24 + 11 * Lc) > r.h) Lc = 1;
+  int Lc = L;                                           /* big rows drop to normal size when an HP + MP card is too short for them; the */
+  if (tall && 35 + 22 * Lc > r.h) Lc = 1;               /* boy's card follows the same rule so all three cards use one HP size */
+  if (mid && 35 + 11 * Lc > r.h) Lc = 1;
   if (tall) {                                            /* big numbers: current value at 2x, maximum small */
     int y1 = ty + 13;
     band(&bd, y1, 11 * Lc, "card HP");

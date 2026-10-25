@@ -20,7 +20,7 @@ MAX_SIZE = 1 << 20
 ROM_EXT = {'.sfc', '.smc', '.fig', '.swc', '.srm', '.sst', '.rom'}
 TITLE = b'SECRET OF MANA'
 HEX_ITEM = re.compile(rb'(?:0x|\$)([0-9A-Fa-f]{2})\b')
-HEX_LIST = re.compile(rb'(?:(?:0x|\$)[0-9A-Fa-f]{2}\b[\s,]*){%d,}' % WINDOW)
+HEX_LIST = re.compile(rb'(?:(?:0x|\$)[0-9A-Fa-f]{2}\b[\s,]*(?:\.?(?:byte|db|BYTE|DB)\s+)?){%d,}' % WINDOW)
 HEX_RUN = re.compile(rb'(?:[0-9A-Fa-f]{2}[ ,]?){%d,}' % WINDOW)
 
 

@@ -1,0 +1,34 @@
+# ROMs, saves and save states: never in this repository (tools/rom_guard.py enforces it)
+*.sfc
+*.smc
+*.fig
+*.swc
+*.rom
+*.srm
+*.sst
+*.state
+roms/
+
+# Build outputs
+build/
+.cxx/
+.gradle/
+local.properties
+*.o
+*.a
+*.so
+*.elf
+*.3dsx
+*.smdh
+*.cia
+*.apk
+*.aab
+*.exe
+*.zip
+
+# Python and editors
+__pycache__/
+.pytest_cache/
+.venv/
+.idea/
+.vscode/

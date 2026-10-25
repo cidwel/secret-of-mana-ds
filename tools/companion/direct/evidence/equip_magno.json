@@ -1,0 +1,167 @@
+{
+ "variant": "magno",
+ "pairs": 16,
+ "mismatches": 0,
+ "results": [
+  {
+   "state": "eqm_magno_h0_w1.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w1.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w1.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w1.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w2.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w2.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w2.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w2.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w3.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w3.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w3.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w3.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w7.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w7.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w7.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_magno_h0_w7.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  }
+ ]
+}

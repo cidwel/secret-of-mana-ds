@@ -1,0 +1,90 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Optional: absolute path of a snes9x libretro core built for Android (see docs/companion-platforms-20261017.md).
+// It is copied into the APK as libsnes9x_core.so; without it the app runs in demo mode.
+// Optional: snes9x libretro cores built for Android (see docs/companion-platforms-20261017.md).
+// -PsomCorePath=<arm64-v8a .so>, -PsomCorePathX86=<x86_64 .so, emulator only>; staged as libsnes9x_core.so.
+// Without a core the app runs in demo mode.
+def stageDir = layout.buildDirectory.dir('staged-core')
+def stage = { String abi, String prop ->
+    def path = providers.gradleProperty(prop).getOrNull()
+    tasks.register("stageCore_${abi}", Copy) {
+        onlyIf { path != null }
+        from(path ?: projectDir)
+        into(stageDir.map { it.dir(abi) })
+        rename { 'libsnes9x_core.so' }
+    }
+}
+stage('arm64-v8a', 'somCorePath')
+// Optional local graphics pack (never committed): -PsomUiPack=<som_ui_pack.bin> is staged into the APK assets.
+def assetDir = layout.buildDirectory.dir('staged-assets')
+tasks.register('stageUiPack', Copy) {
+    def p = providers.gradleProperty('somUiPack').getOrNull()
+    onlyIf { p != null }
+    from(p ?: projectDir)
+    into(assetDir)
+    rename { 'som_ui_pack.bin' }
+}
+// Local start-menu wallpaper (the user's own key art, never committed): -PsomWallpaper=<jpg> is staged as assets/som_bg.jpg.
+tasks.register('stageWallpaper', Copy) {
+    def p = providers.gradleProperty('somWallpaper').getOrNull()
+    onlyIf { p != null }
+    from(p ?: projectDir)
+    into(assetDir)
+    rename { 'som_bg.jpg' }
+}
+// Start-menu pages: the gameplay options menu and the credits are read from the repo data files (single source, never copied by hand).
+tasks.register('stageDataAssets', Copy) {
+    def repo = rootProject.projectDir.parentFile.parentFile.parentFile
+    from(new File(repo, 'tools/gameplay/gameplay_menu.json'))
+    from(new File(repo, 'data/credits.json'))
+    into(assetDir)
+}
+tasks.register('stageEnemyPack', Copy) {
+    def p = providers.gradleProperty('somEnemyPack').getOrNull()
+    onlyIf { p != null }
+    from(p ?: projectDir)
+    into(assetDir)
+    rename { 'som_enemy_sprites.bin' }
+}
+// Widescreen core (arm64 only), staged as libsnes9x_ws_core.so: -PsomWsCorePath=<.so>.
+tasks.register('stageWsCore', Copy) {
+    def p = providers.gradleProperty('somWsCorePath').getOrNull()
+    onlyIf { p != null }
+    from(p ?: projectDir)
+    into(stageDir.map { it.dir('arm64-v8a') })
+    rename { 'libsnes9x_ws_core.so' }
+}
+stage('x86_64', 'somCorePathX86')
+
+android {
+    namespace 'org.somdecomp.companion'
+    compileSdk 34
+    ndkVersion '28.2.13676358'
+
+    defaultConfig {
+        applicationId 'org.somdecomp.companion'
+        minSdk 29
+        targetSdk 33
+        versionCode 1
+        versionName '0.1'
+        ndk { abiFilters 'arm64-v8a', 'x86_64' }
+        externalNativeBuild { cmake {
+            arguments '-DANDROID_STL=none'
+            // -PsomRandoSrc=<upstream SoMRandomizer folder> links libsomrando (the C port of the randomizer) instead of the stub generator
+            if (project.hasProperty('somRandoSrc')) { arguments '-DSOMRANDO_LIB=ON', "-DSOM_RANDO_SRC=${project.property('somRandoSrc')}" }
+        } }
+    }
+    externalNativeBuild {
+        cmake { path 'src/main/cpp/CMakeLists.txt'; version '3.22.1' }
+    }
+    sourceSets { main { jniLibs.srcDirs += [layout.buildDirectory.dir('staged-core').get().asFile]; assets.srcDirs += [layout.buildDirectory.dir('staged-assets').get().asFile] } }
+    packagingOptions { jniLibs { useLegacyPackaging = true } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildTypes { release { minifyEnabled false } }
+}
+
+tasks.matching { it.name.startsWith('merge') && it.name.endsWith('JniLibFolders') }.configureEach { dependsOn 'stageCore_arm64-v8a', 'stageCore_x86_64', 'stageWsCore' }
+tasks.matching { it.name.startsWith('merge') && it.name.endsWith('Assets') }.configureEach { dependsOn 'stageUiPack', 'stageEnemyPack', 'stageWallpaper', 'stageDataAssets' }

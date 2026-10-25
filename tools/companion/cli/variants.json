@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "note": "Per-variant behaviour records for the dual-screen companion. One WRAM address table serves every variant (no address moved on any variant tested); the record carries the behaviour differences. Source: docs/companion-ancientcave-20261017.md, docs/companion-cli-20261017.md.",
+  "variants": {
+    "vanilla_us": {
+      "label": "Secret of Mana, US v1.0 (unmodified)",
+      "table": "data/wram_companion_map.json",
+      "macros": "full",
+      "hud_first_row": 199,
+      "map_id_space": "vanilla",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "route",
+      "smoke_route_frames": 23000,
+      "smoke_expect_map": 131
+    },
+    "magno_es": {
+      "label": "Secret of Mana, Spanish translation (Magno T-Esp 1.01.2)",
+      "table": "data/wram_companion_map.json",
+      "macros": "full",
+      "hud_first_row": 199,
+      "map_id_space": "vanilla",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "route",
+      "smoke_route_frames": 20000,
+      "smoke_expect_map": 128
+    },
+    "randomizer_ancientcave": {
+      "label": "Ancient Cave (Moppu randomizer 1.4x, 4 MiB)",
+      "table": "data/wram_companion_map_ancientcave.json",
+      "table_address_key": "ancient_cave_address",
+      "macros": "full",
+      "hud_first_row": 184,
+      "map_id_space": "generated (floor 1 outside = 0, boss maps from 256)",
+      "item_name_overrides": {"6": "Stuck?", "7": "Random Music"},
+      "weapon_slot_holder_bits": true,
+      "weapon_ring": {"order": [1, 2, 3, 4, 5, 6, 7, 0], "cursor_relative_to_held": true},
+      "smoke_fixture": "name_entry",
+      "smoke_expect_map": 0
+    },
+    "randomizer_open": {
+      "label": "Open World randomizer (4 MiB)",
+      "table": "data/wram_companion_map.json",
+      "macros": "read_only_until_verified",
+      "hud_first_row": 199,
+      "map_id_space": "vanilla",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "none"
+    },
+    "randomizer_rando": {
+      "label": "Vanilla randomizer (4 MiB)",
+      "table": "data/wram_companion_map.json",
+      "macros": "read_only_until_verified",
+      "hud_first_row": 199,
+      "map_id_space": "vanilla",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "none"
+    },
+    "randomizer_bossrush": {
+      "label": "Boss Rush randomizer (4 MiB)",
+      "table": "data/wram_companion_map.json",
+      "macros": "read_only_until_verified",
+      "hud_first_row": 199,
+      "map_id_space": "generated",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "none"
+    },
+    "randomizer_chaos": {
+      "label": "Chaos randomizer (4 MiB)",
+      "table": "data/wram_companion_map.json",
+      "macros": "read_only_until_verified",
+      "hud_first_row": 199,
+      "map_id_space": "generated",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "none"
+    },
+    "unknown_hooked_4mib": {
+      "label": "4 MiB ROM with the randomizer's hook sites but an unknown mode",
+      "table": "data/wram_companion_map.json",
+      "macros": "read_only",
+      "hud_first_row": 199,
+      "map_id_space": "unknown",
+      "item_name_overrides": {},
+      "weapon_slot_holder_bits": false,
+      "smoke_fixture": "none"
+    },
+    "unknown": {
+      "label": "Unrecognised ROM",
+      "table": null,
+      "macros": "refuse",
+      "smoke_fixture": "none"
+    }
+  },
+  "targets": {
+    "android": {
+      "rom_name": "rom.sfc",
+      "rom_dir": "/sdcard/Android/data/org.somdecomp.companion/files",
+      "config_name": "som_variant.json",
+      "note": "dev shortcut of tools/companion/android (docs/companion-platforms-20261017.md section 4); the app may change this path"
+    },
+    "3ds": {
+      "rom_name": "rom.sfc",
+      "rom_dir": "sdmc:/som",
+      "config_name": "variant.json",
+      "note": "tools/companion/n3ds reads sdmc:/som/rom.sfc; the app may change this path"
+    }
+  }
+}

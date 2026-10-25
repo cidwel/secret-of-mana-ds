@@ -1,0 +1,46 @@
+# Full session on the advanced state: assign a spell to L1 with the real picker (hold the button), cast it, queue a second cast,
+# assign an item to R2, use it, screenshots at 1080p for wide 27 and 46.
+LOAD /home/cidwel/.local/state/som-decomp/companion-20261017/adv/advanced_equipped.state
+RUN 60
+CLEARBIND
+SET wide 27
+SET overlay small
+PRINT 1. hold L1 for 1 s: the picker opens
+SLOT L1 66
+STATE picker_open
+UITAP QE_TAB 4
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_01_picker_spirits.bmp
+UITAP QE_CELL 2
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_02_picker_spells.bmp
+UITAP QE_CELL 0
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_03_picker_policy.bmp
+UITAP POLICY 1
+STATE l1_bound
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_04_bound_w27.bmp
+PRINT 2. cast through the slot
+SLOT L1
+RUN 4
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_05_flash.bmp
+STATE cast_start
+PRINT 3. second press while the caster is busy: queued
+SLOT L1
+RUN 2
+STATE queued
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_06_queued.bmp
+WAIT 900
+RUN 200
+STATE after_queue
+PRINT 4. item on R2
+SLOT R2 66
+UITAP QE_TAB 2
+UITAP QE_CELL 0
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_07_picker_item.bmp
+UITAP POLICY 3
+STATE r2_bound
+SLOT R2
+WAIT 600
+RUN 60
+STATE item_used
+SET wide 46
+RUN 30
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s3_08_w46.bmp

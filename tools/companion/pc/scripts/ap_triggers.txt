@@ -1,0 +1,12 @@
+# Trigger axes and shoulder button on the virtual controller (virtual trigger axes rest at -32768): R2, then L2, then R1 each use their bound slot once.
+@100 axis TRIGGERRIGHT -32768
+@100 axis TRIGGERLEFT -32768
+@1500 state before
+@1600 axis TRIGGERRIGHT 32767
+@1800 axis TRIGGERRIGHT -32768
+@2200 axis TRIGGERLEFT 32767
+@2400 axis TRIGGERLEFT -32768
+@2800 pad RIGHTSHOULDER 1
+@2900 pad RIGHTSHOULDER 0
+@3600 state after
+@3700 quit

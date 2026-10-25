@@ -1,0 +1,626 @@
+{
+ "title": "WRAM map for the Secret of Mana dual-screen companion (Ancient Cave column filled)",
+ "date": "2026-10-17",
+ "conventions": "Addresses are offsets in the 128 KiB WRAM image ($7E:xxxx = xxxx, $7F:xxxx = 0x10000 + xxxx). Verification: verified = changed by a mutation and read back (or an exact observable match); partial = single data point or documentation only; unverified = documented elsewhere but not exercised; not-obtained = no ROM could be run.",
+ "roms": {
+  "vanilla_us": {
+   "file": "Secret of Mana (USA).smc",
+   "sha1": "8133041A363E3CC68CEDEF40B49B6D20D03C505D",
+   "state": "route frame 23000 (Potos village, map 131) of tools/fidelity_d_inputs/hhs_glitch_bk2_s9x14.txt + fixture"
+  },
+  "magno_es": {
+   "file": "Secret of Mana (USA) [T-Esp101.2_Magno].smc",
+   "state": "same route desyncs; frame 20000 of the route is in map 128 with a controllable hero (HUD not yet enabled) + fixture"
+  },
+  "ancient_cave": {
+   "status": "boots headless to free play (floor 1) after the name entry; field checks and macro tests run (docs/companion-ancientcave-20261017.md)",
+   "source": "Moppu/SecretOfManaRandomizer v1.49 (LGPL-2.1), Windows .NET app that writes a 4 MiB ROM from the user ROM; no IPS/BPS patch exists",
+   "static_diff": {
+    "method": "byte compare of the first 2 MiB with regions merged when closer than 16 bytes",
+    "regions": 323,
+    "differing_bytes": 30909,
+    "bank_c0_regions": 62,
+    "expansion": "second 2 MiB (E0:0000 onward in HiROM addressing) holds new code and data; seed 1 uses 320,088 non-zero bytes up to file offset 0x2532A4",
+    "header": "bytes 0xFFC0..0xFFFF identical to vanilla (title, map mode 0x21, size byte 0x0B, checksum not updated): the header cannot tell the variants apart",
+    "seed_to_seed": "the 45 hook sites are identical for seeds 1 and 777 (same_hook_sites=True); the JSL operands, expansion layout and map data differ"
+   },
+   "runtime_state": "tools/companion/ancientcave/build_ac_fixture.py"
+  }
+ },
+ "fields": [
+  {
+   "name": "hero_record_base",
+   "address": "7E:E000",
+   "size": 512,
+   "meaning": "Three hero records, stride 0x200; offsets below are relative to the record",
+   "evidence": "docs/rom-combat.md 1.1; tools/companion/som_companion.c; slots 1 and 2 verified separately by activating them with event opcode 0x2B and by casting as each",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "7E:E000 + 0x200*slot",
+   "ancient_cave_evidence": "three records at stride 0x200: active [1,1,1], ids ['0x80', '0x81', '0x82'], HUD shows 50/50, 45/45, 40/40 = record HP (hud_party.png)"
+  },
+  {
+   "name": "hero_active",
+   "address": "+0x000",
+   "size": 1,
+   "meaning": "1 = member present and active; 0 = absent; 0x80 seen after event opcode 0x2C removal",
+   "evidence": "src/rom/cycle_to_next_eligible_unbound_menu_actor.s tests byte == 1; runtime: slots 1/2 0 -> 1 after event 0x2B (test_01 reads [1,1,1] after the fixture, [1,0,0] before)",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x000",
+   "ancient_cave_evidence": "ring owner cycle [0, 1, 2, 1] with all active; [0, 2, 2, 2] with the girl record set to 0 (she is skipped)"
+  },
+  {
+   "name": "hero_object_id",
+   "address": "+0x1E7",
+   "size": 1,
+   "meaning": "0x80 boy, 0x81 girl, 0x82 sprite",
+   "evidence": "docs/rom-combat.md 1.1 (E1E7); dump of the three records",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x1E7",
+   "ancient_cave_evidence": "ids ['0x80', '0x81', '0x82'] in slot order boy, girl, sprite; HUD portraits and names A,B,C in the same order"
+  },
+  {
+   "name": "hero_level",
+   "address": "+0x181",
+   "size": 1,
+   "meaning": "Internal level, display = value + 1",
+   "evidence": "docs/rom-combat.md; status page shows LEVEL 1 for 0 (screenshot, vanilla only)",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "unverified",
+    "ancient_cave": "verified"
+   },
+   "note": "single data point (level 0); not mutated",
+   "ancient_cave_address": "+0x181",
+   "ancient_cave_evidence": "level byte 6 -> status page shows LEVEL 7 (display = value + 1); the game recomputed max HP to 108 (status_level6_gold1234.png, read by eye)"
+  },
+  {
+   "name": "hero_hp",
+   "address": "+0x182",
+   "size": 2,
+   "meaning": "Current HP (word)",
+   "evidence": "Mutation: pending damage 7 (+0x1F1) took HP 50 -> 43; Candy macro healed 20 -> >20; Royal Jam macro 20 -> 50; poison status ticked HP down 1 per timer drop",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x182",
+   "ancient_cave_evidence": "pending damage 7 (+0x1F1) took HP 50 to 43; Candy macro raised 20 to 50 (see macro tests)"
+  },
+  {
+   "name": "hero_hp_max",
+   "address": "+0x184",
+   "size": 2,
+   "meaning": "Maximum HP (word)",
+   "evidence": "HUD shows HP/max matching the word (50/50, 45/45, 40/40) for the three heroes",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x184",
+   "ancient_cave_evidence": "level 6 on the boy: +0x184 reads 108 and the status page shows HP 50/108 (status_level6_gold1234.png); a direct write of 99 is not kept (Royal Jam then refills only to 50): the field is derived by the game, read-only for the companion"
+  },
+  {
+   "name": "hero_mp",
+   "address": "+0x186",
+   "size": 1,
+   "meaning": "Current MP",
+   "evidence": "Cast macro: girl MP 8 -> 4 (Gnome first spell); sprite MP drop; pending MP damage 2 (+0x1F5) 8 -> 6",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x186",
+   "ancient_cave_evidence": "pending MP damage 2 (+0x1F5, girl) took MP 8 to 6; cast macro paid 4 MP (see macro tests)"
+  },
+  {
+   "name": "hero_mp_max",
+   "address": "+0x187",
+   "size": 1,
+   "meaning": "Maximum MP",
+   "evidence": "Spell ring title shows \"MP08/08\" for MP 8 / max 8",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "partial",
+    "ancient_cave": "verified"
+   },
+   "note": "read-only check against the spell ring caption",
+   "ancient_cave_address": "+0x187",
+   "ancient_cave_evidence": "girl level 7: +0x187 reads 10 (MP 8); the spell ring caption shows \"STONE SABER 04MP 08/10\" (spell_caption_mp.png, read by eye); like max HP it is derived and refreshed when the ring opens"
+  },
+  {
+   "name": "hero_status",
+   "address": "+0x190",
+   "size": 2,
+   "meaning": "Status word. Bit 15 (+0x191 bit 7) = dead/not initialised: such a hero is skipped by the owner cycle and the HUD shows HP 0. Bit 13 (0x2000) = 1 HP per timer drop while +0x1B6 counts down",
+   "evidence": "Mutation: writing 0x2000 + timer 20 reduced HP 2 per 40 frames and the timer 0x14 -> 0x05; clearing bit 15 made the girl selectable with X",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "note": "other status bits: docs/rom-combat.md section 7, not re-verified",
+   "ancient_cave_address": "+0x190",
+   "ancient_cave_evidence": "word 0x2000 with timer 0x14: HP 50 to 48 in 120 frames, timer now 0x08; word bit 15 on the girl: ring owner cycle [0, 2, 2, 2] skips her"
+  },
+  {
+   "name": "hero_status_timers",
+   "address": "+0x1B2..+0x1B6",
+   "size": 5,
+   "meaning": "Status timers, one byte per status family; +0x1B6 is the one for bit 0x2000",
+   "evidence": "Poison mutation above (only +0x1B6 exercised)",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "partial",
+    "ancient_cave": "partial"
+   },
+   "ancient_cave_address": "+0x1B2..+0x1B6",
+   "ancient_cave_evidence": "only +0x1B6 exercised: 0x14 -> 0x08 while the status word was set"
+  },
+  {
+   "name": "weapon_recharge",
+   "address": "+0x1ED",
+   "size": 1,
+   "meaning": "Weapon recharge counter: 0 = ready, jumps to about 0x55 on a swing and counts down. HUD percent = 100 - value*100/85",
+   "evidence": "HUD crops at four times show 60/73/82/91 % for 0x22/0x17/0x0F/0x07",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "unverified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x1ED",
+   "ancient_cave_evidence": "after one swing the byte reads [0, 88, 78, 68, 58, 48, 38, 28, 18, 8, 1, 1, 0, 0] every 10 frames: rises to about 0x55 then counts down; HUD shows the matching percentage (swing_hud.png)"
+  },
+  {
+   "name": "weapon_charge_level",
+   "address": "+0x19B / +0xE01B / +0xE085",
+   "size": 1,
+   "meaning": "Power-up charge stage of the swing (documented); not reproduced",
+   "evidence": "Holding B for 240 frames with weapon level 8 and CFB0 = 8 never charged in the synthetic state: values stayed 0",
+   "verification": {
+    "vanilla_us": "unverified",
+    "magno_es": "unverified",
+    "ancient_cave": "not-obtained"
+   },
+   "note": "open",
+   "ancient_cave_address": "+0x19B / +0xE01B / +0xE085",
+   "ancient_cave_evidence": "boy with all weapon levels 8, B held 400 frames: none of the three bytes changed; +0x1B9 only counts down (not charge)"
+  },
+  {
+   "name": "weapon_type",
+   "address": "+0x1E4",
+   "size": 1,
+   "meaning": "Equipped weapon type 0..7 (sword 1, axe 2, spear 3, javelin 7 observed in the ring)",
+   "evidence": "Equip macro: type 1 -> 2 for the axe",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x1E4",
+   "ancient_cave_evidence": "weapon ring cursor 0..7 equips types [1, 2, 3, 4, 5, 6, 7, 0]: ring order is types 1..7 then 0 (glove last)"
+  },
+  {
+   "name": "weapon_row",
+   "address": "+0x1E8",
+   "size": 1,
+   "meaning": "Weapon table row = type*9 + tier (sword tier 0 = 9, axe tier 2 = 20)",
+   "evidence": "Equip macro: 9 -> 20",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x1E8",
+   "ancient_cave_evidence": "row = type * 9 + tier for all 8 types (tier 0 here): [9, 18, 27, 36, 45, 54, 63, 0]"
+  },
+  {
+   "name": "weapon_slots",
+   "address": "$7E:CC54 + type",
+   "size": 8,
+   "meaning": "Owned weapon per type: 0xFF = not owned; low bits = tier (0..8); bit 6 (0x40) set on the type the boy has equipped",
+   "evidence": "Equip macro: sword 0x40 -> 0x00 and axe 0x02 -> 0x42; ring lists exactly the non-0xFF types in type order",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "note": "bits for girl/sprite equips not decoded",
+   "ancient_cave_address": "$7E:CC54 + type",
+   "ancient_cave_evidence": "all 8 types owned at start (value 0x00 = owned tier 0); bits 7..6 hold (hero + 1): 1 boy, 2 girl, 3 sprite; the game swaps weapons with the hero holding the target one. Samples: [{\"cursor\": 0, \"slots\": \"804000000000c000\", \"types\": [1, 0, 6]}, {\"cursor\": 1, \"slots\": \"800040000000c000\", \"types\": [2, 0, 6]}, {\"cursor\": 2, \"slots\": \"800000400000c000\", \"types\": [3, 0, 6]}]"
+  },
+  {
+   "name": "weapon_levels",
+   "address": "+0x1C0",
+   "size": 4,
+   "meaning": "Eight 4-bit weapon levels (even type = high nibble)",
+   "evidence": "docs/rom-combat.md section 1.1 [V] by earlier harness; not re-mutated here",
+   "verification": {
+    "vanilla_us": "unverified",
+    "magno_es": "unverified",
+    "ancient_cave": "not-obtained"
+   },
+   "ancient_cave_address": "+0x1C0",
+   "ancient_cave_evidence": "written 0x12345678 / 0x88888888; no visible or measurable effect found (the skill page lists names only, charge not triggered)"
+  },
+  {
+   "name": "spirit_levels",
+   "address": "+0x1C4",
+   "size": 4,
+   "meaning": "Eight 4-bit spirit levels, byte order = spirit mask byte order",
+   "evidence": "Spell level read back after casts equals the nibble written for bytes 0..5 (E371 = 1..6); byte 7 read 7 not 8 (cap or encoding unexplained)",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "unverified",
+    "ancient_cave": "partial"
+   },
+   "ancient_cave_address": "+0x1C4",
+   "ancient_cave_evidence": "written 0x12345678 and 0x13572468; the page \"Weapon/Magic Level\" only lists names without selection in this harness; cast spell level not isolated"
+  },
+  {
+   "name": "spirit_masks",
+   "address": "+0x1C8",
+   "size": 8,
+   "meaning": "Per spirit availability bits: a non-zero byte lists the spirit in the magic ring (0x3F gives 3 spells). Byte 6 is never listed for the girl, byte 7 never for the sprite; the boy has no magic ring. Ring order is byte order: Gnome, Undine, Salamando, Sylphid, Luna, Dryad, [Lumina], Shade",
+   "evidence": "Mutation grid: single-byte masks for both heroes; ring titles read off screenshots; casts for every listed spirit",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "note": "which bit is which spell is not decoded; 3F lists three spells",
+   "ancient_cave_address": "+0x1C8",
+   "ancient_cave_evidence": "girl magic ring lists 7 spirits with eight masks of 0x3F (byte 6 is never listed) and 6 with byte 2 zeroed"
+  },
+  {
+   "name": "spell_last_cast",
+   "address": "+0x170",
+   "size": 2,
+   "meaning": "Spell id and level of the last cast (rom-combat 1.1); spell id = 6*ring_index + 3 + spell slot for the girl",
+   "evidence": "Observed 0x03/0x04/0x05, 0x09.., 0x15, 0x1B.., 0x22/0x23, 0x27 for ring entries 0..6",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "partial",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "+0x170",
+   "ancient_cave_evidence": "casts as hero/byte/slot: {\"1/0/0\": {\"result\": \"done\", \"spell\": \"0x103\", \"mp\": 4}, \"1/1/0\": {\"result\": \"done\", \"spell\": \"0x209\", \"mp\": 6}, \"1/3/0\": {\"result\": \"done\", \"spell\": \"0x415\", \"mp\": 5}, \"2/5/2\": {\"result\": \"done\", \"spell\": \"0x620\", \"mp\": 7}}; girl low byte = 6*ring_index+3+slot as in vanilla, the sprite (2/5/2) gives low byte 0x20, not 6*idx+3+slot"
+  },
+  {
+   "name": "items",
+   "address": "$7E:CC48",
+   "size": 12,
+   "meaning": "12 consumable records in insertion order, 0xFF = empty, else (qty << 5) | item id; ids 0 Candy, 1 Chocolate, 2 Royal Jam, 3 Faerie Walnut, 4 Medical Herb, 5 Cup of Wishes, 6 Magic Rope, 7 Flammie Drum, 8 Moogle Belt, 9 Midge Mallet, 10 Barrel",
+   "evidence": "docs/items-shops.md; ring shows \"Candy X3\" for 0x60; use macro lowered 0x60 -> 0x40; ring order = record order (names read off screenshots)",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:CC48 (12 records)",
+   "ancient_cave_evidence": "native start inventory 0x20 0x21 0x22 0x23 0x24 0x25 0x27 0x26 (qty 1 each): records are not sorted by id (record 6 = id 7, record 7 = id 6); ring entries follow record order (titles read for cursors 0..7); ids 6 and 7 are shown as \"Stuck?\" and \"Random Music\" (AC repurposes Magic Rope / Flammie Drum)"
+  },
+  {
+   "name": "armor_slots",
+   "address": "$7E:CC24..CC47",
+   "size": 36,
+   "meaning": "Armor rows (low 6 bits) in three groups of 12; not needed by the companion",
+   "evidence": "Seen in dumps only",
+   "verification": {
+    "vanilla_us": "unverified",
+    "magno_es": "unverified",
+    "ancient_cave": "not-obtained"
+   },
+   "ancient_cave_address": "$7E:CC24..CC47",
+   "ancient_cave_evidence": "start bytes FFFFFFFFFFFFFFFFFFFFFFFE5697D8FFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFE; the Equip Armor page was not driven"
+  },
+  {
+   "name": "gold",
+   "address": "$7E:CC6A",
+   "size": 3,
+   "meaning": "24-bit gold",
+   "evidence": "Status page shows 100GP for 0x000064",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "unverified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:CC6A (3 bytes)",
+   "ancient_cave_evidence": "start value 100 (0x64); 0x0004D2 written -> status page shows MONEY 1234GP (status_level6_gold1234.png used 1234)"
+  },
+  {
+   "name": "hero_names",
+   "address": "$7E:CC00 + 12*slot",
+   "size": 12,
+   "meaning": "Name glyph codes, 12 bytes per hero",
+   "evidence": "docs/scale-name-glyph-next-20261014.md; glyph table not decoded here",
+   "verification": {
+    "vanilla_us": "unverified",
+    "magno_es": "unverified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:CC00 + 12*slot",
+   "ancient_cave_evidence": "typed A (boy), B (girl), C (sprite): bytes 0x9B, 0x9C, 0x9D at slots 0, 1, 2; status page shows \"A\"; glyph = 0x9B + letter index"
+  },
+  {
+   "name": "ring_open",
+   "address": "$7E:007D",
+   "size": 1,
+   "meaning": "1 while the ring menu, the status page, the spell sub-ring or the target selection is open",
+   "evidence": "Toggles with Y; stays 1 during item target selection; 0 after use",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:007D",
+   "ancient_cave_evidence": "1 two frames after Y (frame 0); closed again by A/Y in the recovery checks"
+  },
+  {
+   "name": "ring_owner",
+   "address": "$7E:1808",
+   "size": 1,
+   "meaning": "Hero slot whose ring is shown; X cycles to the next living hero not bound to a pad",
+   "evidence": "src/rom/cycle_to_next_eligible_unbound_menu_actor.s; X changed it 0 -> 1 -> 2 -> 1",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:1808",
+   "ancient_cave_evidence": "owner cycle X: [0, 1, 2, 1] with all three heroes, bound hero first"
+  },
+  {
+   "name": "ring_category",
+   "address": "$7E:1809",
+   "size": 1,
+   "meaning": "0 item, 1 magic, 2 config, 3 weapon; UP steps weapon -> item -> magic -> config -> weapon, magic is skipped when its list is empty; 0x55 when no ring has been built yet",
+   "evidence": "Observed for boy and girl rings; src step_native_menu_ring_category...",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:1809",
+   "ancient_cave_evidence": "UP order weapon 3, item 0, config 2, weapon...; magic (1) skipped for the boy; the first open starts on the weapon category, same as the vanilla fixture (3,4 entries, 0,6, 2,7); AC counts are 8, 8, 7 because every weapon type and eight item records are owned; (category, count) on UP: [(3, 8), (0, 8), (2, 7), (3, 8), (0, 8)]"
+  },
+  {
+   "name": "ring_cursor",
+   "address": "$7E:180A",
+   "size": 1,
+   "meaning": "Index of the selected entry; LEFT adds 1 mod count, RIGHT subtracts 1; updates about 9 frames after the press",
+   "evidence": "Tap timeline; every macro uses it",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:180A",
+   "ancient_cave_evidence": "LEFT = +1, RIGHT = -1 (mod count): [('LEFT', 1), ('LEFT', 2), ('RIGHT', 1)]"
+  },
+  {
+   "name": "ring_count",
+   "address": "$7E:180B",
+   "size": 1,
+   "meaning": "Number of entries in the visible ring (spirit ring 7, spell ring 3, item ring = non-empty records, weapon ring = owned types, config ring 7)",
+   "evidence": "All rings; sub-ring switches 7 -> 3",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:180B",
+   "ancient_cave_evidence": "weapon 8, item 8, config 7, girl magic 7, spell ring 3 (see macro tests); changes with ownership (masks test)"
+  },
+  {
+   "name": "ring_busy",
+   "address": "$7E:1812",
+   "size": 1,
+   "meaning": "Non-zero while the ring opens (frames 8..43 after Y); the game ignores navigation input while it is non-zero",
+   "evidence": "Frame timeline",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:1812",
+   "ancient_cave_evidence": "value 5 from frame 7 to 41 after Y, then 0 (vanilla: 8..43)"
+  },
+  {
+   "name": "ring_menu_enable",
+   "address": "$7E:CF00",
+   "size": 1,
+   "meaning": "Story flag: pad-driven ring menus enabled (1)",
+   "evidence": "Fixture needed it on the Magno early state to let Y open the ring",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "partial",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:CF00",
+   "ancient_cave_evidence": "start value 1; with 0 written the ring does not open (7D = 0), with 1 it does"
+  },
+  {
+   "name": "event_state",
+   "address": "$7E:00D0",
+   "size": 1,
+   "meaning": "Non-zero while the event VM runs (dialogue, cutscene, map-change script); 0 in free play, ring and status page",
+   "evidence": "Values 0x81, 0x85, 0x01 in cutscenes; 0 in field/ring; warp script sets 1",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:00D0",
+   "ancient_cave_evidence": "free play 0, event injected 129, floor-1 start message showed 129..131 (name entry flow)"
+  },
+  {
+   "name": "fade",
+   "address": "$7E:00E4 / $7E:00E6",
+   "size": 1,
+   "meaning": "Fade state: E4 = 1 and E6 = 0x0F when fully visible; E6 counts down during a fade out",
+   "evidence": "Warp timeline E6 0F..02 with E4 = 4",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:00E4 / $7E:00E6",
+   "ancient_cave_evidence": "warp through doors: E6 falls from 0x0F and returns, E4 = 1 at rest; sample (E4,E6) pairs [(1, 0), (1, 1), (1, 2), (1, 3)]"
+  },
+  {
+   "name": "map_id",
+   "address": "$7E:00DC",
+   "size": 2,
+   "meaning": "Current map id (131 Potos village, 128 falls, 256 opening room, 257 shop house, 179 prologue)",
+   "evidence": "Compared with docs/maps.md at six route frames",
+   "verification": {
+    "vanilla_us": "verified",
+    "magno_es": "verified",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:00DC",
+   "ancient_cave_evidence": "same address; floor 1 reads 0; doors 0x0B and 0x0D read 1 (generated maps are numbered from 0; vanilla ids such as 131 do not exist here): {10: 0, 11: 1, 13: 1}"
+  },
+  {
+   "name": "pad_binding",
+   "address": "$7E:00D9",
+   "size": 1,
+   "meaning": "Bit n = hero n is bound to pad 1 (DA pad 2, DB pad 3)",
+   "evidence": "Read only; 1 in all single-pad states",
+   "verification": {
+    "vanilla_us": "partial",
+    "magno_es": "partial",
+    "ancient_cave": "verified"
+   },
+   "ancient_cave_address": "$7E:00D9",
+   "ancient_cave_evidence": "D9 = 1, 2, 4 makes the ring open on hero [0, 1, 2] (bit n = hero n bound to pad 1); X cycle then skips the bound hero"
+  }
+ ],
+ "modes": {
+  "predicate": "NO_GAME if hero0 active != 1; TRANSITION if E6 != 0x0F or E4 != 1; EVENT if D0 != 0; RING if 7D == 1; else FIELD",
+  "safe_to_inject": "mode == FIELD and a hero is bound to pad 1 ($D9) and that hero is alive",
+  "observed": [
+   {
+    "situation": "free play",
+    "D0": 0,
+    "r7D": 0,
+    "E6": "0F"
+   },
+   {
+    "situation": "ring open / status page / spell target selection",
+    "D0": 0,
+    "r7D": 1,
+    "E6": "0F"
+   },
+   {
+    "situation": "cast animation after the ring closes",
+    "D0": 0,
+    "r7D": 0,
+    "E6": "0F",
+    "note": "no flag marks it; the macro verifies by MP drop within 330 frames"
+   },
+   {
+    "situation": "warp script",
+    "D0": 1,
+    "r7D": 0,
+    "E6": "counts 0F..02"
+   },
+   {
+    "situation": "dialogue / cutscene (events 0x300, 0x600, 0xDB tried)",
+    "D0": "0x81..0x86",
+    "r7D": 0,
+    "E6": "0F"
+   },
+   {
+    "situation": "boot, title, name entry",
+    "hero0_active": "0 early; 1 with D0 != 0 during name entry in the vanilla route",
+    "note": "NO_GAME or EVENT: never safe"
+   }
+  ]
+ },
+ "ring_navigation": {
+  "open": "tap Y (3 frames); $7D becomes 1 within 2 frames, $1812 is non-zero for frames 8..43, ready at about frame 43",
+  "owner": "tap X until $1808 == hero; each step re-builds the ring, wait about 80 frames",
+  "category": "tap UP until $1809 == wanted (weapon 3, item 0, magic 1); wait about 40 frames per step; at most 4 taps in the cycle weapon, item, magic, config",
+  "cursor": "tap LEFT (+1) or RIGHT (-1) along the shorter way; $180A follows after about 9 frames; allow 22 frames per tap",
+  "confirm": {
+   "weapon": "1 x B closes the ring and equips",
+   "item": "B selects, a second B (target = bound hero) uses it; ring closes",
+   "magic": "B on the spirit opens the 3-entry spell ring; cursor to the spell; B selects it; B on the target; ring closes; MP is paid after about 120..150 more frames"
+  },
+  "measured_frames": {
+   "equip_axe": 240,
+   "use_item_record0": 255,
+   "use_item_record4": 305,
+   "cast_girl_first_spirit": 492,
+   "cast_sprite": 650,
+   "abort_recovery": 139
+  },
+  "needs": "the unusable cases time out: an item the game rejects (Cup of Wishes on a healthy hero) keeps the target selection open and an attack spell with no enemy in range does not leave the ring; the macro gives up and closes the ring with A/Y taps"
+ },
+ "hud": {
+  "vanilla": "HUD occupies rows 199..216 of the 256x224 frame (hero boxes with HP numbers, gauge and portraits). Text, frames and the gauge are BG3 (snes9x layer 3); the portraits are sprites in the same rows. Dialogue windows and the ring title window are BG3 too; ring icons are sprites (layer 5). BG1/BG2 are the map, BG4 unused.",
+  "hide_strategy": "crop rows >= 199 from the video frame (core independent, used by the host). Layer toggles (snes9x_layer_3 / _5 core options) are all-or-nothing per layer and would also hide dialogue windows or every actor.",
+  "not_found": "OAM index ranges of the HUD sprites, TM/TS shadow registers and a HUD-visible flag were not identified; libretro exposes no OAM/PPU registers"
+ },
+ "ancient_cave": {
+  "summary": {
+   "total": 34,
+   "verified": 29,
+   "partial": 2,
+   "not_testable": 3
+  },
+  "percent_verified": 85.29,
+  "differences": [
+   "No WRAM field moved: all 34 map fields read the same addresses; no relocated variable was found.",
+   "Map id ($DC) is generator numbering: floor 1 outside map = 0, other generated maps 1.., boss maps 256 + 2*floor (from the generator source, not measured); vanilla ids (131 Potos) never appear.",
+   "Items: native inventory is one of each, qty 1, in order 0 1 2 3 4 5 7 6; qty-1 records are removed when used and the list shifts up; ids 7 and 6 are titled \"Random Music\" and \"Stuck?\" (Stuck? starts a fade and is not consumed).",
+   "Weapons: all eight types owned from the start (slot byte 0x00 = owned tier 0); bits 7..6 of the slot byte = holder + 1 (1 boy, 2 girl, 3 sprite).",
+   "Party: girl and sprite are active from frame 0, with no spirits until the cave gives them; max HP / max MP are derived by the game from the level.",
+   "HUD: drawn on BG3 at rows 184..215 (FLOOR n and a clock row at 184..191, party bars at 199..215) instead of vanilla rows 199..216; the crop at row 199 leaves the floor/clock row visible.",
+   "Floor clock: $CF1A counts seconds (+1 every 60 frames); minutes, hours and the floor number were not located.",
+   "Name entry rejects duplicate hero names (relevant only to automation of new games)."
+  ],
+  "latent_defects": [
+   "som_weapon_ring_index ranks owned weapons in type order; the real ring order is types 1..7 then 0 (vanilla too). Stock host: 7 of 64 (held, wanted) equip pairs correct.",
+   "The weapon ring cursor is relative to the held weapon: $180A at open holds the held weapon rank, the first directional press re-centres it on 0, and ring position = (cursor + held rank) mod n (vanilla too). Patched host (order + one sync tap + relative target + no-op when already held): 64 of 64."
+  ],
+  "detection": {
+   "inputs": "ROM size and a few structural facts; never a hash of the whole ROM (two seeds differ in 18,345 bytes of the first 2 MiB)",
+   "steps": [
+    "size 2,097,152 (or +512 header) -> candidate vanilla or translation; 4,194,304 -> candidate Ancient Cave",
+    "for a 4 MiB ROM require the vanilla title and header bytes at 0xFFC0 (identical in all variants) plus opcode 0x22 (JSL) at C0:692F and C0:6D1E (file offsets 0x692F, 0x6D1E) with an operand bank >= 0xE0",
+    "confirm with the ASCII strings \"ancient`cave\" and \"moppleton\" found in the expansion (positions vary by seed: E0:26D3 in seed 777, E0:272B in seed 1)",
+    "otherwise vanilla table; if the title matches but a hook site differs (a different randomizer mode), use the unknown-variant table (read-only, no macros)"
+   ],
+   "tables": "data/wram_companion_map_ancientcave.json holds per-field AC status; because no address moved, the companion needs one address table and a per-variant behaviour record (item names, map id space, weapon ring rank rule, HUD crop row 184, weapon slot decoding)",
+   "runtime_check": "independent of the ROM: on a running game compare $E000/$E200/$E400 activity and the ids 0x80..0x82; the map-id space check is not reliable"
+  }
+ },
+ "open_items": [
+  "charge level during a power-up swing",
+  "which mask bit enables which spell",
+  "weapon_levels / spirit_levels value ranges beyond the observed data",
+  "girl and sprite weapon equip marks in the weapon slot bytes",
+  "HUD OAM ranges and PPU shadow registers",
+  "Ancient Cave runtime verification",
+  "Magno HUD rows (state before the HUD is enabled)"
+ ],
+ "derived_from": "data/wram_companion_map.json (unchanged); this sibling only replaces verification.ancient_cave and adds ancient_cave_* keys",
+ "ancient_cave_extra_fields_tested": []
+}

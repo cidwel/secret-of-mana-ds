@@ -1,0 +1,80 @@
+{
+ "variant": "vanilla",
+ "state": "mob_vanilla_344",
+ "cases": [
+  {
+   "title": "Enemy spell (single/all)",
+   "cls": 3,
+   "spell": 18,
+   "group_card": 2,
+   "valid": [
+    [
+     3,
+     92,
+     70,
+     55
+    ],
+    [
+     4,
+     156,
+     79,
+     55
+    ],
+    [
+     5,
+     124,
+     74,
+     55
+    ]
+   ],
+   "tap": [
+    158,
+    64
+   ],
+   "picked_slot": 5,
+   "expected_slot": 5,
+   "rc": "ok",
+   "frames": 2,
+   "request": "1204ffffff000103060000",
+   "ring_flag_max": 0,
+   "ok": true
+  },
+  {
+   "title": "Ally heal (single/all)",
+   "cls": 2,
+   "spell": 11,
+   "group_card": 1,
+   "valid": [
+    [
+     0,
+     128,
+     114,
+     50
+    ],
+    [
+     1,
+     128,
+     114,
+     45
+    ],
+    [
+     2,
+     128,
+     114,
+     40
+    ]
+   ],
+   "tap": [
+    181,
+    220
+   ],
+   "picked_slot": 2,
+   "expected_slot": 2,
+   "rc": "ok",
+   "frames": 2,
+   "request": "0b02ffffff000101030000",
+   "ring_flag_max": 0,
+   "ok": true
+  }
+ ]
+}

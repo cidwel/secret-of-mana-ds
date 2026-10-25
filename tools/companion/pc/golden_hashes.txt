@@ -1,0 +1,16 @@
+# FNV-1a of the ARGB pixels of the shoulder overlay (built-in art, no pack); regenerate with test_pc --update-hashes
+empty_s1_n0 6dcfb379
+empty_s1_n1 01f35d41
+empty_s2_n0 82d81ef5
+empty_s2_n1 0e44be95
+empty_s3_n0 c49eb301
+empty_s3_n1 378272d9
+filled_s2_n1 b2050845
+filled_s3_n1 c4debb68
+filled_s2_n0 237b6f05
+flash_cast_s2_n1 2c9cc21d
+flash_refused_s2_n1 129fecbd
+queued_s2_n1 7894466d
+unavailable_s2_n1 8445c0ad
+notice_queued_s2_n1 2643bf3d
+notice_dropped_s3_n1 e756914f

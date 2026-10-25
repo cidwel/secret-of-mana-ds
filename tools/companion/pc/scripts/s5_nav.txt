@@ -1,0 +1,29 @@
+LOAD /home/cidwel/.local/state/som-decomp/companion-20261017/adv/advanced_equipped.state
+RUN 60
+CLEARBIND
+PICKER L1
+STATE open
+UINAV down
+STATE down1
+UINAV right
+UINAV right
+UINAV right
+UINAV right
+STATE right4
+UIOK
+STATE tab_confirm
+UINAV down
+STATE down2
+UINAV left
+UINAV left
+STATE left2
+UIOK
+STATE spirit_confirm
+UINAV down
+STATE down3
+UIOK
+STATE spell_confirm
+UINAV right
+STATE pol_right
+UIOK
+STATE bound

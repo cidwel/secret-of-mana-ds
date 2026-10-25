@@ -1,0 +1,487 @@
+{
+ "variant": "vanilla",
+ "pairs": 48,
+ "mismatches": 0,
+ "results": [
+  {
+   "state": "eqm_v_h1_h1_w1.state",
+   "hero": 1,
+   "want": 1,
+   "ring": "fail-timeout",
+   "direct": "bad-argument",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w1.state",
+   "hero": 1,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w1.state",
+   "hero": 1,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w1.state",
+   "hero": 1,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w2.state",
+   "hero": 1,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w2.state",
+   "hero": 1,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w2.state",
+   "hero": 1,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w2.state",
+   "hero": 1,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w3.state",
+   "hero": 1,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w3.state",
+   "hero": 1,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w3.state",
+   "hero": 1,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w3.state",
+   "hero": 1,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w7.state",
+   "hero": 1,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w7.state",
+   "hero": 1,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w7.state",
+   "hero": 1,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h1_h1_w7.state",
+   "hero": 1,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w1.state",
+   "hero": 2,
+   "want": 1,
+   "ring": "fail-timeout",
+   "direct": "bad-argument",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w1.state",
+   "hero": 2,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w1.state",
+   "hero": 2,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w1.state",
+   "hero": 2,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w2.state",
+   "hero": 2,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w2.state",
+   "hero": 2,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w2.state",
+   "hero": 2,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w2.state",
+   "hero": 2,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w3.state",
+   "hero": 2,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w3.state",
+   "hero": 2,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w3.state",
+   "hero": 2,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w3.state",
+   "hero": 2,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w7.state",
+   "hero": 2,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 5,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w7.state",
+   "hero": 2,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w7.state",
+   "hero": 2,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_v_h2_h2_w7.state",
+   "hero": 2,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w1.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w1.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w1.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w1.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w2.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w2.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w2.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w2.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w3.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w3.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w3.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w3.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w7.state",
+   "hero": 0,
+   "want": 1,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w7.state",
+   "hero": 0,
+   "want": 2,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w7.state",
+   "hero": 0,
+   "want": 3,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "state": "eqm_vanilla_h0_w7.state",
+   "hero": 0,
+   "want": 7,
+   "ring": "done",
+   "direct": "ok",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  }
+ ]
+}

@@ -1,0 +1,91 @@
+# From power-on: title, new game, name entry (names A, B, C), intro dialogue, free play; then give the girl and the sprite
+# every spirit and MP (fixture pokes, as tools/companion/build_fixture.py) and save a state for the scenario scripts.
+# usage: som-pc --rom ROM --script boot_newgame.txt   (writes $SOM_PC_OUT/boot.state, default ~/.local/state/som-decomp/pc/boot.state)
+RUN 300
+PAD START 5
+RUN 410
+PAD B 5
+RUN 300
+# hero 1 name: A
+PAD B 5
+RUN 60
+PAD START 5
+RUN 400
+# hero 2 name: B
+PAD RIGHT 4
+RUN 30
+PAD B 5
+RUN 60
+PAD START 5
+RUN 400
+# hero 3 name: C
+PAD RIGHT 4
+RUN 30
+PAD RIGHT 4
+RUN 30
+PAD B 5
+RUN 60
+PAD START 5
+RUN 400
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+PAD B 4
+RUN 60
+RUN 120
+STATE booted

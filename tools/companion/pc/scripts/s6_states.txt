@@ -1,0 +1,21 @@
+# Overlay states on the advanced state: weapon, item, spell (usable), spell that costs more MP than the caster has (dimmed), spirit.
+LOAD /home/cidwel/.local/state/som-decomp/companion-20261017/adv/advanced_equipped.state
+RUN 60
+CLEARBIND
+SET overlay medium
+POKE E187 30
+POKE E186 00
+POKE E387 30
+POKE E386 00
+POKE E587 30
+POKE E586 00
+BIND L1 weapon 3 near
+BIND R1 spell 12 near
+BIND L2 spell 29 near
+BIND R2 item 1 lesshp
+RUN 8
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s6_states.bmp
+BIND L1 spirit 2 near
+SET overlay small
+RUN 8
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/s6_states2.bmp

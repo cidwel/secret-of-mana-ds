@@ -1,0 +1,141 @@
+[
+ {
+  "check": "silence-queued",
+  "ok": true,
+  "err": "ok",
+  "state": "waiting",
+  "reason": "silenced"
+ },
+ {
+  "check": "silence-fires-on-expiry",
+  "ok": true,
+  "frames_waited": 390,
+  "state": "fired",
+  "mp": [
+   60,
+   56
+  ]
+ },
+ {
+  "check": "busy-queue",
+  "ok": true,
+  "waited_frames": 1,
+  "state": "fired",
+  "mp": [
+   60,
+   56
+  ]
+ },
+ {
+  "check": "ko-not-queued",
+  "ok": true,
+  "err": "ko",
+  "state": "empty"
+ },
+ {
+  "check": "no-mp-not-queued",
+  "ok": true,
+  "err": "no-mp",
+  "state": "empty"
+ },
+ {
+  "check": "not-owned-not-queued",
+  "ok": true,
+  "err": "bad-argument",
+  "reason": "not-owned",
+  "state": "empty"
+ },
+ {
+  "check": "rapid-replacement",
+  "ok": true,
+  "first": 3,
+  "second": 9,
+  "final": [
+   "fired",
+   9
+  ]
+ },
+ {
+  "check": "cancel",
+  "ok": true,
+  "state": "dropped",
+  "err": "cancelled"
+ },
+ {
+  "check": "timeout",
+  "ok": true,
+  "state": "dropped",
+  "err": "expired",
+  "waited": 31
+ },
+ {
+  "check": "immediate-fire",
+  "ok": true,
+  "err": "ok",
+  "mp": [
+   60,
+   56
+  ]
+ },
+ {
+  "check": "direct-cancels-queue",
+  "ok": true,
+  "direct": "ok",
+  "state": "dropped",
+  "err": "cancelled"
+ },
+ {
+  "check": "enemy-spell-found",
+  "ok": true,
+  "spell": [
+   2,
+   1
+  ]
+ },
+ {
+  "check": "policy-nearest-resolves-at-fire",
+  "ok": true,
+  "queued": "ok",
+  "final": "fired",
+  "err": "ok"
+ },
+ {
+  "check": "policy-lowest-hp-resolves-at-fire",
+  "ok": true,
+  "queued": "ok",
+  "final": "fired",
+  "err": "ok"
+ },
+ {
+  "check": "policy-all-resolves-at-fire",
+  "ok": true,
+  "queued": "ok",
+  "final": "fired",
+  "err": "ok"
+ },
+ {
+  "check": "policy-slot-resolves-at-fire",
+  "ok": true,
+  "queued": "ok",
+  "final": "fired",
+  "err": "ok"
+ },
+ {
+  "check": "vanished-target-nearest",
+  "ok": true,
+  "final": "dropped",
+  "err": "no-target"
+ },
+ {
+  "check": "vanished-target-slot",
+  "ok": true,
+  "final": "dropped",
+  "err": "bad-target"
+ },
+ {
+  "check": "vanished-target-all",
+  "ok": true,
+  "final": "dropped",
+  "err": "no-target"
+ }
+]

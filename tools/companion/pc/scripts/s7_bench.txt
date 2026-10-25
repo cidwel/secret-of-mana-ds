@@ -1,0 +1,10 @@
+LOAD /home/cidwel/.local/state/som-decomp/companion-20261017/adv/advanced_equipped.state
+RUN 60
+SET wide off
+BENCH 600
+SET wide 27
+RUN 30
+BENCH 600
+SET wide 46
+RUN 30
+BENCH 600

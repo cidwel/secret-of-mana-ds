@@ -1,0 +1,31 @@
+{
+ "_comment": "Defaults = vanilla behaviour. With every option at its default the tool changes nothing (byte-identical copy). Run 'som_gameplay.py list' for the meaning of each option.",
+ "options": {
+  "weapon_recharge": "vanilla",
+  "run_recharge": "vanilla",
+  "monster_flinch": "vanilla",
+  "charge_speed": "vanilla",
+  "charge_frames_per_stage": null,
+  "charge_speed_up_bonus": false,
+  "hero_crit_bonus_girl": null,
+  "hero_crit_bonus_others": null,
+  "fix_checksum": "auto",
+  "hero_flinch": "vanilla",
+  "crit_multiplier": 2,
+  "walk_speed": 2,
+  "charge_bonus_item_id": null,
+  "weapon_level_rate": 1,
+  "qol_chest_fast": false,
+  "qol_unready_damage": false,
+  "qol_fast_transitions": false,
+  "qol_fast_fades": false,
+  "qol_item_limit": 4,
+  "qol_levelup_mp_restore": false,
+  "qol_dead_exp": false,
+  "qol_magic_level_rate": 1,
+  "qol_scroll_deadzone": "vanilla",
+  "qol_ring_speed": 1,
+  "qol_message_speed": 1,
+  "qol_shop_fill": false
+ }
+}

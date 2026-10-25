@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "title": "Special thanks",
+  "entries": [
+    {
+      "who": "Moppleton and contributors",
+      "what": "Secret of Mana Randomizer and its Ancient Cave mode (libsomrando is a C port of their generator)",
+      "license": "LGPL-2.1",
+      "url": "https://github.com/Moppu/SecretOfManaRandomizer"
+    },
+    {
+      "who": "Moppleton",
+      "what": "QOL ideas from the Secret of Mana Randomizer hack set: MP refill on level-up, faster spell levels, 7 items per stack, no map fades, full damage for early swings, shorter top-of-screen messages, buying several items at once",
+      "license": "LGPL-2.1 (ideas only, no bytes copied)",
+      "url": "https://github.com/Moppu/SecretOfManaRandomizer",
+      "options": [
+        "qol_levelup_mp_restore",
+        "qol_magic_level_rate",
+        "qol_item_limit",
+        "qol_fast_transitions",
+        "qol_unready_damage",
+        "qol_message_speed",
+        "qol_shop_fill"
+      ]
+    },
+    {
+      "who": "Zhade",
+      "what": "Research on the treasure chest animation scripts (chests open without the shake)",
+      "license": "idea credit",
+      "url": "https://github.com/Moppu/SecretOfManaRandomizer",
+      "options": [
+        "qol_chest_fast"
+      ]
+    },
+    {
+      "who": "Masterflow",
+      "what": "Item Limit \"9\" Patch (bigger item stacks)",
+      "license": "idea credit, no bytes copied",
+      "url": "https://www.romhacking.net/hacks/672/",
+      "options": [
+        "qol_item_limit"
+      ]
+    },
+    {
+      "who": "Binarynova",
+      "what": "Secret of Mana - Better Scrolling (earlier screen scroll)",
+      "license": "idea credit, no bytes copied",
+      "url": "https://www.romhacking.net/hacks/2913/",
+      "options": [
+        "qol_scroll_deadzone"
+      ]
+    },
+    {
+      "who": "AdmiralStiff",
+      "what": "Dead party members gain EXP",
+      "license": "idea credit, no bytes copied",
+      "url": "https://www.romhacking.net/hacks/6662/",
+      "options": [
+        "qol_dead_exp"
+      ]
+    },
+    {
+      "who": "Kethinov",
+      "what": "Faster or Slower Spell Grinding and Faster Weapon Grinding",
+      "license": "idea credit, no bytes copied",
+      "url": "https://www.romhacking.net/hacks/4419/",
+      "options": [
+        "qol_magic_level_rate",
+        "weapon_level_rate"
+      ]
+    },
+    {
+      "who": "Faydgamer",
+      "what": "Secret of Mana - Stamina Removed (no wait between attacks)",
+      "license": "idea credit, no bytes copied",
+      "url": "https://www.romhacking.net/hacks/9581/",
+      "options": [
+        "weapon_recharge",
+        "run_recharge"
+      ]
+    },
+    {
+      "who": "som-decomp project",
+      "what": "Ring menu speed, written from the project's own disassembly of the ring code",
+      "license": "project",
+      "url": "docs/qol-gameplay-20261020.md",
+      "options": [
+        "qol_ring_speed"
+      ]
+    },
+    {
+      "who": "The Secret of Mana reverse-engineering and documentation community",
+      "what": "Disassemblies, data maps, tools and write-ups",
+      "license": "n/a",
+      "url": "docs/external-reverse-engineering-sources.md"
+    }
+  ],
+  "note": "The qol-patches agent owns the per-patch entries (who/what/url/options); every frontend renders this file or a generated copy. No patch bytes of any author are distributed: the options are re-implemented as rules applied to the user's own ROM copy (tools/gameplay/som_gameplay.py)."
+}

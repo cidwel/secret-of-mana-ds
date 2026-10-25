@@ -1,0 +1,45 @@
+{
+ "_comment": "Ready-made option sets (same ids as gameplay_menu.json). Pass the \"options\" block to apply --options.",
+ "vanilla": {
+  "options": {},
+  "description": "No change: the ROM is left byte-identical."
+ },
+ "quick_combat": {
+  "options": {
+   "weapon_recharge": "faster",
+   "run_recharge": "fast",
+   "charge_speed": "faster",
+   "monster_flinch": "strong"
+  },
+  "description": "Short waits between swings, quick charge, ordinary enemies only flinch from magic and critical hits."
+ },
+ "arcade": {
+  "options": {
+   "weapon_recharge": "instant",
+   "run_recharge": "none",
+   "charge_speed": "fast",
+   "monster_flinch": "strong",
+   "hero_flinch": "light",
+   "crit_multiplier": 3,
+   "hero_crit_bonus_girl": 30,
+   "hero_crit_bonus_others": 30,
+   "walk_speed": 3
+  },
+  "description": "No weapon wait, instant-ish charge, heroes shrug off small hits, triple criticals, brisk walking."
+ },
+ "test_all": {
+  "options": {
+   "weapon_recharge": "instant",
+   "run_recharge": "none",
+   "monster_flinch": "strong",
+   "hero_flinch": "light",
+   "charge_speed": "instant",
+   "hero_crit_bonus_girl": 60,
+   "hero_crit_bonus_others": 60,
+   "crit_multiplier": 3,
+   "weapon_level_rate": 2,
+   "walk_speed": 3
+  },
+  "description": "Stress set used by the emulator experiments."
+ }
+}

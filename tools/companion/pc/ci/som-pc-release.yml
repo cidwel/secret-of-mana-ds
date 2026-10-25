@@ -1,0 +1,62 @@
+# GitHub Actions recipe for the portable som-pc releases (Linux and Windows).  Copy it to .github/workflows/ of the repository that carries
+# tools/companion/.  No ROM is needed or used: the jobs build, run the unit tests that need no game, and upload the release folders.
+# libsomrando needs the upstream generator sources for its build-time resources (commit 1404b7b of Moppu/SecretOfManaRandomizer).
+name: som-pc-release
+on:
+  workflow_dispatch:
+  push:
+    tags: ['pc-*']
+
+env:
+  UPSTREAM_COMMIT: 1404b7b
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Packages
+        run: sudo apt-get update && sudo apt-get install -y gcc make pkg-config libsdl2-dev python3 xvfb
+      - name: Upstream generator sources (build-time resources only)
+        run: |
+          git clone https://github.com/Moppu/SecretOfManaRandomizer "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" checkout "$UPSTREAM_COMMIT"
+          echo "SOM_RANDO_SRC=$RUNNER_TEMP/upstream/SoMRandomizer" >> "$GITHUB_ENV"
+      - name: Unit tests (no ROM: the parity steps skip themselves)
+        run: tools/companion/pc/run_pc_tests.sh
+      - name: Release folder
+        run: tools/companion/pc/package_release.sh --bundle-sdl --version "${GITHUB_REF_NAME:-dev}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: som-pc-linux
+          path: ~/.local/state/som-decomp/pc/release/som-pc-*-linux-x86_64.tar.gz
+
+  windows:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git zip python
+            mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-pkg-config
+      - name: Upstream generator sources (build-time resources only)
+        run: |
+          git clone https://github.com/Moppu/SecretOfManaRandomizer "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" checkout "$UPSTREAM_COMMIT"
+          echo "SOM_RANDO_SRC=$(cygpath -u "$RUNNER_TEMP")/upstream/SoMRandomizer" >> "$GITHUB_ENV"
+      - name: Release folder
+        env:
+          CC: gcc
+          AR: ar
+          SDL2_PREFIX: /mingw64
+        run: tools/companion/pc/package_release.sh --platform windows --bundle-sdl --version "${GITHUB_REF_NAME:-dev}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: som-pc-windows
+          path: ~/.local/state/som-decomp/pc/release/som-pc-*-windows-x86_64.zip

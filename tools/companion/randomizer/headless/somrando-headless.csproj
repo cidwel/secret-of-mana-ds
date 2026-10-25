@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Headless build of Moppu/SecretOfManaRandomizer (LGPL-2.1) from a source checkout:
+       dotnet build -p:SomRandoSrc=/path/to/SecretOfManaRandomizer/SoMRandomizer
+       The upstream sources are NOT copied into this repository. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <OutputType Condition="'$(SomRandoNativeLib)'!=''">Library</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>somrando</AssemblyName>
+    <RootNamespace>SoMRandomizer</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>CS0436;NU1701;CA1416;CS0168;CS0219;CS0162;CS0649;CS0414;CS0169;CS8981;SYSLIB0001;SYSLIB0011</NoWarn>
+    <SomRandoSrc Condition="'$(SomRandoSrc)'==''">$(SOM_RANDO_SRC)</SomRandoSrc>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(SomRandoSrc)/processing/**/*.cs;$(SomRandoSrc)/config/*.cs;$(SomRandoSrc)/config/settings/**/*.cs;$(SomRandoSrc)/util/**/*.cs;$(SomRandoSrc)/logging/**/*.cs"
+             Exclude="$(SomRandoSrc)/util/FormUtil.cs;$(SomRandoSrc)/util/UpdateCheck.cs;$(SomRandoSrc)/config/AppConfig.cs" />
+    <Compile Include="SomRandoApi.cs" />
+    <Compile Include="Headless.cs" Condition="'$(SomRandoNativeLib)'==''" />
+    <Compile Include="NativeExports.cs" Condition="'$(SomRandoNativeLib)'!=''" />
+    <EmbeddedResource Include="$(SomRandoSrc)/Resources/**/*.properties;$(SomRandoSrc)/Resources/**/*.bin;$(SomRandoSrc)/Resources/**/*.xml;$(SomRandoSrc)/Resources/**/*.bmp;$(SomRandoSrc)/Resources/**/*.png"
+                      Exclude="$(SomRandoSrc)/Resources/sprite_*.png;$(SomRandoSrc)/Resources/backdrop_*.png">
+      <LogicalName>SoMRandomizer.Resources.$([System.String]::Copy('%(RecursiveDir)').Replace('/','.').Replace('\','.'))%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="9.0.0" />
+    <PackageReference Include="U8XmlParser" Version="1.6.1" />
+  </ItemGroup>
+</Project>

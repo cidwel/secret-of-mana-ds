@@ -1,0 +1,38 @@
+--- a/tools/companion/som_companion.h	2026-10-17 14:34:22.265918626 +0200
++++ b/tools/companion/som_companion.h	2026-10-17 14:34:22.282167203 +0200
+@@ -125,4 +125,15 @@
+ int som_item_ring_index(const struct som_state *s, int record);
+ int som_spirit_ring_index(const struct som_state *s, int hero, int spirit);
+ 
++/* ------------------------------------------------------------------ direct mode (no ring menu)
++ * som_direct runs the commit of a weapon / item / spell without opening the ring.  A frontend that supports it keeps a
++ * struct somd next to the macro, calls somd_pre_frame() before and somd_post_frame() after every retro_run(), and uses
++ * som_cmd_direct() as the drop-in twin of som_macro_start().  Design, limits and evidence: docs/companion-direct-20261017.md. */
++#include "direct/som_direct.h"
++
++/* Same command struct as the macro path.  cmd->hero is the caster (magic) or the equipping hero (weapon) or ignored (item);
++ * cmd->arg is the weapon type, the item record or the E3C8 spirit index; cmd->spell is the spell entry 0..2.  `target` is
++ * ignored for equip and for casts whose class is not targeted.  Returns SOMD_OK or the refusal (somd_err_name()). */
++int som_cmd_direct(struct somd *d, const uint8_t *wram, const struct som_cmd *cmd, struct somd_target target);
++
+ #endif
+--- a/tools/companion/som_companion.c	2026-10-17 14:34:22.265953482 +0200
++++ b/tools/companion/som_companion.c	2026-10-17 14:34:22.282200145 +0200
+@@ -322,3 +322,17 @@
+   }
+   return 0;
+ }
++
++/* ------------------------------------------------------------------ direct mode glue */
++int som_cmd_direct(struct somd *d, const uint8_t *wram, const struct som_cmd *cmd, struct somd_target target) {
++  switch (cmd->kind) {
++  case SOM_CMD_EQUIP_WEAPON: return somd_equip(d, wram, cmd->hero, cmd->arg);
++  case SOM_CMD_USE_ITEM: return somd_use_item(d, wram, cmd->arg, target);
++  case SOM_CMD_CAST_MAGIC: {
++    /* E3C8 index 7 is the girl's Lumina, the sprite's Shade is index 6: both are spirit position 6 for somd_cast() */
++    int pos = (cmd->hero == 1 && cmd->arg == 7) ? 6 : cmd->arg;
++    return somd_cast(d, wram, cmd->hero, pos, cmd->spell, target);
++  }
++  default: return SOMD_ERR_BAD_ARGUMENT;
++  }
++}

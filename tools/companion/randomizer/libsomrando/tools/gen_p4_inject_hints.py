@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+"""Generates src/sr_p4_ow_hints_data.h: the tables of OpenWorldHints.cs and the two event injection patterns of the upstream project (LGPL-2.1).
+
+  gen_p4_inject_hints.py <upstream SoMRandomizer folder> <output .h>
+
+Original tool of this repository (LGPL-2.1+).  The C# string expressions (literals joined with + and the VanillaEventUtil arrows) are evaluated
+here so that no text is copied by hand.  Characters 149..152 (the arrows) are emitted as octal escapes: a hex escape would swallow the next digits.
+"""
+import pathlib
+import re
+import sys
+
+ARROWS = {"VanillaEventUtil.LEFT_ARROW": 149, "VanillaEventUtil.RIGHT_ARROW": 150, "VanillaEventUtil.UP_ARROW": 151, "VanillaEventUtil.DOWN_ARROW": 152}
+
+
+def unescape(lit):
+    out = []
+    i = 0
+    while i < len(lit):
+        ch = lit[i]
+        if ch == "\\":
+            i += 1
+            e = lit[i]
+            if e == "n":
+                out.append("\n")
+            elif e == "t":
+                out.append("\t")
+            elif e in "\\\"'":
+                out.append(e)
+            else:
+                raise SystemExit("unhandled escape \\" + e)
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+TOKEN = re.compile(r'\s*(?:"((?:[^"\\]|\\.)*)"|([A-Za-z_][A-Za-z_0-9.]*))')
+
+
+def eval_expr(expr, env):
+    """expr = term (+ term)* ; term = string literal | identifier"""
+    pos = 0
+    parts = []
+    expr = re.sub(r"//[^\n]*", "", expr)
+    while True:
+        m = TOKEN.match(expr, pos)
+        if not m:
+            raise SystemExit("cannot parse: " + expr[pos:pos + 40])
+        if m.group(1) is not None:
+            parts.append(unescape(m.group(1)))
+        else:
+            name = m.group(2)
+            if name in ARROWS:
+                parts.append(chr(ARROWS[name]))
+            elif name in env:
+                parts.append(env[name])
+            else:
+                raise SystemExit("unknown identifier " + name)
+        pos = m.end()
+        m = re.compile(r"\s*\+").match(expr, pos)
+        if not m:
+            if expr[pos:].strip():
+                raise SystemExit("trailing text: " + expr[pos:pos + 40])
+            return "".join(parts)
+        pos = m.end()
+
+
+def split_array(body):
+    """splits the elements of a C# string[] initializer on top-level commas"""
+    items, cur, in_str, i = [], [], False, 0
+    body = re.sub(r"//[^\n]*", "", body)
+    while i < len(body):
+        ch = body[i]
+        if in_str:
+            cur.append(ch)
+            if ch == "\\":
+                i += 1
+                cur.append(body[i])
+            elif ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+            cur.append(ch)
+        elif ch == ",":
+            items.append("".join(cur))
+            cur = []
+        else:
+            cur.append(ch)
+        i += 1
+    if "".join(cur).strip():
+        items.append("".join(cur))
+    return items
+
+
+def c_string(s):
+    out = ['"']
+    for ch in s:
+        o = ord(ch)
+        if ch == "\n":
+            out.append("\\n")
+        elif ch == "\t":
+            out.append("\\t")
+        elif ch in '"\\':
+            out.append("\\" + ch)
+        elif 32 <= o < 127:
+            out.append(ch)
+        elif 128 <= o < 256:
+            out.append("\\%03o" % o)
+        else:
+            raise SystemExit("unexpected char %d" % o)
+    out.append('"')
+    return "".join(out)
+
+
+def array_after(text, marker):
+    i = text.index(marker)
+    i = text.index("{", i)
+    depth, j = 0, i
+    while True:
+        if text[j] == "{":
+            depth += 1
+        elif text[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[i + 1:j]
+        j += 1
+
+
+def pattern(path, name):
+    t = pathlib.Path(path).read_text(encoding="utf-8-sig")
+    m = re.search(name + r"\s*=\s*new byte\[\]\s*\{([^}]*)\}", t)
+    return [int(x, 16) for x in re.findall(r"0x[0-9A-Fa-f]+", m.group(1))]
+
+
+def main():
+    if len(sys.argv) != 3:
+        print(__doc__)
+        return 2
+    root = pathlib.Path(sys.argv[1]) / "processing" / "openworld"
+    text = (root / "randomization" / "OpenWorldHints.cs").read_text(encoding="utf-8-sig")
+    ids = [int(x, 16) for x in re.findall(r"\{\s*(0x[0-9a-fA-F]+)\s*,\s*\"", array_after(text, "HintEventNames = new"))]
+    env = {"A": "A  ", "_": "   "}
+    for k, a in (("U", 151), ("D", 152), ("L", 149), ("R", 150)):
+        env[k] = chr(a) + "  "
+    phrases = [eval_expr(e, env) for e in split_array(array_after(text, "string[] hintPhrases = new"))]
+    dumb = [eval_expr(e, env) for e in split_array(array_after(text, "string[] dumbHints = new"))]
+    ev_pat = pattern(root / "events" / "PrizeEvents.cs", "OPENWORLD_EVENT_INJECTION_PATTERN")
+    hint_pat = pattern(root / "events" / "HintEvents.cs", "OPENWORLD_HINT_INJECTION_PATTERN")
+    out = ["/* Generated by tools/gen_p4_inject_hints.py from the upstream Moppu/SecretOfManaRandomizer v1.49 (LGPL-2.1).  Author: Moppleton. */",
+           "static const int HINT_EVENTS[%d] = {%s};" % (len(ids), ", ".join("0x%x" % i for i in ids)),
+           "static const uint8_t PRIZE_INJECTION_PATTERN[%d] = {%s};" % (len(ev_pat), ", ".join("0x%02X" % b for b in ev_pat)),
+           "static const uint8_t HINT_INJECTION_PATTERN[%d] = {%s};" % (len(hint_pat), ", ".join("0x%02X" % b for b in hint_pat)),
+           "static const char *const HINT_PHRASES[%d] = {" % len(phrases)]
+    out += ["  " + c_string(p) + "," for p in phrases]
+    out.append("};")
+    out.append("static const char *const DUMB_HINTS[%d] = {" % len(dumb))
+    out += ["  " + c_string(p) + "," for p in dumb]
+    out.append("};")
+    pathlib.Path(sys.argv[2]).write_text("\n".join(out) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

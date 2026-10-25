@@ -1,0 +1,36 @@
+# T12 pad scenario on the virtual game controller (times in ms from the start of the game loop).
+# 1.0 s: SRAM bytes appear, the 2 s auto flush must write them
+@1000 sram C0FFEE5A 32
+# 3.5 s: Select + R1 = quick save into slot 1
+@3500 pad BACK 1
+@3600 pad RIGHTSHOULDER 1
+@3800 pad RIGHTSHOULDER 0
+@3900 pad BACK 0
+# 4.5 s: Select + D-pad right = slot 2, Select + R1 = quick save into slot 2
+@4500 pad BACK 1
+@4600 pad DPAD_RIGHT 1
+@4800 pad DPAD_RIGHT 0
+@4900 pad RIGHTSHOULDER 1
+@5100 pad RIGHTSHOULDER 0
+@5200 pad BACK 0
+# 6.0 s: Select + L1 = quick load of slot 2
+@6000 pad BACK 1
+@6100 pad LEFTSHOULDER 1
+@6300 pad LEFTSHOULDER 0
+@6400 pad BACK 0
+# 7.0 s: left stick click opens the menu; D-pad down + A = the save page (on slot 2, which holds a state: A asks, A again overwrites)
+@7000 pad LEFTSTICK 1
+@7150 pad LEFTSTICK 0
+@7500 pad DPAD_DOWN 1
+@7600 pad DPAD_DOWN 0
+@7900 pad A 1
+@8000 pad A 0
+@8300 state menu_save_page
+@8400 shot @SHOTS@_pad_menu_save.bmp
+@8700 pad A 1
+@8800 pad A 0
+@9100 shot @SHOTS@_pad_menu_confirm.bmp
+@9300 pad A 1
+@9400 pad A 0
+@9900 state after_save
+@10500 quit

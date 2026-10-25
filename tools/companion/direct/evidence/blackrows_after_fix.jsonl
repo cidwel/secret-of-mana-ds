@@ -1,0 +1,34 @@
+{"variant": "vanilla", "case": "equip 0 2", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "equip 0 3", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "item rec 0 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "item rec 1 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 0}
+{"variant": "vanilla", "case": "cast enemy single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "cast enemy all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "cast ally single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "vanilla", "case": "cast ally all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "equip 0 2", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "equip 0 3", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "item rec 0 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "item rec 1 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 0}
+{"variant": "magno", "case": "cast enemy single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "cast enemy all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "cast ally single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "magno", "case": "cast ally all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "equip 0 1", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 5}
+{"variant": "ac1", "case": "equip 0 2", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "equip 0 5", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "item rec 0 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "item rec 1 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "cast enemy single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "cast enemy all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "cast ally single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac1", "case": "cast ally all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "equip 0 1", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 5}
+{"variant": "ac777", "case": "equip 0 2", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "equip 0 5", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "item rec 0 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "item rec 1 hero 0", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "cast enemy single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "cast enemy all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "cast ally single", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}
+{"variant": "ac777", "case": "cast ally all", "black_frames": 0, "rows": 0, "detail": [], "err": "ok", "latency": 2}

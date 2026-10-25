@@ -1,0 +1,80 @@
+{
+ "variant": "magno",
+ "state": "mob_magno_357",
+ "cases": [
+  {
+   "title": "Enemy spell (single/all)",
+   "cls": 3,
+   "spell": 18,
+   "group_card": 2,
+   "valid": [
+    [
+     3,
+     76,
+     92,
+     200
+    ],
+    [
+     4,
+     92,
+     108,
+     200
+    ],
+    [
+     5,
+     172,
+     92,
+     200
+    ]
+   ],
+   "tap": [
+    218,
+    80
+   ],
+   "picked_slot": 5,
+   "expected_slot": 5,
+   "rc": "ok",
+   "frames": 2,
+   "request": "1204ffffff000103060000",
+   "ring_flag_max": 0,
+   "ok": true
+  },
+  {
+   "title": "Ally heal (single/all)",
+   "cls": 2,
+   "spell": 11,
+   "group_card": 1,
+   "valid": [
+    [
+     0,
+     128,
+     114,
+     50
+    ],
+    [
+     1,
+     140,
+     150,
+     45
+    ],
+    [
+     2,
+     140,
+     146,
+     40
+    ]
+   ],
+   "tap": [
+    181,
+    220
+   ],
+   "picked_slot": 2,
+   "expected_slot": 2,
+   "rc": "ok",
+   "frames": 2,
+   "request": "0b02ffffff000101030000",
+   "ring_flag_max": 0,
+   "ok": true
+  }
+ ]
+}

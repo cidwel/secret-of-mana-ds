@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks commits that carry ROM data. Set SOM_ROM=/path/to/rom.sfc to also compare bytes against the ROM.
+exec python3 "$(git rev-parse --show-toplevel)/tools/rom_guard.py" --staged

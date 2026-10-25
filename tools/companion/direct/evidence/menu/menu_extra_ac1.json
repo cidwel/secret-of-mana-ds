@@ -1,0 +1,109 @@
+[
+ {
+  "check": "open-weapon-boy",
+  "ok": true
+ },
+ {
+  "check": "weapon-ring-boy",
+  "ok": true,
+  "cat": 3,
+  "owner": 0
+ },
+ {
+  "check": "retarget-spirit-sprite",
+  "ok": true
+ },
+ {
+  "check": "spirit-list-sprite",
+  "ok": true,
+  "rings_seen": [
+   [
+    1,
+    2
+   ]
+  ],
+  "frames": 87,
+  "hidden_all": true,
+  "sel": "0xc212"
+ },
+ {
+  "check": "retarget-item-girl",
+  "ok": true
+ },
+ {
+  "check": "item-ring-girl",
+  "ok": true,
+  "cat": 0,
+  "owner": 1
+ },
+ {
+  "check": "close",
+  "ok": true
+ },
+ {
+  "check": "closed",
+  "ok": true
+ },
+ {
+  "check": "rapid-sequence",
+  "ok": true,
+  "ring": 0,
+  "d9": 1
+ },
+ {
+  "check": "refuse-boy-magic",
+  "ok": true
+ },
+ {
+  "check": "refuse-boy-spirit",
+  "ok": true
+ },
+ {
+  "check": "refuse-bad-page",
+  "ok": true
+ },
+ {
+  "check": "refuse-bad-kind",
+  "ok": true
+ },
+ {
+  "check": "refuse-unowned-spirit",
+  "ok": true
+ },
+ {
+  "check": "refuse-event",
+  "ok": true
+ },
+ {
+  "check": "refuse-fade",
+  "ok": true
+ },
+ {
+  "check": "refuse-dead-hero",
+  "ok": true
+ },
+ {
+  "check": "busy",
+  "ok": true
+ },
+ {
+  "check": "close-when-closed",
+  "ok": true
+ },
+ {
+  "check": "event-during-open",
+  "ok": true,
+  "state": "finished",
+  "err": "ok",
+  "edge": 0
+ },
+ {
+  "check": "sheet",
+  "ok": true,
+  "shown": [
+   63
+  ],
+  "hidden": 63,
+  "black_in_hidden": 18
+ }
+]

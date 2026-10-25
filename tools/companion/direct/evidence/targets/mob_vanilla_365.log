@@ -1,0 +1,22 @@
+{"check": "scan-enemy-class", "ok": true, "enemies": [[3, 124, 76, 165, 1], [4, 92, 108, 165, 1], [5, 156, 108, 165, 1]], "card": 2}
+{"check": "scan-ally-class", "ok": true, "allies": [[0, 128, 114, 1], [1, 158, 144, 1], [2, 158, 144, 1]], "card": 1}
+{"check": "cast-one-enemy-slot4", "ok": true, "before": [165, 165, 165], "after": [165, 50, 165], "request": "000104ffff000100050505"}
+{"check": "cast-all-enemies", "ok": true, "before": [165, 165, 165], "after": [127, 127, 126], "request": "0001ffffff000300040506", "n_valid": 3}
+{"check": "cast-all-allies", "ok": true, "before": [5, 5, 5], "after": [50, 45, 40], "request": "0b02ffffff000301010203"}
+{"check": "cast-one-other-ally", "ok": true, "before": [25, 45, 40], "peak": [50, 45, 40], "after": [50, 45, 40], "request": "0b02ffffff000101010000"}
+{"check": "refuse-ally-spell-on-enemy", "ok": true}
+{"check": "refuse-enemy-spell-on-ally", "ok": true}
+{"check": "refuse-analyzer-group", "ok": true}
+{"check": "refuse-boy-caster", "ok": true}
+{"check": "refuse-no-mp", "ok": true}
+{"check": "refuse-spirit-not-owned", "ok": true}
+{"check": "refuse-busy", "ok": true, "rc1": "ok", "rc2": "busy"}
+{"check": "refuse-caster-busy", "ok": true, "rc": "caster-busy"}
+{"check": "unsafe-event", "ok": true, "results": ["unsafe-state", "unsafe-state", "unsafe-state"]}
+{"check": "unsafe-ring", "ok": true, "results": ["unsafe-state", "unsafe-state", "unsafe-state"]}
+{"check": "unsafe-fade", "ok": true, "results": ["unsafe-state", "unsafe-state", "unsafe-state"]}
+{"check": "unsafe-input-lock", "ok": true, "results": ["unsafe-state", "unsafe-state", "unsafe-state"]}
+{"check": "rollback-on-event", "ok": true, "state": "failed", "err": "unsafe-state"}
+{"check": "refuse-no-target", "ok": true, "result": "no-target"}
+checks 20 failed 0
+Map_HiROMMap

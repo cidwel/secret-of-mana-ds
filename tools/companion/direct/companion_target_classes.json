@@ -1,0 +1,959 @@
+{
+ "schema": "som_direct_target_classes_v1",
+ "generated": "2026-10-17",
+ "note": "ids only; spell id = 6*spirit_position + (girl ? 3 : 0) + slot; MP costs are read from each ROM at run time, target flags from the same table row; classes verified at run time by tests/test_direct_*.py",
+ "spells": [
+  {
+   "id": 0,
+   "hero": "sprite",
+   "spirit_pos": 0,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 1,
+   "hero": "sprite",
+   "spirit_pos": 0,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 2,
+   "hero": "sprite",
+   "spirit_pos": 0,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 3,
+   "hero": "girl",
+   "spirit_pos": 0,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 4,
+   "hero": "girl",
+   "spirit_pos": 0,
+   "slot": 1,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 5,
+   "hero": "girl",
+   "spirit_pos": 0,
+   "slot": 2,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 6,
+   "hero": "sprite",
+   "spirit_pos": 1,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 7,
+   "hero": "sprite",
+   "spirit_pos": 1,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 8,
+   "hero": "sprite",
+   "spirit_pos": 1,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 9,
+   "hero": "girl",
+   "spirit_pos": 1,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 10,
+   "hero": "girl",
+   "spirit_pos": 1,
+   "slot": 1,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 11,
+   "hero": "girl",
+   "spirit_pos": 1,
+   "slot": 2,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 12,
+   "hero": "sprite",
+   "spirit_pos": 2,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 13,
+   "hero": "sprite",
+   "spirit_pos": 2,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 14,
+   "hero": "sprite",
+   "spirit_pos": 2,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 15,
+   "hero": "girl",
+   "spirit_pos": 2,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 16,
+   "hero": "girl",
+   "spirit_pos": 2,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 17,
+   "hero": "girl",
+   "spirit_pos": 2,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 18,
+   "hero": "sprite",
+   "spirit_pos": 3,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 19,
+   "hero": "sprite",
+   "spirit_pos": 3,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 20,
+   "hero": "sprite",
+   "spirit_pos": 3,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 21,
+   "hero": "girl",
+   "spirit_pos": 3,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 22,
+   "hero": "girl",
+   "spirit_pos": 3,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 23,
+   "hero": "girl",
+   "spirit_pos": 3,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one",
+    "magno": "enemy-one",
+    "ac1": "enemy-one",
+    "ac777": "enemy-one"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 24,
+   "hero": "sprite",
+   "spirit_pos": 4,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 5,
+    "magno": 5,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 25,
+   "hero": "sprite",
+   "spirit_pos": 4,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 26,
+   "hero": "sprite",
+   "spirit_pos": 4,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 8,
+    "magno": 8,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 27,
+   "hero": "girl",
+   "spirit_pos": 4,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 3,
+    "magno": 3,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 28,
+   "hero": "girl",
+   "spirit_pos": 4,
+   "slot": 1,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 29,
+   "hero": "girl",
+   "spirit_pos": 4,
+   "slot": 2,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 30,
+   "hero": "sprite",
+   "spirit_pos": 5,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 2,
+    "ac777": 2
+   }
+  },
+  {
+   "id": 31,
+   "hero": "sprite",
+   "spirit_pos": 5,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 32,
+   "hero": "sprite",
+   "spirit_pos": 5,
+   "slot": 2,
+   "cls": {
+    "vanilla": "boy-only",
+    "magno": "boy-only",
+    "ac1": "boy-only",
+    "ac777": "boy-only"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 33,
+   "hero": "girl",
+   "spirit_pos": 5,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-dead-one",
+    "magno": "ally-dead-one",
+    "ac1": "ally-dead-one",
+    "ac777": "ally-dead-one"
+   },
+   "mp": {
+    "vanilla": 10,
+    "magno": 10,
+    "ac1": 10,
+    "ac777": 10
+   }
+  },
+  {
+   "id": 34,
+   "hero": "girl",
+   "spirit_pos": 5,
+   "slot": 1,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 6,
+    "magno": 6,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 35,
+   "hero": "girl",
+   "spirit_pos": 5,
+   "slot": 2,
+   "cls": {
+    "vanilla": "boy-only",
+    "magno": "boy-only",
+    "ac1": "boy-only",
+    "ac777": "boy-only"
+   },
+   "mp": {
+    "vanilla": 1,
+    "magno": 1,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 36,
+   "hero": "sprite",
+   "spirit_pos": 6,
+   "slot": 0,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 8,
+    "magno": 8,
+    "ac1": 5,
+    "ac777": 5
+   }
+  },
+  {
+   "id": 37,
+   "hero": "sprite",
+   "spirit_pos": 6,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 2,
+    "magno": 2,
+    "ac1": 3,
+    "ac777": 3
+   }
+  },
+  {
+   "id": 38,
+   "hero": "sprite",
+   "spirit_pos": 6,
+   "slot": 2,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 1,
+    "ac777": 1
+   }
+  },
+  {
+   "id": 39,
+   "hero": "girl",
+   "spirit_pos": 6,
+   "slot": 0,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 5,
+    "magno": 5,
+    "ac1": 5,
+    "ac777": 5
+   }
+  },
+  {
+   "id": 40,
+   "hero": "girl",
+   "spirit_pos": 6,
+   "slot": 1,
+   "cls": {
+    "vanilla": "enemy-one-or-all",
+    "magno": "enemy-one-or-all",
+    "ac1": "enemy-one-or-all",
+    "ac777": "enemy-one-or-all"
+   },
+   "mp": {
+    "vanilla": 8,
+    "magno": 8,
+    "ac1": 4,
+    "ac777": 4
+   }
+  },
+  {
+   "id": 41,
+   "hero": "girl",
+   "spirit_pos": 6,
+   "slot": 2,
+   "cls": {
+    "vanilla": "ally-one-or-all",
+    "magno": "ally-one-or-all",
+    "ac1": "ally-one-or-all",
+    "ac777": "ally-one-or-all"
+   },
+   "mp": {
+    "vanilla": 4,
+    "magno": 4,
+    "ac1": 4,
+    "ac777": 4
+   }
+  }
+ ],
+ "items": [
+  {
+   "id": 0,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 1,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 2,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 3,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 4,
+   "cls": {
+    "vanilla": "ally-status-one",
+    "magno": "ally-status-one",
+    "ac1": "ally-status-one",
+    "ac777": "ally-status-one"
+   }
+  },
+  {
+   "id": 5,
+   "cls": {
+    "vanilla": "ally-dead-one",
+    "magno": "ally-dead-one",
+    "ac1": "ally-dead-one",
+    "ac777": "ally-dead-one"
+   }
+  },
+  {
+   "id": 6,
+   "cls": {
+    "vanilla": "unsupported",
+    "magno": "unsupported",
+    "ac1": "unsupported",
+    "ac777": "unsupported"
+   }
+  },
+  {
+   "id": 7,
+   "cls": {
+    "vanilla": "unsupported",
+    "magno": "unsupported",
+    "ac1": "unsupported",
+    "ac777": "unsupported"
+   }
+  },
+  {
+   "id": 8,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 9,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 10,
+   "cls": {
+    "vanilla": "ally-one",
+    "magno": "ally-one",
+    "ac1": "ally-one",
+    "ac777": "ally-one"
+   }
+  },
+  {
+   "id": 11,
+   "cls": {
+    "vanilla": "unsupported",
+    "magno": "unsupported",
+    "ac1": "unsupported",
+    "ac777": "unsupported"
+   }
+  },
+  {
+   "id": 12,
+   "cls": {
+    "vanilla": "unsupported",
+    "magno": "unsupported",
+    "ac1": "unsupported",
+    "ac777": "unsupported"
+   }
+  }
+ ],
+ "items_note": "ids 6 and 7 are modal in the game (NEEDS_RING); 8 and 9 keep their quantity; item 4 needs a curable status on the target, item 5 needs a fallen ally; item ids 11 and 12 have no field effect",
+ "target_kinds": {
+  "one": "somd_target{kind=ONE, slot}",
+  "all_allies": "kind=ALL_ALLIES",
+  "all_enemies": "kind=ALL_ENEMIES"
+ },
+ "verification": {
+  "vanilla": {
+   "cast": {
+    "cases": 42,
+    "mismatches_first_run": 0,
+    "evidence": "cast_vanilla.json"
+   },
+   "item": {
+    "cases": 12,
+    "mismatches_first_run": 0,
+    "evidence": "item_vanilla.json"
+   },
+   "equip": {
+    "cases": 48,
+    "mismatches_first_run": 0,
+    "evidence": "equip_vanilla.json"
+   }
+  },
+  "magno": {
+   "cast": {
+    "cases": 42,
+    "mismatches_first_run": 3,
+    "evidence": "cast_magno_run1.json"
+   },
+   "item": {
+    "cases": 12,
+    "mismatches_first_run": 0,
+    "evidence": "item_magno.json"
+   },
+   "equip": {
+    "cases": 16,
+    "mismatches_first_run": 0,
+    "evidence": "equip_magno.json"
+   }
+  },
+  "ac1": {
+   "cast": {
+    "cases": 42,
+    "mismatches_first_run": 6,
+    "evidence": "cast_ac1_run1.json"
+   },
+   "item": {
+    "cases": 14,
+    "mismatches_first_run": 0,
+    "evidence": "item_ac1.json"
+   },
+   "equip": {
+    "cases": 192,
+    "mismatches_first_run": 0,
+    "evidence": "equip_ac1.json"
+   }
+  },
+  "ac777": {
+   "cast": {
+    "cases": 42,
+    "mismatches_first_run": 1,
+    "evidence": "cast_ac777_run1.json"
+   },
+   "item": {
+    "cases": 14,
+    "mismatches_first_run": 0,
+    "evidence": "item_ac777.json"
+   },
+   "equip": {
+    "cases": 192,
+    "mismatches_first_run": 0,
+    "evidence": "equip_ac777.json"
+   }
+  }
+ },
+ "verification_note": "first-run mismatches were: vanilla spell 25 (RNG-dependent MP at payment), Magno spells 27/28/18 and AC1 spells 10/11/29/24/31/32 (shared scratch file race of the parallel runs); all re-run sequentially with 0 mismatches. AC777 spell 5: the ring run leaves a stale byte at +0x175 of the request block (d0 vs 00); target bytes, MP, timing and effect are identical (deterministic, not a behaviour difference)"
+}

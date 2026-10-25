@@ -1,0 +1,185 @@
+[
+ {
+  "check": "status-0004",
+  "ok": true,
+  "ring_cast": true,
+  "ring_refused": null,
+  "reason": "ok",
+  "eta": 0,
+  "mask_blocks": false
+ },
+ {
+  "check": "status-0008",
+  "ok": true,
+  "ring_cast": true,
+  "ring_refused": null,
+  "reason": "ok",
+  "eta": 0,
+  "mask_blocks": false
+ },
+ {
+  "check": "status-0010",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0020",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0040",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0080",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "silenced",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0100",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0200",
+  "ok": true,
+  "ring_cast": true,
+  "ring_refused": null,
+  "reason": "ok",
+  "eta": 0,
+  "mask_blocks": false
+ },
+ {
+  "check": "status-0400",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 0,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-0800",
+  "ok": true,
+  "ring_cast": true,
+  "ring_refused": null,
+  "reason": "ok",
+  "eta": 0,
+  "mask_blocks": false
+ },
+ {
+  "check": "status-1000",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-2000",
+  "ok": true,
+  "ring_cast": true,
+  "ring_refused": null,
+  "reason": "ok",
+  "eta": 0,
+  "mask_blocks": false
+ },
+ {
+  "check": "status-4000",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": null,
+  "reason": "status",
+  "eta": 2880,
+  "mask_blocks": true
+ },
+ {
+  "check": "status-8000",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": "fail-bad-argument",
+  "reason": "ko",
+  "eta": 0,
+  "mask_blocks": true
+ },
+ {
+  "check": "mp-zero",
+  "ok": true,
+  "ring_cast": false,
+  "ring_refused": "fail-bad-argument",
+  "reason": "no-mp",
+  "mp_cost": 4,
+  "mp_have": 0
+ },
+ {
+  "check": "mp-exact",
+  "ok": true,
+  "ring_cast": true,
+  "reason": "ok",
+  "mp_have": 4
+ },
+ {
+  "check": "reason-ok",
+  "ok": true
+ },
+ {
+  "check": "reason-boy",
+  "ok": true
+ },
+ {
+  "check": "reason-not-owned",
+  "ok": true
+ },
+ {
+  "check": "reason-busy",
+  "ok": true
+ },
+ {
+  "check": "reason-event",
+  "ok": true
+ },
+ {
+  "check": "reason-fade",
+  "ok": true
+ },
+ {
+  "check": "reason-lock",
+  "ok": true
+ },
+ {
+  "check": "reason-ring",
+  "ok": true
+ },
+ {
+  "check": "silence-eta",
+  "ok": true,
+  "eta": 80
+ },
+ {
+  "check": "direct-refuses-silenced",
+  "ok": true
+ }
+]

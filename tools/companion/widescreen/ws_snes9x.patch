@@ -1,0 +1,910 @@
+diff --git a/gfx.cpp b/gfx.cpp
+index 375414a2..be5be4cc 100644
+--- a/gfx.cpp
++++ b/gfx.cpp
+@@ -1,3 +1,4 @@
++#include <stdlib.h>
+ /*****************************************************************************\
+      Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
+                 This file is licensed under the Snes9x License.
+@@ -438,8 +439,441 @@ static inline void RenderScreen (bool8 sub)
+ 	DrawBackdrop();
+ }
+ 
++/* ---- SoM companion widescreen (see tools/companion/widescreen, docs/companion-widescreen-core-20261017.md) ----
++ * When libretro.cpp sets som_ws_mode = 2, each batch of scanlines is rendered three times by the stock
++ * renderer: the screen 256 px to the left (BG H offset - 256, sprites +256), the screen 256 px to the
++ * right, and the normal screen, last, so GFX.Screen stays exactly the stock frame.  The three 256 px slices
++ * are stored side by side in som_ws_buf (768 px per line).  som_ws_mode = 1 only validates the map (no
++ * side render), 0 is the stock path.  Debug env: SOM_WS_BG3=1 keeps BG3 in the side passes, SOM_WS_OBJ=0
++ * drops sprites in them, SOM_WS_FIX=0 keeps the game's tilemap, SOM_WS_RAW=1 shows unvalidated layers.
++ */
++uint16 som_ws_buf[240 * 768];
++static int som_dbg = -1;
++int som_m7_dx = 0;
++int som_ws_mode = 0, som_ws_init_done = 0, som_ws_bg3 = 0, som_ws_obj = 1, som_ws_ok = 0, som_ws_fix = 1, som_ws_mask = 0, som_ws_raw = 0;
++/* Per-frame map validation, read and reset by libretro.cpp at the end of each frame. */
++int som_ws_fr_batches = 0, som_ws_fr_strict = 1, som_ws_fr_show = 1, som_ws_fr_mode7 = 0, som_ws_fr_layout = 0;
++static int som_ws_batch_show = 0, som_ws_batch_partial = 0;
++uint8 som_ws_skyfix[240];
++static int som_ws_m7_cur = 0, som_ws_m7_prev = 0;   /* a Mode 7 batch was seen in this / the previous frame (flights switch Mode 1 sky -> Mode 7 floor mid-frame) */
++#define SOM_WS_M7MIX (PPU.BGMode != 7 && som_ws_m7_prev)
++int som_ws_stat[4];   /* test hooks, cumulative: batches without a side render because the mode is not supported, batches with no valid layer, side passes drawn */
++void som_ws_frame_reset (void) { som_ws_fr_batches = 0; som_ws_fr_strict = 1; som_ws_fr_show = 1; som_ws_fr_mode7 = 0; som_ws_fr_layout = 0; }
++static void som_ws_init (void)
++{
++	som_ws_init_done = 1;
++	const char *e = getenv("SOM_WS_BG3"); som_ws_bg3 = e && *e == '1';
++	e = getenv("SOM_WS_OBJ"); som_ws_obj = !(e && *e == '0');
++	e = getenv("SOM_WS_FIX"); som_ws_fix = !(e && *e == '0');
++	e = getenv("SOM_WS_RAW"); som_ws_raw = e && *e == '1';
++	e = getenv("SOM_WS_MASK"); som_ws_mask = e && *e == '1';
++}
++static void SetupOBJ (void);
++static inline void RenderScreen (bool8 sub);
++extern int som_ws_fix, som_ws_mask;
++static void som_ws_copy (int slice)
++{
++	int camx = (int16) (Memory.RAM[0xA8] | (Memory.RAM[0xA9] << 8)), mapw = Memory.RAM[0xC0] | (Memory.RAM[0xC1] << 8);
++	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++)
++	{
++		uint16 *d = som_ws_buf + y * 768 + slice * 256;
++		memcpy(d, GFX.Screen + y * GFX.PPL, 256 * sizeof(uint16));
++		if (som_ws_mask && slice != 1 && mapw)
++			for (int x = 0; x < 256; x++)
++			{
++				int wx = camx + x + (slice - 1) * 256;
++				if (wx < 0 || wx >= mapw)
++					d[x] = 0;
++			}
++	}
++}
++/* SoM keeps the whole map in WRAM: tile ids $7F:0000 (layer 1) and $7F:4000 (layer 2), 128 cells per row,
++ * tilemap words $7F:C000 / $7F:C800 + 8 * id, camera $A8/$AA and $AC/$AE, map size $C0/$C2.  The game streams
++ * only about one 8 px column beyond the view into the 64 x 32 tilemaps, so for the side passes the whole
++ * 512 px tilemap is rewritten from WRAM, centred on the camera, and restored afterwards. */
++uint32 som_ws_cmp[2][2];
++static uint8 som_vram_saved[2][0x1000];
++static int som_vram_fixed[2];
++extern int som_ws_raw;
++static inline int som_ramw (int a) { return Memory.RAM[a] | (Memory.RAM[a + 1] << 8); }
++int som_ws_layer_ok[2], som_ws_layer_draw[2];
++static int som_ws_k_age[2] = { 100000, 100000 };   /* evaluations since the layer last matched strictly */
++static void som_ws_tilemaps (bool apply)
++{
++	for (int L = 0; L < 2; L++)
++	{
++		som_vram_fixed[L] = 0;
++		som_ws_layer_ok[L] = 0;
++		som_ws_layer_draw[L] = 0;
++		if (PPU.BG[L].SCSize != 1 || PPU.BG[L].SCBase > 0x7c00)
++			continue;
++		uint8 *base = Memory.VRAM + PPU.BG[L].SCBase * 2;
++		static uint16 nw[2048];
++		int camx = (int16) som_ramw(L ? 0xAC : 0xA8), camy = (int16) som_ramw(L ? 0xAE : 0xAA);
++		const uint8 *ids = Memory.RAM + 0x10000 + L * 0x4000;
++		const uint8 *wd = Memory.RAM + 0x1C000 + L * 0x800;
++		/* The game's own tilemap offset: BG scroll minus camera, in 8 px cells.  It is constant for a map load, but the scroll
++		 * registers and the WRAM camera are written at different times, so on a frame where they disagree (a fast camera
++		 * move, the ring opening, a screen shake) the value derived from them is off by cells.  The derived value is tried
++		 * first; if it does not match the game's tilemap, the last value that did match and then its neighbours are tried. */
++		int colK = ((((int) LineData[GFX.StartY].BG[L].HOffset - camx) + 4) >> 3) & 63;
++		int rowK = ((((int) LineData[GFX.StartY].BG[L].VOffset - 1 - camy) + 4) >> 3) & 31;
++		int vc = ((LineData[GFX.StartY].BG[L].HOffset >> 3) & 63), vr = ((LineData[GFX.StartY].BG[L].VOffset >> 3) & 31);
++		uint32 cmp = 0, bad = 0;
++		int mapw = som_ramw(L ? 0xC4 : 0xC0), maph = som_ramw(L ? 0xC6 : 0xC2);
++		uint16 blank = 0;
++		{
++			/* a character that is all zero stands in for "no map here" (shows the backdrop) */
++			const uint8 *ch = Memory.VRAM + ((PPU.BG[L].NameBase * 2) & 0xffff);
++			for (int i = 0; i < 1024 && ((i + 1) * 32 + (PPU.BG[L].NameBase * 2)) <= 0x10000; i++)
++			{
++				int z = 1;
++				for (int k = 0; k < 32; k++) if (ch[i * 32 + k]) { z = 0; break; }
++				if (z) { blank = i; break; }
++			}
++		}
++		/* Tilemap cell (r, c) shows world cell (bx, by): the 33 x 29 cells in view run from (bxl, byt) on and the rest of the
++		 * 64 x 32 map continues them (16 columns before, 15 after the view, 3 rows below it), whatever the camera says. */
++		auto cell = [&](int ck, int rk, int r, int c) -> int {   /* -1 = outside the map */
++			int bxl = (((vc - ck) - (camx >> 3) + 32) & 63) + (camx >> 3) - 32;
++			int byt = (((vr - rk) - (camy >> 3) + 16) & 31) + (camy >> 3) - 16;
++			int by = byt + ((r - vr) & 31), bx = bxl + ((c - vc + 16) & 63) - 16, cx = bx >> 1, cy = by >> 1;
++			if (cx >= 0 && cx < 128 && cy >= 0 && cy < 128 && cx * 16 < mapw && cy * 16 < maph)
++			{
++				int id = ids[cy * 128 + cx];
++				const uint8 *q = wd + 8 * id + (((by & 1) * 2 + (bx & 1)) * 2);
++				return q[0] | (q[1] << 8);
++			}
++			return -1;
++		};
++		auto score = [&](int ck, int rk, uint32 &n) -> uint32 {
++			uint32 b = 0; n = 0;
++			for (int r = 0; r < 32; r++)
++			{
++				if (((r - vr) & 31) >= 24) continue;
++				for (int c = 0; c < 64; c++)
++				{
++					if (((c - vc) & 63) >= 33) continue;
++					int o = (c >= 32 ? 0x400 : 0) + r * 32 + (c & 31);
++					int w = cell(ck, rk, r, c);
++					if (w < 0) continue;   /* beyond the map edge the game may show anything (wall tiles, padding): not compared */
++					n++;
++					if ((base[o * 2] | (base[o * 2 + 1] << 8)) != w) b++;
++				}
++			}
++			return b;
++		};
++		static int k_last[2][2] = { { -1, -1 }, { -1, -1 } };
++		int ck = colK, rk = rowK;
++		bad = score(ck, rk, cmp);
++		if (cmp && bad * 50 <= cmp)
++		{
++			k_last[L][0] = ck; k_last[L][1] = rk;
++		}
++		else if (cmp)
++		{
++			som_ws_stat[3]++;
++			uint32 best = bad, n;
++			int bc = ck, br = rk;
++			if (k_last[L][0] >= 0)
++			{
++				uint32 b = score(k_last[L][0], k_last[L][1], n);
++				if (b < best) { best = b; bc = k_last[L][0]; br = k_last[L][1]; }
++			}
++			for (int pass = 0; pass < 2 && best * 50 > cmp; pass++)
++			{
++				int c0 = pass ? k_last[L][0] : colK, r0 = pass ? k_last[L][1] : rowK;
++				if (c0 < 0) continue;
++				for (int dr = -2; dr <= 2; dr++)
++					for (int dc = -2; dc <= 2; dc++)
++					{
++						uint32 b = score((c0 + dc) & 63, (r0 + dr) & 31, n);
++						if (b < best) { best = b; bc = (c0 + dc) & 63; br = (r0 + dr) & 31; }
++					}
++			}
++			bad = best; ck = bc; rk = br;
++			if (cmp && bad * 50 <= cmp) { k_last[L][0] = ck; k_last[L][1] = rk; }
++		}
++		colK = ck; rowK = rk;
++		/* A layer that matched the game's tilemap a moment ago keeps being drawn while a few more cells differ (up to 10 %, e.g. a
++		 * tile the game changes in VRAM only, or a map that is being streamed); the strict 2 % result still drives the
++		 * widen / fall back decision. */
++		int strict_ok = cmp && bad * 50 <= cmp;
++		som_ws_k_age[L] = strict_ok ? 0 : som_ws_k_age[L] + 1;
++		int draw_ok = strict_ok || (cmp && som_ws_k_age[L] <= 600 && bad * 10 <= cmp);
++		if (draw_ok)
++			for (int r = 0; r < 32; r++)
++				for (int c = 0; c < 64; c++)
++				{
++					int o = (c >= 32 ? 0x400 : 0) + r * 32 + (c & 31), w = cell(ck, rk, r, c);
++					/* outside the map: the picture in view keeps the game's own cell (the centre shows it too), the rest is blank */
++					if (w < 0) w = (((c - vc) & 63) < 33 && ((r - vr) & 31) < 29) ? (base[o * 2] | (base[o * 2 + 1] << 8)) : blank;
++					nw[o] = w;
++				}
++		if (GFX.StartY < 100) { som_ws_cmp[L][0] += cmp; som_ws_cmp[L][1] += bad; }
++		som_ws_layer_ok[L] = strict_ok;
++		som_ws_layer_draw[L] = draw_ok;
++		if (!draw_ok || !apply)
++			continue;
++		memcpy(som_vram_saved[L], base, 0x1000);
++		for (int o = 0; o < 2048; o++) { base[o * 2] = nw[o] & 0xff; base[o * 2 + 1] = nw[o] >> 8; }
++		som_vram_fixed[L] = 1;
++	}
++}
++/* A batch is "strict" when every enabled BG1/BG2 layer was rebuilt and matches the game's own tilemap, and
++ * "show" when at least one enabled layer did (the side passes draw the valid layers only). */
++static void som_ws_batch_flags (void)
++{
++	if (PPU.BGMode == 7 || SOM_WS_M7MIX)
++	{
++		if (PPU.BGMode == 7) som_ws_m7_cur = 1;
++		/* Mode 7 (and the Mode 1 sky above it in the same frame, which is not the field layout): the side passes evaluate the same per-line affine map at screen columns outside 0..255; there is no tilemap to check */
++		som_ws_layer_ok[0] = som_ws_layer_ok[1] = som_ws_layer_draw[0] = som_ws_layer_draw[1] = 1;
++		som_ws_batch_show = 1; som_ws_batch_partial = 0; som_ws_fr_batches++;
++		return;
++	}
++	int en = Memory.FillRAM[0x212c] | Memory.FillRAM[0x212d], strict = 1, show = 0, any = 0, partial = 0;
++	if (!som_ws_fix)
++		som_ws_layer_ok[0] = som_ws_layer_ok[1] = som_ws_layer_draw[0] = som_ws_layer_draw[1] = 1;
++	for (int L = 0; L < 2; L++)
++		if (en & (1 << L))
++		{
++			any = 1;
++			if (PPU.BG[L].SCSize != 1) som_ws_fr_layout = 1;
++			if (som_ws_layer_draw[L]) show = 1;
++			else if (som_ws_k_age[L] <= 60) partial = 1;   /* a layer that matched a moment ago is missing now */
++			if (!som_ws_layer_ok[L]) strict = 0;
++		}
++	if (!any) strict = 0;
++	if (som_ws_raw) show = 1;
++	som_ws_batch_show = show;
++	som_ws_batch_partial = partial && !som_ws_raw;
++	som_ws_fr_batches++;
++	som_ws_fr_strict &= strict;
++	som_ws_fr_show &= show;
++}
++static void som_ws_validate (void)
++{
++	if (PPU.BGMode != 7 && !SOM_WS_M7MIX) som_ws_tilemaps(false);
++	som_ws_batch_flags();
++}
++static void som_ws_notok (void)
++{
++	som_ws_stat[0]++;
++	som_ws_fr_batches++;
++	som_ws_fr_strict = 0;
++	som_ws_fr_show = 0;
++	if (PPU.BGMode == 7) som_ws_fr_mode7 = 1; else som_ws_fr_layout = 1;
++}
++static void som_ws_black (int slice)
++{
++	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++)
++		memset(som_ws_buf + y * 768 + slice * 256, 0, 256 * sizeof(uint16));
++}
++static void som_ws_tilemaps_restore (void)
++{
++	for (int L = 0; L < 2; L++)
++		if (som_vram_fixed[L])
++			memcpy(Memory.VRAM + PPU.BG[L].SCBase * 2, som_vram_saved[L], 0x1000);
++}
++static unsigned som_ws_fid;   /* counts frames rendered while the side passes are on */
++/* True while the side columns may keep what was drawn last instead of going black: the first 6 consecutive frames in which a
++ * batch cannot be drawn.  A momentary miss (a tilemap the game is rewriting, a hi-res or interlace bit set for a few lines)
++ * would otherwise flash black bands in the sides. */
++static int som_ws_hold (void)
++{
++	static unsigned last_fid = 0xffffffffu;
++	static int consec = 0;
++	if (last_fid != som_ws_fid) { consec = (last_fid + 1 == som_ws_fid) ? consec + 1 : 1; last_fid = som_ws_fid; }
++	return consec <= 6;
++}
++static void som_ws_passes (void)
++{
++	if (som_dbg < 0) { const char *e = getenv("SOM_WS_DBG"); som_dbg = e ? atoi(e) : 0; }
++	if (som_dbg & 32) return;
++	static struct SLineData saved[240];
++	static int16 hpos[128];
++	uint8 forced = Settings.BG_Forced;
++	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) saved[y] = LineData[y];
++	for (int i = 0; i < 128; i++) hpos[i] = PPU.OBJ[i].HPos;
++	if (SOM_WS_M7MIX)
++		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) som_ws_skyfix[y] = 1;
++	if (som_ws_fix && PPU.BGMode != 7 && !SOM_WS_M7MIX) som_ws_tilemaps(true); else som_vram_fixed[0] = som_vram_fixed[1] = 0;
++	som_ws_batch_flags();
++	if (!som_ws_batch_show || som_ws_batch_partial)
++	{
++		/* Nothing valid to draw, or a layer that was fine a moment ago is missing (drawing the rest would make it blink): no extra
++		 * render, the sides hold the last picture for a few frames; after that they go black (nothing valid) or show what is valid. */
++		int hold = som_ws_hold();
++		if (hold || !som_ws_batch_show)
++		{
++			som_ws_stat[1]++;
++			som_ws_tilemaps_restore();
++			if (!hold)
++			{
++				som_ws_black(0);
++				som_ws_black(2);
++			}
++			return;
++		}
++	}
++	if (som_dbg == 78 && GFX.StartY == 0)
++	{
++		for (int L = 0; L < 3; L++)
++		{
++			int nz[2] = { 0, 0 }; uint8 *b = Memory.VRAM + PPU.BG[L].SCBase * 2;
++			for (int i = 0; i < 2048; i++) if (b[i * 2] | b[i * 2 + 1]) nz[i >= 1024]++;
++			fprintf(stderr, "BG%d size=%d base=%04x h=%d v=%d nz=%d/%d tm=%02x\n", L, PPU.BG[L].SCSize, PPU.BG[L].SCBase, LineData[0].BG[L].HOffset, LineData[0].BG[L].VOffset, nz[0], nz[1], Memory.FillRAM[0x212c]);
++		}
++	}
++	som_ws_stat[2]++;
++	/* Windows are screen coordinates (the sword effect is a window ellipse), so the side renders get their own window state (below) and the
++	 * original one is restored afterwards. */
++	uint8 wsave[4] = { PPU.Window1Left, PPU.Window1Right, PPU.Window2Left, PPU.Window2Right };
++	bool8 wuse = !(som_dbg & 64);
++	for (int dir = -1; dir <= 1; dir += 2)
++	{
++		if (wuse)
++		{
++			/* a window that touches the screen edge on this side keeps going over the whole side column; one that closes before the edge does not
++			 * reach it (an ellipse that fills the screen carries on, a small one is not repeated) */
++			bool w1 = wsave[0] <= wsave[1] && (dir < 0 ? wsave[0] == 0 : wsave[1] == 255), w2 = wsave[2] <= wsave[3] && (dir < 0 ? wsave[2] == 0 : wsave[3] == 255);
++			PPU.Window1Left = w1 ? 0 : 1; PPU.Window1Right = w1 ? 255 : 0;
++			PPU.Window2Left = w2 ? 0 : 1; PPU.Window2Right = w2 ? 255 : 0;
++			S9xComputeClipWindows();
++		}
++		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++)
++			for (int b = 0; b < 3; b++)
++				LineData[y].BG[b].HOffset = (uint16) (saved[y].BG[b].HOffset + dir * 256) & 0x3ff;
++		for (int i = 0; i < 128; i++)
++		{
++			int h = hpos[i] - dir * 256;
++			PPU.OBJ[i].HPos = (int16) (((h + 256) & 511) - 256);
++		}
++		som_m7_dx = dir * 256;
++		Settings.BG_Forced = forced | (som_ws_bg3 ? 0 : 4) | (som_ws_obj ? 0 : 16);
++		if (som_ws_fix && !som_ws_raw)
++			Settings.BG_Forced |= (som_ws_layer_draw[0] ? 0 : 1) | (som_ws_layer_draw[1] ? 0 : 2);
++		if (!(som_dbg & 2)) SetupOBJ();
++		if (!(som_dbg & 1)) {
++		if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires ||
++			((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2130] & 2) && (Memory.FillRAM[0x2131] & 0x3f) && (Memory.FillRAM[0x212d] & 0x1f)))
++			RenderScreen(TRUE);
++		RenderScreen(FALSE); }
++		som_ws_copy(dir < 0 ? 0 : 2);
++		memset(GFX.ZBuffer + GFX.StartY * GFX.PPL, 0, (GFX.EndY - GFX.StartY + 1) * GFX.PPL);
++		memset(GFX.SubZBuffer + GFX.StartY * GFX.PPL, 0, (GFX.EndY - GFX.StartY + 1) * GFX.PPL);
++	}
++	som_m7_dx = 0;
++	if (wuse)
++	{
++		PPU.Window1Left = wsave[0]; PPU.Window1Right = wsave[1]; PPU.Window2Left = wsave[2]; PPU.Window2Right = wsave[3];
++		S9xComputeClipWindows();
++	}
++	if (som_ws_fix) som_ws_tilemaps_restore();
++	Settings.BG_Forced = forced;
++	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) LineData[y] = saved[y];
++	for (int i = 0; i < 128; i++) PPU.OBJ[i].HPos = hpos[i];
++	if (!(som_dbg & 16)) SetupOBJ();
++}
++
++/* SoM HUD mask (option snes9x_som_hud = hide_except_ring).  The HUD is (a) three party portrait sprites in OAM
++ * slots 0..2 (16x16, y 199, x 8/88/168, tiles $E8/$EA/$EC, attr priority 3) and (b) three BG3 panels of 10 x 3
++ * cells at rows 25..27, columns 1+10p..10+10p (frame, name, HP/MP numbers, gauge); Ancient Cave adds a "FLOOR / time"
++ * line at row 23.  Unless the ring is open ($7D = 1, which also covers the status, equipment and config screens) the HUD
++ * is removed at render time in every other state: field, fades, transitions, events, dialogs.  A BG3 panel is
++ * recognised by its static frame cells (tile $016 at rows 25 and 26 of its first column, tile $013 at row 27 column 3),
++ * so screens that merely share BG3 rows (name entry and title are not Mode 1) are untouched, and a dialog box keeps
++ * its own cells (only the panel cells are cleared).  VRAM and OAM are restored after each scanline batch.  The decision
++ * is latched on the first batch of a frame (ring flag). */
++int som_hires_native = 0;
++int som_hud_opt = 0, som_hud_field = 0, som_hud_hidden_total = 0, som_hud_panels_total = 0, som_hud_panels_frame = 0;
++static int som_hud_n = 0, som_hud_idx[3];
++static uint16 som_hud_vpos[3];
++static uint8 som_hud3_saved[4][64];
++static int som_hud3_rows[4], som_hud3_n = 0;
++static inline int som_bg3_get (const uint8 *b, int r, int c) { const uint8 *q = b + (r * 32 + c) * 2; return q[0] | (q[1] << 8); }
++static void som_hud_bg3 (void)
++{
++	if (PPU.BGMode != 1 || PPU.BG[2].SCSize != 0 || PPU.BG[2].SCBase > 0x7c00)
++		return;
++	uint8 *b = Memory.VRAM + PPU.BG[2].SCBase * 2;
++	int present = 0;
++	for (int p = 0; p < 3; p++)
++	{
++		int c0 = 1 + 10 * p;
++		if ((som_bg3_get(b, 25, c0) & 0x3ff) == 0x016 && (som_bg3_get(b, 26, c0) & 0x3ff) == 0x016 &&
++			(som_bg3_get(b, 27, c0 + 2) & 0x3ff) == 0x013)
++			present |= 1 << p;
++	}
++	if (!present)
++		return;
++	som_hud_panels_frame |= present;
++	static const int rows[4] = { 23, 25, 26, 27 };
++	for (int k = 0; k < 4; k++)
++	{
++		som_hud3_rows[k] = rows[k];
++		memcpy(som_hud3_saved[k], b + rows[k] * 64, 64);
++		for (int c = 0; c < 32; c++)
++		{
++			int p = c >= 1 && c <= 30 ? (c - 1) / 10 : -1;
++			if (k == 0 ? (p >= 0) : (p >= 0 && (present & (1 << p))))
++				b[rows[k] * 64 + c * 2] = b[rows[k] * 64 + c * 2 + 1] = 0;
++		}
++	}
++	som_hud3_n = 4;
++}
++static void som_hud_begin (void)
++{
++	if (IPPU.PreviousLine == 0)
++	{
++		som_hud_field = Memory.RAM[0x7D] != 1;
++		som_hud_panels_total += som_hud_panels_frame ? 1 : 0;
++		som_hud_panels_frame = 0;
++	}
++	som_hud_n = 0;
++	som_hud3_n = 0;
++	if (!som_hud_field)
++		return;
++	som_hud_bg3();
++	for (int i = 0; i < 3; i++)
++	{
++		const uint8 *o = PPU.OAMData + i * 4;
++		int hi = (PPU.OAMData[512 + (i >> 2)] >> ((i & 3) * 2)) & 3;
++		if (o[1] == 199 && !(hi & 2) && (o[3] & 0x30) == 0x30 && o[2] >= 0xE8 && o[2] <= 0xEE && !(o[2] & 1) &&
++			(o[0] == 8 || o[0] == 88 || o[0] == 168) && !(hi & 1))
++		{
++			som_hud_idx[som_hud_n] = i;
++			som_hud_vpos[som_hud_n++] = PPU.OBJ[i].VPos;
++			PPU.OBJ[i].VPos = 240;
++		}
++	}
++	if (som_hud_n)
++	{
++		som_hud_hidden_total += som_hud_n;
++		SetupOBJ();
++	}
++}
++static void som_hud_end (void)
++{
++	for (int k = 0; k < som_hud_n; k++)
++		PPU.OBJ[som_hud_idx[k]].VPos = som_hud_vpos[k];
++	if (som_hud_n)
++		IPPU.OBJChanged = TRUE;
++	som_hud_n = 0;
++	if (som_hud3_n && PPU.BG[2].SCBase <= 0x7c00)
++	{
++		uint8 *b = Memory.VRAM + PPU.BG[2].SCBase * 2;
++		for (int k = 0; k < som_hud3_n; k++)
++			memcpy(b + som_hud3_rows[k] * 64, som_hud3_saved[k], 64);
++	}
++	som_hud3_n = 0;
++}
++
+ void S9xUpdateScreen (void)
+ {
++	if (som_hud_opt)
++		som_hud_begin();
+ 	if (IPPU.OBJChanged || IPPU.InterlaceOBJ)
+ 		SetupOBJ();
+ 
+@@ -491,6 +925,21 @@ void S9xUpdateScreen (void)
+ 		if ((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2131] & 0x3f))
+ 			GFX.FixedColour = BUILD_PIXEL(IPPU.XB[PPU.FixedColourRed], IPPU.XB[PPU.FixedColourGreen], IPPU.XB[PPU.FixedColourBlue]);
+ 
++		if (!som_ws_init_done) som_ws_init();
++		if (som_dbg < 0) { const char *e = getenv("SOM_WS_DBG"); som_dbg = e ? atoi(e) : 0; }
++		som_ws_ok = som_ws_mode && !IPPU.DoubleWidthPixels && (PPU.BGMode < 5 || PPU.BGMode == 7) && !IPPU.PseudoHires && !GFX.DoInterlace;
++		if (som_dbg == 77 && GFX.StartY < 100) fprintf(stderr, "batch y=%d..%d mode=%d ok=%d wsmode=%d tm=%02x ts=%02x\n", GFX.StartY, GFX.EndY, PPU.BGMode, som_ws_ok, som_ws_mode, Memory.FillRAM[0x212c], Memory.FillRAM[0x212d]);
++		if (som_dbg == 99 && !som_ws_ok) fprintf(stderr, "notok dw=%d mode=%d ph=%d il=%d y=%d..%d\n", IPPU.DoubleWidthPixels, PPU.BGMode, IPPU.PseudoHires, GFX.DoInterlace, GFX.StartY, GFX.EndY);
++		if (GFX.StartY == 0) { som_ws_m7_prev = som_ws_m7_cur; som_ws_m7_cur = 0; memset(som_ws_skyfix, 0, sizeof som_ws_skyfix); }
++		if (som_ws_mode == 2 && GFX.StartY == 0)
++			som_ws_fid++;
++		if (som_ws_ok)
++		{
++			if (som_ws_mode == 2) som_ws_passes(); else som_ws_validate();
++		}
++		else if (som_ws_mode)
++			som_ws_notok();
++
+ 		if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires ||
+ 			((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2130] & 2) && (Memory.FillRAM[0x2131] & 0x3f) && (Memory.FillRAM[0x212d] & 0x1f)))
+ 			// If hires (Mode 5/6 or pseudo-hires) or math is to be done
+@@ -498,6 +947,19 @@ void S9xUpdateScreen (void)
+ 			RenderScreen(TRUE);
+ 
+ 		RenderScreen(FALSE);
++		if (som_ws_ok && som_ws_mode == 2)
++			som_ws_copy(1);
++		else if (som_ws_mode == 2)
++		{
++			/* only a hi-res or interlace bit seen in a field mode is held; Mode 5/6/7 screens (title, text, cutscenes) have no sides */
++			int hold = PPU.BGMode < 5 && som_ws_hold();
++			for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++)
++			{
++				if (!hold) memset(som_ws_buf + y * 768, 0, 256 * sizeof(uint16));
++				memcpy(som_ws_buf + y * 768 + 256, GFX.Screen + y * GFX.PPL, 256 * sizeof(uint16));
++				if (!hold) memset(som_ws_buf + y * 768 + 512, 0, 256 * sizeof(uint16));
++			}
++		}
+ 	}
+ 	else
+ 	{
+@@ -510,8 +972,15 @@ void S9xUpdateScreen (void)
+ 		for (uint32 l = GFX.StartY; l <= GFX.EndY; l++, GFX.S += GFX.PPL)
+ 			for (int x = 0; x < IPPU.RenderedScreenWidth; x++)
+ 				GFX.S[x] = black;
++		if (som_ws_mode == 2)
++			for (uint32 l = GFX.StartY; l <= GFX.EndY && l < 240; l++)
++				for (int x = 0; x < 768; x++)
++					som_ws_buf[l * 768 + x] = black;
+ 	}
+ 
++	if (som_hud_n || som_hud3_n)
++		som_hud_end();
++
+ 	IPPU.PreviousLine = IPPU.CurrentLine;
+ }
+ 
+diff --git a/libretro/libretro.cpp b/libretro/libretro.cpp
+index 6060767b..b3877c48 100644
+--- a/libretro/libretro.cpp
++++ b/libretro/libretro.cpp
+@@ -155,6 +155,27 @@ enum aspect_mode {
+     ASPECT_RATIO_AUTO
+ };
+ static retro_environment_t environ_cb;
++
++/* ---- SoM companion widescreen (see ../ws_snes9x.patch notes, docs/companion-widescreen-core-20261017.md) ----
++ * Core option snes9x_som_widescreen = disabled | 17 | 27 | 46 (px per side).  While it is on, the frame is
++ * (256 + 2 * margin) wide with the stock 256 px picture at x = margin.  The width changes only when the
++ * option changes or at a map transition (the first visible frame after the screen went dark following a
++ * change of the map id, WRAM $DC) when the new map cannot be widened (fallback to 256).  Dialogs, menus
++ * and other screens never change it. */
++extern "C" { extern int som_ws_mode, som_ws_fr_batches, som_ws_fr_strict, som_ws_fr_show, som_ws_fr_mode7, som_ws_fr_layout; }
++void som_ws_frame_reset(void);
++static int ws_margin = 0;          /* requested px per side from the option, 0 = off */
++static int ws_keep_wide = 0;       /* option fallback = "black": keep the wide frame on unsupported maps */
++static int ws_active = 0;          /* current frame is wide */
++static int ws_pending = 0;         /* 1 = map transition awaiting its first visible frame, 2 = positive-only recheck */
++static int ws_grace = 0;
++static int ws_blank_seen = 0, ws_pending_age = 0, ws_last_dc = -1, ws_reported_w = 0, ws_last_decision = 0;
++static int ws_debug_margin = -1;
++static uint16 ws_out[512 * 240];
++extern "C" int som_ws_decisions[4];
++int som_ws_decisions[4];          /* transitions seen, widened, fell back, soft rechecks */
++static inline int ws_eff_margin(void) { return blargg_filter ? 0 : ws_margin; }
++static inline int ws_cur_width(void) { return 256 + ((ws_active && ws_eff_margin()) ? 2 * ws_eff_margin() : 0); }
+ static overscan_mode crop_overscan_mode = OVERSCAN_CROP_ON; // default to crop
+ static aspect_mode aspect_ratio_mode = ASPECT_RATIO_4_3; // default to 4:3
+ static bool rom_loaded = false;
+@@ -598,6 +619,41 @@ static void update_variables(void)
+             S9xSetControllerCrosshair(X_MACSRIFLE, -1, get_cursor_color(var.value), "Black");
+     }
+ 
++    {
++        int old = ws_margin, nm = 0;
++        var.key = "snes9x_som_widescreen";
++        var.value = NULL;
++        if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value && strcmp(var.value, "disabled"))
++            nm = atoi(var.value);
++        if (ws_debug_margin < 0) { const char *e = getenv("SOM_WS_MARGIN"); ws_debug_margin = e ? atoi(e) : 0; }
++        if (ws_debug_margin > 0 && ws_debug_margin <= 128) nm = ws_debug_margin;
++        if (nm != 17 && nm != 27 && nm != 46 && !(ws_debug_margin > 0 && nm == ws_debug_margin)) nm = 0;
++        var.key = "snes9x_som_widescreen_fallback";
++        var.value = NULL;
++        ws_keep_wide = environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value && !strcmp(var.value, "black");
++        if (nm != old)
++        {
++            ws_margin = nm;
++            if (nm == 0) { ws_active = 0; ws_pending = 0; }
++            else { ws_active = 1; ws_pending = 2; }
++            g_geometry_update = true;
++        }
++    }
++
++    {
++        extern int som_hires_native;
++        var.key = "snes9x_som_hires";
++        var.value = NULL;
++        som_hires_native = environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value && !strcmp(var.value, "native");
++    }
++
++    {
++        extern int som_hud_opt;
++        var.key = "snes9x_som_hud";
++        var.value = NULL;
++        som_hud_opt = environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value && (!strcmp(var.value, "hide_except_ring") || !strcmp(var.value, "hide_in_field"));
++    }
++
+     var.key = "snes9x_block_invalid_vram_access";
+     var.value = NULL;
+ 
+@@ -823,16 +879,18 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
+     memset(info,0,sizeof(retro_system_av_info));
+     unsigned width = SNES_WIDTH;
+     unsigned height = PPU.ScreenHeight;
++    unsigned out_width = ws_cur_width();
++    ws_reported_w = out_width;
+     if (crop_overscan_mode == OVERSCAN_CROP_ON)
+         height = SNES_HEIGHT;
+     else if (crop_overscan_mode == OVERSCAN_CROP_OFF)
+         height = SNES_HEIGHT_EXTENDED;
+ 
+-    info->geometry.base_width = width;
++    info->geometry.base_width = out_width;
+     info->geometry.base_height = height;
+-    info->geometry.max_width = MAX_SNES_WIDTH_NTSC;
++    info->geometry.max_width = MAX_SNES_WIDTH_NTSC > 512 ? MAX_SNES_WIDTH_NTSC : 512;
+     info->geometry.max_height = MAX_SNES_HEIGHT;
+-    info->geometry.aspect_ratio = get_aspect_ratio(width, height);
++    info->geometry.aspect_ratio = get_aspect_ratio(width, height) * (float) out_width / (float) width;
+     info->timing.sample_rate = 32040;
+     info->timing.fps = retro_get_region() == RETRO_REGION_NTSC ? 21477272.0 / 357366.0 : 21281370.0 / 425568.0;
+ 
+@@ -1829,6 +1887,7 @@ void retro_run()
+         update_geometry();
+         height = PPU.ScreenHeight;
+     }
++    som_ws_mode = ws_eff_margin() ? (ws_active ? 2 : (ws_pending ? 1 : 0)) : 0;
+ 
+     int result = -1;
+     bool okay = environ_cb(RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE, &result);
+@@ -1966,11 +2025,100 @@ bool retro_unserialize(const void* data, size_t size)
+     if (S9xUnfreezeGameMem((const uint8_t*)data,size) != SUCCESS)
+         return false;
+ 
++    ws_last_dc = Memory.RAM[0xDC] | (Memory.RAM[0xDD] << 8);
++    ws_blank_seen = 0;
++    if (ws_margin)
++        ws_pending = 2;
+     return true;
+ }
+ 
++extern uint16 som_ws_buf[];
++extern "C" const uint16 *retro_som_ws_get(void) { return som_ws_buf; }
++extern uint32 som_ws_cmp[2][2];
++extern "C" uint32 *retro_som_cmp_get(void) { return &som_ws_cmp[0][0]; }
++extern struct SLineData LineData[];
++extern "C" void retro_som_line_get(int y, int bg, int *h, int *v) { *h = LineData[y].BG[bg].HOffset; *v = LineData[y].BG[bg].VOffset; }
++extern "C" const uint8 *retro_som_oam_get(void) { return PPU.OAMData; }
++extern "C" const uint8 *retro_som_regs_get(void) { return Memory.FillRAM; }
++extern "C" void retro_som_bg_get(int bg, int *h, int *v) { *h = PPU.BG[bg].HOffset; *v = PPU.BG[bg].VOffset; }
++extern "C" const uint16 *retro_som_cgram_get(void) { return PPU.CGDATA; }
++
++extern "C" void retro_som_ws_state(int *margin, int *active, int *pending, int *width, int *dc, int *dec)
++{
++    *margin = ws_eff_margin(); *active = ws_active; *pending = ws_pending; *width = ws_reported_w;
++    *dc = ws_last_dc; for (int i = 0; i < 4; i++) dec[i] = som_ws_decisions[i];
++}
++
++extern "C" int ws_dec_stats[8];
++int ws_dec_stats[8];
++/* End-of-frame bookkeeping: map transition detection and the wide/normal decision. */
++static void ws_tick(void)
++{
++    int dc = Memory.RAM[0xDC] | (Memory.RAM[0xDD] << 8);
++    uint8 ini = Memory.FillRAM[0x2100];
++    int visible = !(ini & 0x80) && (ini & 0x0f);
++    int batches = som_ws_fr_batches;
++    if (ws_last_dc < 0)
++        ws_last_dc = dc;
++    else if (dc != ws_last_dc)
++    {
++        ws_last_dc = dc;
++        ws_pending = 1; ws_blank_seen = 0; ws_pending_age = 0; ws_grace = 0;
++        som_ws_decisions[0]++;
++    }
++    if (ws_pending == 1)
++    {
++        if (!visible)
++            ws_blank_seen = 1;
++        else if (ws_blank_seen && batches)
++        {
++            /* Screens that are not a 64 x 32 field layout (title, hi-res text) and single-screen maps (map 8, name entry) neither
++             * widen nor fall back: the geometry stays as it is and the sides stay black. */
++            ws_dec_stats[0] = som_ws_fr_batches; ws_dec_stats[1] = som_ws_fr_strict; ws_dec_stats[2] = som_ws_fr_show;
++            ws_dec_stats[3] = som_ws_fr_mode7; ws_dec_stats[4] = som_ws_fr_layout; ws_dec_stats[5] = dc;
++            int mapw = Memory.RAM[0xC0] | (Memory.RAM[0xC1] << 8);
++            /* a map that is at most one screen wide has nothing to show on the sides: no fallback either */
++            int other = (som_ws_fr_layout || (mapw <= 256 && !som_ws_fr_strict)) && !som_ws_fr_mode7;
++            if (!other)
++            {
++                int ok = som_ws_fr_strict && !som_ws_fr_mode7;
++                /* The first visible frame of a fade-in can be too early (the loader is still writing the tilemaps, brightness 1):
++                 * a layout that does not validate yet gets up to 30 visible frames or half brightness to start matching before it counts as unsupported. */
++                if (!ok && !som_ws_fr_mode7 && ws_grace < 30 && (ini & 0x0f) < 8)
++                {
++                    ws_grace++;
++                    return;
++                }
++                ws_active = ok || ws_keep_wide;
++                som_ws_decisions[ok ? 1 : 2]++;
++                ws_last_decision = ok;
++            }
++            ws_pending = 0;
++        }
++        else if (++ws_pending_age > 3600)
++            ws_pending = 0;
++    }
++    else if (ws_pending == 2 && batches && visible)
++    {
++        if (som_ws_fr_mode7)
++        {
++            ws_active = ws_keep_wide; ws_pending = 0; som_ws_decisions[3]++;
++        }
++        else if (som_ws_fr_strict)
++        {
++            ws_active = 1; ws_pending = 0; som_ws_decisions[3]++;
++        }
++        else if (som_ws_fr_layout)
++            ws_pending = 0;
++    }
++}
++
++static uint8 ws_oam_snap[544];
++extern "C" const uint8 *retro_som_oam_frame_get(void) { return ws_oam_snap; }
++
+ bool8 S9xDeinitUpdate(int width, int height)
+ {
++    memcpy(ws_oam_snap, PPU.OAMData, 544);
+     static int burst_phase = 0;
+     int overscan_offset = 0;
+ 
+@@ -2010,6 +2158,88 @@ bool8 S9xDeinitUpdate(int width, int height)
+     }
+ 
+ 
++    extern int som_hires_native;
++    if (ws_eff_margin() && width == 512 && height <= 240 && som_hires_native)
++        som_ws_frame_reset();   /* hi-res text screens (title, name entry, dialogue pages) go out as the native 512 px frame: averaging pairs smears the font */
++    if (ws_eff_margin() && (width == 256 || (width == 512 && height <= 240 && !som_hires_native)))
++    {
++        static uint16 ws_lo[256 * 240];
++        const uint16 *scr = GFX.Screen;
++        int spitch = GFX.Pitch >> 1;
++        if (width == 512)
++        {
++            /* hi-res frame (title, name entry): average pixel pairs so the geometry stays 256 based */
++            for (int r = 0; r < 240; r++)
++            {
++                const uint16 *in = GFX.Screen + r * spitch;
++                uint16 *o = ws_lo + r * 256;
++                for (int x = 0; x < 256; x++)
++                {
++                    uint16 a = in[2 * x], b = in[2 * x + 1];
++                    o[x] = (a & b) + (((a ^ b) & 0xF7DE) >> 1);
++                }
++            }
++            scr = ws_lo;
++            spitch = 256;
++            width = 256;
++        }
++        ws_tick();
++        if (ws_cur_width() != ws_reported_w)
++            update_geometry();
++        int m = ws_eff_margin();
++        if (ws_active)
++        {
++            int ow = 256 + 2 * m, sides = (som_ws_mode == 2);
++            for (int r = 0; r < height; r++)
++            {
++                int sr = r + overscan_offset;
++                uint16 *o = ws_out + r * ow;
++                if (sr < 0 || sr >= 240)
++                {
++                    memset(o, 0, ow * sizeof(uint16));
++                    continue;
++                }
++                extern uint16 som_ws_buf[];
++                if (sides)
++                {
++                    memcpy(o, som_ws_buf + sr * 768 + 256 - m, m * sizeof(uint16));
++                    memcpy(o + m + 256, som_ws_buf + sr * 768 + 512, m * sizeof(uint16));
++                    extern uint8 som_ws_skyfix[];
++                    if (som_ws_skyfix[sr] && !getenv("SOM_NOSKY"))
++                    {
++                        /* Mode 1 sky above a Mode 7 floor: the sky layers are authored for the 256 px picture only (BG2 holds black beyond it, the
++                         * cloud layer is a few tiles), so wrapping their tilemaps shows black or half clouds.  The sides mirror the centre columns instead:
++                         * continuous at the seam, no smear, stable from frame to frame. */
++                        for (int k = 0; k < m; k++) { o[m - 1 - k] = som_ws_buf[sr * 768 + 256 + k]; o[m + 256 + k] = som_ws_buf[sr * 768 + 511 - k]; }
++                    }
++                }
++                else
++                {
++                    memset(o, 0, m * sizeof(uint16));
++                    memset(o + m + 256, 0, m * sizeof(uint16));
++                }
++                memcpy(o + m, scr + sr * spitch, 256 * sizeof(uint16));
++            }
++            som_ws_frame_reset();
++            video_cb(ws_out, ow, height, ow * sizeof(uint16));
++            return TRUE;
++        }
++        som_ws_frame_reset();
++        if (scr != GFX.Screen)
++        {
++            for (int r = 0; r < height; r++)
++            {
++                int sr = r + overscan_offset;
++                if (sr >= 0 && sr < 240)
++                    memcpy(ws_out + r * 256, scr + sr * 256, 256 * sizeof(uint16));
++                else
++                    memset(ws_out + r * 256, 0, 256 * sizeof(uint16));
++            }
++            video_cb(ws_out, 256, height, 256 * sizeof(uint16));
++            return TRUE;
++        }
++    }
++
+     if (blargg_filter)
+     {
+         burst_phase = (burst_phase + 1) % 3;
+@@ -2169,3 +2399,14 @@ void S9xAutoSaveSRAM()
+ {
+     return;
+ }
++
++extern int som_hud_hidden_total, som_hud_field;
++extern "C" int retro_som_hud_hidden(void) { return som_hud_hidden_total; }
++extern "C" int retro_som_hud_field(void) { return som_hud_field; }
++extern int som_hud_panels_total;
++extern "C" int retro_som_hud_panels(void) { return som_hud_panels_total; }
++
++extern "C" const int *retro_som_ws_decision_stats(void) { return ws_dec_stats; }
++
++extern int som_ws_stat[4];
++extern "C" const int *retro_som_ws_stat(void) { return som_ws_stat; }
+diff --git a/libretro/libretro_core_options.h b/libretro/libretro_core_options.h
+index e3b9f2ac..8e22bbc4 100644
+--- a/libretro/libretro_core_options.h
++++ b/libretro/libretro_core_options.h
+@@ -116,6 +116,53 @@ struct retro_core_option_definition option_defs_us[] = {
+       },
+       "disabled"
+    },
++   {
++      "snes9x_som_widescreen",
++      "Secret of Mana Widescreen (px per side)",
++      "Renders extra world on both sides of the 256 px picture (Secret of Mana only; the central 256 px are unchanged). The frame becomes 256 + 2 x N pixels wide. Not available with the Blargg NTSC filter.",
++      {
++         { "disabled", NULL },
++         { "17",       "17 px" },
++         { "27",       "27 px" },
++         { "46",       "46 px" },
++         { NULL, NULL},
++      },
++      "disabled"
++   },
++   {
++      "snes9x_som_hud",
++      "Secret of Mana HUD",
++      "'hide_except_ring' removes the HUD at render time (BG3 portrait/HP/MP panels, the Ancient Cave floor line and the three portrait sprites) in every state except while the ring menu is open ($7D = 1, which includes status/equipment/config screens). Fades and transitions are covered. Geometry never changes. 'hide_in_field' is a legacy alias.",
++      {
++         { "off",              "Show" },
++         { "hide_except_ring", "Hide except in ring menu" },
++         { "hide_in_field",    "Hide except in ring menu (legacy name)" },
++         { NULL, NULL},
++      },
++      "off"
++   },
++   {
++      "snes9x_som_hires",
++      "Secret of Mana Hi-Res Frames (widescreen on)",
++      "With the widescreen option on, hi-res frames (title, name entry, text pages, 512 px in the stock core) are 'average' = pair-averaged to 256 px (constant geometry) or 'native' = sent as the stock 512 px frame (sharp text; the width is 512 for those frames).",
++      {
++         { "average", "Average to 256 px" },
++         { "native",  "Native 512 px" },
++         { NULL, NULL},
++      },
++      "average"
++   },
++   {
++      "snes9x_som_widescreen_fallback",
++      "Widescreen on Unsupported Maps",
++      "What to do on a map that cannot be widened (Mode 7 or a layout the widener cannot rebuild). 'normal' switches to the 256 px frame at the map change; 'black' keeps the wide frame with black or partial sides.",
++      {
++         { "normal", "Fall back to 256 px" },
++         { "black",  "Keep wide, black sides" },
++         { NULL, NULL},
++      },
++      "normal"
++   },
+    {
+       "snes9x_blargg",
+       "Blargg NTSC Filter",
+diff --git a/tileimpl.h b/tileimpl.h
+index 8b062354..007c45b9 100644
+--- a/tileimpl.h
++++ b/tileimpl.h
+@@ -14,6 +14,7 @@
+ extern struct SLineMatrixData	LineMatrixData[240];
+ 
+ 
++extern int som_m7_dx;   /* SoM widescreen: screen columns the Mode 7 side passes are shifted by (-256, 0, 256) */
+ namespace TileImpl {
+ 
+ 	struct BPProgressive
+@@ -590,8 +591,8 @@ namespace TileImpl {
+ 				}
+ 
+ 				int	xx = CLIP_10_BIT_SIGNED(HOffset - CentreX);
+-				int	AA = l->MatrixA * startx + ((l->MatrixA * xx) & ~63);
+-				int	CC = l->MatrixC * startx + ((l->MatrixC * xx) & ~63);
++				int	AA = l->MatrixA * (startx + (PPU.Mode7HFlip ? -som_m7_dx : som_m7_dx)) + ((l->MatrixA * xx) & ~63);
++				int	CC = l->MatrixC * (startx + (PPU.Mode7HFlip ? -som_m7_dx : som_m7_dx)) + ((l->MatrixC * xx) & ~63);
+ 
+ 				uint8	Pix;
+ 
+@@ -720,8 +721,8 @@ namespace TileImpl {
+ 				}
+ 
+ 				int	xx = CLIP_10_BIT_SIGNED(HOffset - CentreX);
+-				int	AA = l->MatrixA * startx + ((l->MatrixA * xx) & ~63);
+-				int	CC = l->MatrixC * startx + ((l->MatrixC * xx) & ~63);
++				int	AA = l->MatrixA * (startx + (PPU.Mode7HFlip ? -som_m7_dx : som_m7_dx)) + ((l->MatrixA * xx) & ~63);
++				int	CC = l->MatrixC * (startx + (PPU.Mode7HFlip ? -som_m7_dx : som_m7_dx)) + ((l->MatrixC * xx) & ~63);
+ 
+ 				uint8	Pix;
+ 				uint8	ctr = 1;

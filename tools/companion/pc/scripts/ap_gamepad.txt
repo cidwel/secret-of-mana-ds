@@ -1,0 +1,46 @@
+# Virtual game controller session on the real window (run by test_window.sh): hold L1 for the picker, navigate with the D-pad, assign, cast.
+@1500 state start
+@2000 pad LEFTSHOULDER 1
+@2500 shot @SHOTS@_ap_hold.bmp
+@2900 pad LEFTSHOULDER 0
+@3200 shot @SHOTS@_ap_picker.bmp
+@3300 state picker_open
+@3400 pad DPAD_DOWN 1
+@3460 pad DPAD_DOWN 0
+@3700 pad DPAD_RIGHT 1
+@3760 pad DPAD_RIGHT 0
+@3950 pad DPAD_RIGHT 1
+@4010 pad DPAD_RIGHT 0
+@4200 pad DPAD_RIGHT 1
+@4260 pad DPAD_RIGHT 0
+@4450 pad DPAD_RIGHT 1
+@4510 pad DPAD_RIGHT 0
+@4700 shot @SHOTS@_ap_tabs.bmp
+@4800 pad A 1
+@4860 pad A 0
+@5100 shot @SHOTS@_ap_spirits.bmp
+@5200 pad DPAD_RIGHT 1
+@5260 pad DPAD_RIGHT 0
+@5450 pad DPAD_RIGHT 1
+@5510 pad DPAD_RIGHT 0
+@5700 pad A 1
+@5760 pad A 0
+@6000 shot @SHOTS@_ap_spells.bmp
+@6100 pad A 1
+@6160 pad A 0
+@6400 shot @SHOTS@_ap_policy.bmp
+@6500 pad DPAD_RIGHT 1
+@6560 pad DPAD_RIGHT 0
+@6750 pad A 1
+@6810 pad A 0
+@7100 shot @SHOTS@_ap_bound.bmp
+@7200 state bound
+@7500 axis TRIGGERLEFT 0
+@7600 pad LEFTSHOULDER 1
+@7700 pad LEFTSHOULDER 0
+@7800 shot @SHOTS@_ap_flash.bmp
+@10500 state after_cast_l1
+@10600 axis TRIGGERRIGHT 32000
+@10700 axis TRIGGERRIGHT 0
+@10800 shot @SHOTS@_ap_r2_empty.bmp
+@11300 quit

@@ -1,0 +1,17 @@
+{
+  "note": "Header area names. The ROM has no map-name table; a map appears here only with the stated evidence. Maps not listed show no name.",
+  "evidence": {
+    "doc": "documented and visited in docs/maps.md or docs/companion-device-20261017.md (map ids, exits and thumbnails)",
+    "visual": "every map of the range was checked on the warp thumbnails (device state dir adv/sheet*.png) and on the exit graph"
+  },
+  "ranges": [
+    {"lo": 128, "hi": 128, "name": "POTOS FALLS", "evidence": "doc", "confidence": "high"},
+    {"lo": 131, "hi": 131, "name": "POTOS VILLAGE", "evidence": "doc", "confidence": "high"},
+    {"lo": 256, "hi": 256, "name": "POTOS FALLS", "evidence": "doc", "confidence": "high"},
+    {"lo": 257, "hi": 259, "name": "POTOS VILLAGE", "evidence": "doc", "confidence": "high"},
+    {"lo": 16, "hi": 16, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "high"},
+    {"lo": 19, "hi": 19, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "medium"},
+    {"lo": 144, "hi": 144, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "medium"},
+    {"lo": 198, "hi": 235, "name": "PURE LAND", "evidence": "visual", "confidence": "medium"}
+  ]
+}

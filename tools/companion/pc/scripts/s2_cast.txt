@@ -1,0 +1,16 @@
+# bind a spell to L1 and cast it through the slot, then an item to R2 (the cast waits for the caster to be free)
+LOAD /home/cidwel/.local/state/som-decomp/companion-20261017/adv/advanced_equipped.state
+RUN 60
+SET wide 27
+STATE before
+BIND L1 spell 12 near
+RUN 2
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/t2_bound.bmp
+SLOT L1
+RUN 3
+SHOT /home/cidwel/.local/state/som-decomp/pc/shots/t2_flash.bmp
+WAIT 600
+RUN 60
+STATE mid_cast
+RUN 20
+STATE after_cast

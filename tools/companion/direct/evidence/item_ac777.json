@@ -1,0 +1,211 @@
+{
+ "variant": "ac777",
+ "cases": 14,
+ "mismatches": 0,
+ "results": [
+  {
+   "rec": 0,
+   "id": 0,
+   "qty": 1,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 0,
+   "id": 0,
+   "qty": 1,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 1,
+   "id": 1,
+   "qty": 1,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 1,
+   "id": 1,
+   "qty": 1,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 2,
+   "id": 2,
+   "qty": 1,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 2,
+   "id": 2,
+   "qty": 1,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 3,
+   "id": 3,
+   "qty": 1,
+   "hero": 1,
+   "preset": "mp",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 3,
+   "id": 3,
+   "qty": 1,
+   "hero": 2,
+   "preset": "mp",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 4,
+   "id": 4,
+   "qty": 1,
+   "hero": 0,
+   "preset": "poison",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 4,
+   "id": 4,
+   "qty": 1,
+   "hero": 1,
+   "preset": "none",
+   "ring": "fail-timeout",
+   "direct": "bad-target",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 5,
+   "id": 5,
+   "qty": 1,
+   "hero": 1,
+   "preset": "dead",
+   "ring": "fail-bad-argument",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [
+    [
+     "0xcc4d",
+     37,
+     39
+    ],
+    [
+     "0xcc4e",
+     39,
+     38
+    ],
+    [
+     "0xcc4f",
+     38,
+     255
+    ],
+    [
+     "0xe380",
+     229,
+     129
+    ],
+    [
+     "0xe382",
+     0,
+     45
+    ],
+    [
+     "0xe391",
+     128,
+     0
+    ],
+    [
+     "0xe39f",
+     128,
+     0
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "rec": 5,
+   "id": 5,
+   "qty": 1,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "fail-timeout",
+   "direct": "bad-target",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 6,
+   "id": 7,
+   "qty": 1,
+   "hero": 0,
+   "preset": "none",
+   "ring": "done-unverified",
+   "direct": "needs-ring",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 7,
+   "id": 6,
+   "qty": 1,
+   "hero": 0,
+   "preset": "none",
+   "ring": "fail-unsafe",
+   "direct": "needs-ring",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  }
+ ]
+}

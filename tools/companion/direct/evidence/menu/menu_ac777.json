@@ -1,0 +1,2050 @@
+{
+ "variant": "ac777",
+ "results": [
+  {
+   "case": "ring h0 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 44,
+   "presented": [
+    [
+     43,
+     0,
+     1
+    ]
+   ],
+   "cat": 0,
+   "owner": 0,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     0,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h0 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 44,
+   "presented": [
+    [
+     43,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h0 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 44,
+   "presented": [
+    [
+     43,
+     0,
+     1
+    ]
+   ],
+   "cat": 3,
+   "owner": 0,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     3,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h1 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 50,
+   "presented": [
+    [
+     49,
+     0,
+     1
+    ]
+   ],
+   "cat": 0,
+   "owner": 1,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     0,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h1 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 50,
+   "presented": [
+    [
+     49,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h1 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 50,
+   "presented": [
+    [
+     49,
+     0,
+     1
+    ]
+   ],
+   "cat": 3,
+   "owner": 1,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     3,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h1 a1",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 50,
+   "presented": [
+    [
+     49,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 63,
+   "presented": [
+    [
+     62,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc203",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 3,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a1",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 64,
+   "presented": [
+    [
+     63,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc209",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 9,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 63,
+   "presented": [
+    [
+     62,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc20f",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 15,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 64,
+   "presented": [
+    [
+     63,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc215",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 21,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a4",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 63,
+   "presented": [
+    [
+     62,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc21b",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 27,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a5",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 62,
+   "presented": [
+    [
+     61,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc221",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 33,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h1 a7",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 63,
+   "presented": [
+    [
+     62,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 1,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc227",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 39,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h2 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 61,
+   "presented": [
+    [
+     60,
+     0,
+     1
+    ]
+   ],
+   "cat": 0,
+   "owner": 2,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     0,
+     2,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h2 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 61,
+   "presented": [
+    [
+     60,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 2,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     2,
+     2,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h2 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 61,
+   "presented": [
+    [
+     60,
+     0,
+     1
+    ]
+   ],
+   "cat": 3,
+   "owner": 2,
+   "count": 8,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     3,
+     2,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "ring h2 a1",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 61,
+   "presented": [
+    [
+     60,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 75,
+   "presented": [
+    [
+     74,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc200",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a1",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 74,
+   "presented": [
+    [
+     73,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc206",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 6,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 74,
+   "presented": [
+    [
+     73,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc20c",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 12,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 74,
+   "presented": [
+    [
+     73,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc212",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 18,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a4",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 75,
+   "presented": [
+    [
+     74,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc218",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 24,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a5",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 74,
+   "presented": [
+    [
+     73,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc21e",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 30,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "spirit h2 a6",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 74,
+   "presented": [
+    [
+     73,
+     0,
+     1
+    ]
+   ],
+   "cat": 1,
+   "owner": 2,
+   "count": 3,
+   "flags": 128,
+   "sel": "0xc224",
+   "pad_hero": 4,
+   "rings_seen": [
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     128
+    ]
+   ],
+   "black_presented": 0,
+   "spell_low": 36,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 64,
+   "presented": [
+    [
+     63,
+     0,
+     1
+    ]
+   ],
+   "cat": 5,
+   "owner": 0,
+   "count": 4,
+   "flags": 8,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ],
+    [
+     5,
+     0,
+     8
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a1",
+   "open_rc": "ok",
+   "state": "failed",
+   "err": "no-target",
+   "frames": 78,
+   "presented": [
+    [
+     77,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 16,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": false
+  },
+  {
+   "case": "page h0 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 112,
+   "presented": [
+    [
+     111,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 112,
+   "presented": [
+    [
+     111,
+     0,
+     1
+    ]
+   ],
+   "cat": 3,
+   "owner": 0,
+   "count": 12,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a4",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 112,
+   "presented": [
+    [
+     111,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a5",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 112,
+   "presented": [
+    [
+     111,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 115,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h0 a6",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 112,
+   "presented": [
+    [
+     111,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 0,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 1,
+   "rings_seen": [
+    [
+     2,
+     0,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 75,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a0",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 70,
+   "presented": [
+    [
+     69,
+     0,
+     1
+    ]
+   ],
+   "cat": 5,
+   "owner": 1,
+   "count": 4,
+   "flags": 8,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ],
+    [
+     5,
+     1,
+     8
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 34,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a1",
+   "open_rc": "ok",
+   "state": "failed",
+   "err": "no-target",
+   "frames": 84,
+   "presented": [
+    [
+     83,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 14,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 16,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": false
+  },
+  {
+   "case": "page h1 a2",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 118,
+   "presented": [
+    [
+     117,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a3",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 118,
+   "presented": [
+    [
+     117,
+     0,
+     1
+    ]
+   ],
+   "cat": 3,
+   "owner": 1,
+   "count": 12,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a4",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 118,
+   "presented": [
+    [
+     117,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 35,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a5",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 118,
+   "presented": [
+    [
+     117,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 115,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  },
+  {
+   "case": "page h1 a6",
+   "open_rc": "ok",
+   "state": "finished",
+   "err": "ok",
+   "frames": 118,
+   "presented": [
+    [
+     117,
+     0,
+     1
+    ]
+   ],
+   "cat": 2,
+   "owner": 1,
+   "count": 7,
+   "flags": 0,
+   "sel": "0xc2c2",
+   "pad_hero": 2,
+   "rings_seen": [
+    [
+     2,
+     1,
+     0
+    ]
+   ],
+   "black_presented": 0,
+   "stray_rings": [],
+   "close_rc": "ok",
+   "close_state": "finished",
+   "close_err": "ok",
+   "close_frames": 75,
+   "after_close": {
+    "ring": 0,
+    "active": 0,
+    "phase": 0,
+    "f1803": 0,
+    "f1804": 0,
+    "a1847": 0,
+    "edge": 0,
+    "event": 0,
+    "fade": [
+     1,
+     15
+    ]
+   },
+   "moved": true,
+   "reopen": true,
+   "ok": true
+  }
+ ],
+ "failed": []
+}

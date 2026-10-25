@@ -1,0 +1,31 @@
+# Scenario for any ROM + its party state (set SOM_PC_STATE_FILE through the wrapper test_roms.sh, which writes the LOAD line):
+# assign the girl's first Undine spell (an ally spell, so it works without enemies on screen) to L1 and an item to R2 through the picker, cast it, use the item, shots at wide 46 and 27.
+RUN 60
+CLEARBIND
+SET overlay small
+SLOT L1 66
+UITAP QE_TAB 4
+UITAP QE_CELL 1
+UITAP QE_CELL 3
+UITAP POLICY 3
+STATE bound_l1
+SLOT R2 66
+UITAP QE_TAB 2
+UITAP QE_CELL 0
+UITAP POLICY 3
+STATE bound_r2
+SET wide 46
+RUN 10
+SLOT L1
+RUN 4
+SHOT @SHOTS@_flash_w46.bmp
+WAIT 900
+RUN 220
+STATE after_cast
+SLOT R2
+WAIT 600
+RUN 40
+STATE after_item
+SET wide 27
+RUN 10
+SHOT @SHOTS@_w27.bmp

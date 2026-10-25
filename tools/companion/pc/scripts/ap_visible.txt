@@ -1,0 +1,7 @@
+# Short visible run on a real display: windowed 1080p, a cast through L1 with a bound spell, borderless fullscreen, quit.
+@1000 state start
+@1500 shot @SHOTS@_visible_window.bmp
+@2000 set screen 1
+@3200 shot @SHOTS@_visible_fullscreen.bmp
+@3500 set screen 0
+@4500 quit

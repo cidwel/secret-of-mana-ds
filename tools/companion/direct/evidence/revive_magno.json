@@ -1,0 +1,111 @@
+[
+ {
+  "check": "options-living-hero-empty",
+  "ok": true
+ },
+ {
+  "check": "boy-dies",
+  "ok": true,
+  "hp": 0
+ },
+ {
+  "check": "options-boy",
+  "ok": true,
+  "options": [
+   {
+    "kind": 1,
+    "id": 5,
+    "qty": 2,
+    "record": 2,
+    "caster": 0,
+    "spirit": 0,
+    "slot": 0,
+    "mp_cost": 0,
+    "reason": 0,
+    "usable": 1
+   },
+   {
+    "kind": 2,
+    "id": 33,
+    "qty": 0,
+    "record": 0,
+    "caster": 1,
+    "spirit": 5,
+    "slot": 0,
+    "mp_cost": 10,
+    "reason": 0,
+    "usable": 1
+   }
+  ]
+ },
+ {
+  "check": "cup-revives-boy",
+  "ok": true,
+  "err": "ok",
+  "hp": 50,
+  "max": 50,
+  "qty": [
+   2,
+   1
+  ]
+ },
+ {
+  "check": "revivifier-revives-boy",
+  "ok": true,
+  "can_cast": "ok",
+  "err": "ok",
+  "hp": 50,
+  "mp": [
+   60,
+   50
+  ]
+ },
+ {
+  "check": "options-girl",
+  "ok": true,
+  "options": [
+   {
+    "kind": 1,
+    "id": 5,
+    "qty": 2,
+    "record": 2,
+    "caster": 0,
+    "spirit": 0,
+    "slot": 0,
+    "mp_cost": 0,
+    "reason": 0,
+    "usable": 1
+   },
+   {
+    "kind": 2,
+    "id": 33,
+    "qty": 0,
+    "record": 0,
+    "caster": 1,
+    "spirit": 5,
+    "slot": 0,
+    "mp_cost": 10,
+    "reason": 3,
+    "usable": 0
+   }
+  ]
+ },
+ {
+  "check": "cup-revives-girl",
+  "ok": true,
+  "err": "ok",
+  "hp": 45
+ },
+ {
+  "check": "cup-on-living-refused",
+  "ok": true,
+  "err": "bad-target"
+ },
+ {
+  "check": "queued-revivifier",
+  "ok": true,
+  "err": "ok",
+  "queue": "waiting",
+  "hp": 1
+ }
+]

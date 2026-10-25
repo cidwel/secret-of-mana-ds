@@ -1,0 +1,177 @@
+{
+ "variant": "vanilla",
+ "cases": 12,
+ "mismatches": 0,
+ "results": [
+  {
+   "rec": 0,
+   "id": 0,
+   "qty": 3,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 0,
+   "id": 0,
+   "qty": 3,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 1,
+   "id": 4,
+   "qty": 1,
+   "hero": 0,
+   "preset": "poison",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 1,
+   "id": 4,
+   "qty": 1,
+   "hero": 1,
+   "preset": "none",
+   "ring": "fail-timeout",
+   "direct": "bad-target",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 2,
+   "id": 5,
+   "qty": 2,
+   "hero": 1,
+   "preset": "dead",
+   "ring": "fail-bad-argument",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [
+    [
+     "0xcc4a",
+     69,
+     37
+    ],
+    [
+     "0xe380",
+     229,
+     129
+    ],
+    [
+     "0xe382",
+     0,
+     45
+    ],
+    [
+     "0xe391",
+     128,
+     0
+    ],
+    [
+     "0xe39f",
+     128,
+     0
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "rec": 2,
+   "id": 5,
+   "qty": 2,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "fail-timeout",
+   "direct": "bad-target",
+   "frames": 0,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 3,
+   "id": 1,
+   "qty": 1,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 3,
+   "id": 1,
+   "qty": 1,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 4,
+   "id": 2,
+   "qty": 2,
+   "hero": 0,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 4,
+   "id": 2,
+   "qty": 2,
+   "hero": 2,
+   "preset": "hurt",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 5,
+   "id": 3,
+   "qty": 1,
+   "hero": 1,
+   "preset": "mp",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  },
+  {
+   "rec": 5,
+   "id": 3,
+   "qty": 1,
+   "hero": 2,
+   "preset": "mp",
+   "ring": "done",
+   "direct": "ok",
+   "frames": 2,
+   "diffs": [],
+   "ok": true
+  }
+ ]
+}

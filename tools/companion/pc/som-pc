@@ -1,0 +1,36 @@
+#!/bin/bash
+# Launcher of the SoM PC frontend (board item T10).  Builds the binary on first use (and when a source changed) into
+# ~/.local/state/som-decomp/pc/build/ and runs it.  Usage: som-pc [--rom ROM] [options], see docs/companion-pc-20261018.md.
+set -e
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+C="$HERE/.."
+REPO="$(cd "$C/../.." && pwd)"
+OUT="${SOM_PC_BUILD:-$HOME/.local/state/som-decomp/pc/build}"
+BIN="$OUT/som-pc"
+. "$HERE/sources.sh"
+RANDO="$OUT/rando/libsomrando.a"
+RLIB="$C/randomizer/libsomrando"
+# libsomrando: built once from tools/companion/randomizer/libsomrando (needs the upstream checkout for build-time resources, see build_rando.sh);
+# without it the stub is linked and the start menu says that no generator is in this build.  SOM_PC_NO_RANDO=1 forces the stub.
+if [ -z "$SOM_PC_NO_RANDO" ]; then
+  if [ ! -f "$RANDO" ] || [ -n "$(find "$RLIB/src" "$RLIB/data" "$HERE/build_rando.sh" -newer "$RANDO" -print -quit)" ]; then "$HERE/build_rando.sh" "$OUT/rando" >&2 || true; fi
+fi
+if [ -f "$RANDO" ] && [ -z "$SOM_PC_NO_RANDO" ]; then GEN_LIB="$RANDO"; GEN=rando; else GEN_LIB="$C/launcher/somrando_stub.c"; GEN=stub; fi
+need=0
+[ -x "$BIN" ] || need=1
+if [ $need = 0 ]; then
+  for f in $SRC $HDR "$GEN_LIB"; do [ "$f" -nt "$BIN" ] && need=1; done
+  [ "$(cat "$BIN.gen" 2>/dev/null)" = "$GEN" ] || need=1
+fi
+if [ $need = 1 ]; then
+  if ! command -v sdl2-config >/dev/null 2>&1 && ! pkg-config --exists sdl2 2>/dev/null; then
+    echo "som-pc: SDL2 development files not found (install libsdl2-dev)" >&2; exit 1
+  fi
+  mkdir -p "$OUT"
+  gcc -std=gnu99 -O2 -Wall -Wextra -Wno-unused-parameter -Wno-format-truncation -DSOM_PC_REPO="\"$REPO\"" $(pkg-config --cflags sdl2) $SRC "$GEN_LIB" \
+      $(pkg-config --libs sdl2) -lm -ldl -o "$BIN.new"
+  mv "$BIN.new" "$BIN"
+  echo "$GEN" > "$BIN.gen"
+  cp "$REPO/data/credits.json" "$OUT/credits.json" 2>/dev/null || true
+fi
+exec "$BIN" "$@"

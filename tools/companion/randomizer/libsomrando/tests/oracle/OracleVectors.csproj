@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test-vector generator for libsomrando: compiles the upstream DotNet110Random.cs / HashcodeUtil.cs unchanged and prints
+       .NET results (RNG streams, hash codes, Math.Pow sweeps).  Original glue code of this repository.
+       Build: dotnet build -c Release -p:SomRandoSrc=<upstream SoMRandomizer folder> -o <outdir> -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <SomRandoSrc Condition="'$(SomRandoSrc)' == ''">$(SOM_RANDO_SRC)</SomRandoSrc>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="$(SomRandoSrc)/util/rng/DotNet110Random.cs" />
+    <Compile Include="$(SomRandoSrc)/util/rng/HashcodeUtil.cs" />
+  </ItemGroup>
+</Project>

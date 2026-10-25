@@ -1,0 +1,567 @@
+#!/usr/bin/env python3
+"""som-dualscreen: prepare Secret of Mana ROMs for the dual-screen companion (Thor / 3DS).
+
+  som-dualscreen inspect   <rom>                           detect the variant, print the address table to use
+  som-dualscreen setup-randomizer                          fetch + build the headless randomizer (needs network, dotnet)
+  som-dualscreen randomize --mode ancientcave --seed N --rom <vanilla us rom> --out <path>
+  som-dualscreen package   --rom <rom> --target android|3ds --out <dir>
+  som-dualscreen verify    <rom>                           headless companion smoke test (libretro snes9x core)
+  som-dualscreen generate  --config cfg.json --rom <us rom>  start menu pipeline: validate, generate, check header, boot headless
+  som-dualscreen push-random --serial S --rom <generated>  copy a generated ROM into the app files directory (adb)
+
+No ROM byte is ever written inside the repository: `randomize` and `package` refuse an output path under it.
+Python 3 standard library only (verify also needs gcc and the snes9x libretro core, like tools/companion tests).
+"""
+import argparse
+import hashlib
+import json
+import os
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE.parents[2]
+COMPANION = HERE.parent
+STATE = pathlib.Path(os.environ.get('SOM_CLI_STATE', '/home/cidwel/.local/state/som-decomp/companion-cli-20261017'))
+UPSTREAM_URL = 'https://github.com/Moppu/SecretOfManaRandomizer'
+UPSTREAM_TAG = 'v1.49'
+UPSTREAM_COMMIT = '1404b7b'
+HEADLESS_PROJECT = COMPANION / 'randomizer' / 'headless'
+MODES = {'ancientcave': 'randomizer_ancientcave', 'open': 'randomizer_open', 'rando': 'randomizer_rando',
+         'bossrush': 'randomizer_bossrush', 'chaos': 'randomizer_chaos'}
+SNES_KNOWN = {
+    '8133041a363e3cc68cedef40b49b6d20d03c505d': 'vanilla_us',
+}
+MODE_STRINGS = [(b'ancient`cave', 'randomizer_ancientcave'), (b'boss`rush', 'randomizer_bossrush'),
+                (b'chaos`mode', 'randomizer_chaos'), (b'open world v', 'randomizer_open'),
+                (b'randomizer\xff', 'randomizer_rando')]
+FALLBACK_HOOKS = [0x692F, 0x6D1E]
+
+
+def die(msg, code=1):
+    print('error: ' + msg, file=sys.stderr)
+    sys.exit(code)
+
+
+def variants():
+    return json.loads((HERE / 'variants.json').read_text())
+
+
+def inside_repo(path):
+    p = pathlib.Path(path).resolve()
+    return p == ROOT or ROOT in p.parents
+
+
+def check_out_path(path):
+    if inside_repo(path):
+        die('refusing to write under the repository (%s): ROM data must stay outside it' % ROOT)
+
+
+def hook_sites():
+    try:
+        d = json.loads((ROOT / 'data/companion_ancientcave_20261017.json').read_text())
+        return [int(s['site'].split(':')[1], 16) for s in d['hooks_bank_c0']['sites']]
+    except Exception:
+        return list(FALLBACK_HOOKS)
+
+
+# ------------------------------------------------------------------ inspect
+def load_rom(path):
+    p = pathlib.Path(path)
+    if not p.is_file():
+        die('no such ROM: %s' % path)
+    data = p.read_bytes()
+    header = len(data) % 0x8000 == 0x200
+    if header:
+        data = data[0x200:]
+    return data, header
+
+
+def inspect_rom(path):
+    data, header = load_rom(path)
+    info = {'file': str(path), 'size': len(data), 'copier_header_stripped': header,
+            'sha1': hashlib.sha1(data).hexdigest(), 'sha256': hashlib.sha256(data).hexdigest()}
+    if len(data) < 0x10000:
+        info.update(variant='unknown', reason='too small for a SNES HiROM image')
+        return info
+    title = data[0xFFC0:0xFFD5]
+    info['title'] = title.decode('latin1').rstrip()
+    info['region_byte'] = data[0xFFD9]
+    info['version_byte'] = data[0xFFDB]
+    info['map_mode'] = data[0xFFD5]
+    if len(data) == 2 * 1024 * 1024:
+        if info['sha1'] in SNES_KNOWN:
+            info.update(variant=SNES_KNOWN[info['sha1']], reason='known SHA-1 of the US v1.0 dump')
+        elif info['title'] == 'Secret of MANA' and info['region_byte'] == 1 and info['version_byte'] == 0:
+            info.update(variant='vanilla_us', reason='US v1.0 header (title, region, version) but unknown SHA-1: modified?')
+        elif info['title'].startswith('Secret of Mana (ESP)'):
+            info.update(variant='magno_es', reason='title "Secret of Mana (ESP)", the Magno Spanish translation header')
+        else:
+            info.update(variant='unknown', reason='2 MiB image with an unrecognised header')
+    elif len(data) == 4 * 1024 * 1024:
+        sites = hook_sites()
+        hits = sum(1 for s in sites if data[s] == 0x22 and data[s + 3] >= 0xE0)
+        info['hook_sites_hit'] = '%d/%d' % (hits, len(sites))
+        mode = None
+        exp = data[0x200000:0x240000]
+        for needle, name in MODE_STRINGS:
+            if needle in exp:
+                mode = name
+                break
+        if info['title'] == 'Secret of MANA' and hits >= len(sites) // 2 and mode:
+            info.update(variant=mode, reason='4 MiB, JSL hooks into bank E0+ at %s sites, mode string in the expansion' % info['hook_sites_hit'])
+        elif hits >= 2 and info['title'] == 'Secret of MANA':
+            info.update(variant='unknown_hooked_4mib', reason='4 MiB with %s hook sites but no known mode string' % info['hook_sites_hit'])
+        else:
+            info.update(variant='unknown', reason='4 MiB image without the randomizer hooks')
+    else:
+        info.update(variant='unknown', reason='unexpected size %d' % len(data))
+    return info
+
+
+def address_table(variant):
+    rec = variants()['variants'][variant]
+    if not rec.get('table'):
+        return {}
+    d = json.loads((ROOT / rec['table']).read_text())
+    key = rec.get('table_address_key')
+    out = {}
+    for f in d['fields']:
+        out[f['name']] = f.get(key) or f['address'] if key else f['address']
+    return out
+
+
+def cmd_inspect(a):
+    info = inspect_rom(a.rom)
+    rec = variants()['variants'][info['variant']]
+    info['record'] = rec
+    info['address_table'] = address_table(info['variant'])
+    if a.json:
+        print(json.dumps(info, indent=2))
+        return 0
+    print('file      : %s' % info['file'])
+    print('size      : %d bytes%s' % (info['size'], ' (copier header ignored)' if info['copier_header_stripped'] else ''))
+    print('sha1      : %s' % info['sha1'])
+    print('title     : %s' % info.get('title'))
+    print('variant   : %s  (%s)' % (info['variant'], info['reason']))
+    print('label     : %s' % rec['label'])
+    print('table     : %s' % rec.get('table'))
+    print('macros    : %s' % rec.get('macros'))
+    for k in ('hud_first_row', 'map_id_space', 'item_name_overrides', 'weapon_slot_holder_bits', 'weapon_ring'):
+        if k in rec:
+            print('%-24s: %s' % (k, rec[k]))
+    print('address table (%d fields):' % len(info['address_table']))
+    for n, ad in info['address_table'].items():
+        print('  %-22s %s' % (n, ad))
+    return 0 if info['variant'] != 'unknown' else 3
+
+
+# ------------------------------------------------------------------ randomizer
+def find_dotnet():
+    for c in (os.environ.get('DOTNET'), shutil.which('dotnet'), str(pathlib.Path(os.environ.get('DOTNET_ROOT', '')) / 'dotnet'),
+              str(pathlib.Path.home() / '.dotnet' / 'dotnet')):
+        if c and pathlib.Path(c).is_file():
+            return c
+    return None
+
+
+def headless_dll():
+    return STATE / 'build' / 'headless' / 'somrando.dll'
+
+
+def upstream_src():
+    return pathlib.Path(os.environ.get('SOM_RANDO_SRC', str(STATE / 'repo-moppu' / 'SecretOfManaRandomizer' / 'SoMRandomizer')))
+
+
+def cmd_setup(a):
+    dn = find_dotnet() or die('dotnet SDK not found (PATH, DOTNET_ROOT, ~/.dotnet)', 2)
+    src = upstream_src()
+    if not src.is_dir():
+        repo = src.parent
+        repo.parent.mkdir(parents=True, exist_ok=True)
+        print('cloning %s into %s' % (UPSTREAM_URL, repo))
+        subprocess.run(['git', 'clone', '--quiet', UPSTREAM_URL, str(repo)], check=True)
+        subprocess.run(['git', '-C', str(repo), 'checkout', '--quiet', UPSTREAM_TAG], check=True)
+    head = subprocess.run(['git', '-C', str(src.parent), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
+    print('upstream source %s at %s (expected %s for %s)' % (src, head, UPSTREAM_COMMIT, UPSTREAM_TAG))
+    out = headless_dll().parent
+    obj = STATE / 'build' / 'obj'
+    r = subprocess.run([dn, 'build', str(HEADLESS_PROJECT), '-c', 'Release', '-o', str(out), '-p:BaseIntermediateOutputPath=%s/' % obj,
+                        '-p:SomRandoSrc=%s' % src, '-nologo', '-v', 'q'], capture_output=True, text=True)
+    if r.returncode:
+        print(r.stdout[-2000:] + r.stderr[-2000:])
+        die('build failed')
+    print('built %s' % headless_dll())
+    return 0
+
+
+def cmd_randomize(a):
+    mode = a.mode
+    if mode not in MODES:
+        die('unknown mode %s (choose from %s)' % (mode, ', '.join(MODES)), 2)
+    out = pathlib.Path(a.out).resolve()
+    check_out_path(out)
+    info = inspect_rom(a.rom)
+    if info['variant'] != 'vanilla_us':
+        die('the randomizer accepts only the US v1.0 ROM (title "Secret of MANA", region 1, version 0, 2 MiB); got variant %s: %s'
+            % (info['variant'], info['reason']), 2)
+    dn = find_dotnet() or die('dotnet runtime not found (PATH, DOTNET_ROOT, ~/.dotnet)', 2)
+    if not headless_dll().exists():
+        die('headless randomizer not built: run "som-dualscreen setup-randomizer"', 2)
+    return run_generator(a.rom, info, mode, a.seed, a.difficulty, a.option or [], out)
+
+
+def run_generator(rom, info, mode, seed, difficulty, options, out):
+    """Runs the headless generator into <out>.part, renames on success, writes <out>.json.  Returns 0 or exits."""
+    dn = find_dotnet() or die('dotnet runtime not found (PATH, DOTNET_ROOT, ~/.dotnet)', 2)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    work = STATE / 'work' / ('%s_%s' % (mode, re.sub(r'[^A-Za-z0-9_.-]', '_', str(seed))))
+    work.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_name(out.name + '.part')       # the generator creates its output file before validating its input
+    cmd = [dn, str(headless_dll()), '--mode', mode, '--seed', str(seed), '--src', str(rom), '--dst', str(tmp),
+           '--workdir', str(work), '--difficulty', difficulty]
+    for o in options:
+        cmd += ['--set', o]
+    t0 = time.time()
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    dt = time.time() - t0
+    if r.returncode or not tmp.exists() or tmp.stat().st_size != 4 * 1024 * 1024:
+        sys.stderr.write(r.stdout + r.stderr)
+        die('generation failed (exit %d); see logs in %s' % (r.returncode, work))
+    tmp.replace(out)
+    data = out.read_bytes()
+    side = {'tool': 'som-dualscreen', 'generator': 'Moppu/SecretOfManaRandomizer %s (%s) headless source build' % (UPSTREAM_TAG, UPSTREAM_COMMIT),
+            'mode': mode, 'seed': str(seed), 'difficulty': difficulty, 'options': options,
+            'source_rom_sha1': info['sha1'], 'output_sha256': hashlib.sha256(data).hexdigest(), 'output_size': len(data),
+            'seconds': round(dt, 2), 'work_dir': str(work)}
+    out.with_suffix(out.suffix + '.json').write_text(json.dumps(side, indent=2) + '\n')
+    print('wrote %s (%d bytes, %.1f s) sha256 %s' % (out, len(data), dt, side['output_sha256'][:16]))
+    print('variant detected on the result: %s' % inspect_rom(out)['variant'])
+    return 0
+
+
+# ------------------------------------------------------------------ package
+def cmd_package(a):
+    outdir = pathlib.Path(a.out).resolve()
+    check_out_path(outdir)
+    info = inspect_rom(a.rom)
+    if info['variant'] == 'unknown':
+        die('unrecognised ROM: %s' % info['reason'], 3)
+    v = variants()
+    tgt = v['targets'][a.target]
+    rec = v['variants'][info['variant']]
+    data, _ = load_rom(a.rom)
+    sub = outdir / ('files' if a.target == 'android' else 'sdmc_som')
+    sub.mkdir(parents=True, exist_ok=True)
+    rom_dst = sub / tgt['rom_name']
+    rom_dst.write_bytes(data)                                  # headerless image: no copier header on the device
+    cfg = {'schema': 1, 'variant': info['variant'], 'label': rec['label'], 'rom_file': tgt['rom_name'], 'rom_size': len(data),
+           'rom_sha1': info['sha1'], 'macros': rec.get('macros'), 'hud_first_row': rec.get('hud_first_row'),
+           'map_id_space': rec.get('map_id_space'), 'item_name_overrides': rec.get('item_name_overrides', {}),
+           'weapon_slot_holder_bits': rec.get('weapon_slot_holder_bits', False), 'weapon_ring': rec.get('weapon_ring'),
+           'address_table_source': rec.get('table'), 'wram': address_table(info['variant'])}
+    cfg_dst = sub / tgt['config_name']
+    cfg_dst.write_text(json.dumps(cfg, indent=2) + '\n')
+    lines = ['# Printed by som-dualscreen; nothing below was executed.']
+    if a.target == 'android':
+        d = tgt['rom_dir']
+        lines += ['adb shell mkdir -p %s' % d,
+                  'adb push "%s" %s/%s' % (rom_dst, d, tgt['rom_name']),
+                  'adb push "%s" %s/%s' % (cfg_dst, d, tgt['config_name'])]
+    else:
+        lines += ['# copy the folder "%s" to the SD card root as /som (keep the names)' % sub,
+                  '# result: %s/%s and %s/%s' % (tgt['rom_dir'], tgt['rom_name'], tgt['rom_dir'], tgt['config_name'])]
+    (outdir / 'install.txt').write_text('\n'.join(lines) + '\n')
+    print('variant %s -> %s' % (info['variant'], sub))
+    print('\n'.join(lines))
+    return 0
+
+
+# ------------------------------------------------------------------ verify
+def verify_env():
+    os.environ.setdefault('SOM_COMPANION_STATE', str(STATE / 'harness'))
+    (pathlib.Path(os.environ['SOM_COMPANION_STATE'])).mkdir(parents=True, exist_ok=True)
+
+
+def parse_states(lines):
+    st, macros = {}, []
+    for ln in lines.splitlines():
+        if ln.startswith('{'):
+            d = json.loads(ln)
+            if 'tag' in d:
+                st[d['tag']] = d
+            elif d.get('event') in ('macro', 'refused'):
+                macros.append(d)
+    return st, macros
+
+
+def cmd_verify(a):
+    verify_env()
+    info = inspect_rom(a.rom)
+    v = variants()
+    rec = v['variants'][info['variant']]
+    fix = rec.get('smoke_fixture')
+    report = {'rom': str(a.rom), 'variant': info['variant'], 'sha1': info['sha1'], 'checks': []}
+
+    def check(name, ok, detail=''):
+        report['checks'].append({'name': name, 'ok': bool(ok), 'detail': detail})
+        print('  [%s] %s %s' % ('PASS' if ok else 'FAIL', name, detail))
+        return ok
+
+    print('verify %s: %s' % (info['variant'], info['reason']))
+    if fix not in ('route', 'name_entry'):
+        check('smoke fixture available', False, 'no headless fixture for variant %s' % info['variant'])
+        return finish(report, 3)
+    sys.path.insert(0, str(COMPANION))
+    import common  # noqa: E402 (reads SOM_COMPANION_STATE at import)
+    if not pathlib.Path(common.CORE).exists():
+        check('libretro core', False, 'snes9x core missing: %s (set SOM_CORE)' % common.CORE)
+        return finish(report, 2)
+    tag = 'cli_%s_%s' % (info['variant'], info['sha1'][:8])
+    rom = pathlib.Path(a.rom).resolve()
+    if info['copier_header_stripped']:
+        stripped = common.WORK / (tag + '.sfc')
+        common.WORK.mkdir(parents=True, exist_ok=True)
+        stripped.write_bytes(load_rom(rom)[0])
+        rom = stripped
+    env = dict(os.environ)
+    t0 = time.time()
+    if fix == 'route':
+        party = common.WORK / ('party3_%s.state' % tag)
+        if not party.exists():
+            r = subprocess.run([sys.executable, str(COMPANION / 'build_fixture.py'), '--rom', str(rom), '--tag', tag,
+                                '--route-frames', str(rec['smoke_route_frames'])], env=env, capture_output=True, text=True)
+            if r.returncode:
+                check('boot fixture (route)', False, (r.stdout + r.stderr)[-300:])
+                return finish(report, 1)
+        script = 'LOAD %s\nRUN 2\nSTATE t0\nWRITE E182 1400\nRUN 2\nSTATE before\nCMD item 0 0\nWAIT 900\nRUN 150\nSTATE after\n' % party
+    else:
+        tg = '_' + tag
+        party = common.WORK / ('ac_party%s.state' % tg)
+        if not party.exists():
+            env.update(SOM_ROM_AC=str(rom), SOM_AC_TAG=tg)
+            r = subprocess.run([sys.executable, str(COMPANION / 'ancientcave' / 'build_ac_fixture.py')], env=env, capture_output=True, text=True)
+            if r.returncode:
+                check('boot fixture (name entry)', False, (r.stdout + r.stderr)[-300:])
+                return finish(report, 1)
+        script = 'LOAD %s\nRUN 2\nSTATE t0\nWRITE E182 1400\nRUN 2\nSTATE before\nCMD item 0 0\nWAIT 900\nRUN 150\nSTATE after\n' % party
+    report['boot_seconds'] = round(time.time() - t0, 1)
+    try:
+        lines = common.run_host(script, rom=rom, name='smoke_' + tag)
+    except Exception as e:                                       # noqa: BLE001
+        check('host run', False, str(e)[:300])
+        return finish(report, 1)
+    st, macros = {}, []
+    for d in lines:
+        if 'tag' in d:
+            st[d['tag']] = d
+        elif d.get('event') in ('macro', 'refused'):
+            macros.append(d)
+    t0s, bef, aft = st.get('t0'), st.get('before'), st.get('after')
+    if not (t0s and bef and aft and macros):
+        check('host output', False, 'missing states or macro result')
+        return finish(report, 1)
+    check('free play reached (mode field, safe to inject)', t0s['mode'] == 'field' and t0s['safe'], 'mode=%s safe=%s' % (t0s['mode'], t0s['safe']))
+    exp = rec.get('smoke_expect_map')
+    check('map id', t0s['map'] == exp, 'map=%s expected %s' % (t0s['map'], exp))
+    check('party read from WRAM', t0s['party'][0]['present'] == 1 and t0s['party'][0]['hp'] > 0,
+          'present=%s hp=%s' % ([h['present'] for h in t0s['party']], [h['hp'] for h in t0s['party']]))
+    check('WRAM write seen by the game', bef['party'][0]['hp'] == 20, 'hero 0 HP set to 20 -> %s' % bef['party'][0]['hp'])
+    check('macro use-item (Candy, record 0) done', macros[0].get('result') == 'done', '%s in %s frames' % (macros[0].get('result'), macros[0].get('frames')))
+    check('macro healed the hero', aft['party'][0]['hp'] > 20, 'HP 20 -> %s' % aft['party'][0]['hp'])
+    check('ring closed and mode back to field', (not aft['ring']['open']) and aft['mode'] == 'field')
+    report['evidence'] = {'states': {k: {'mode': s['mode'], 'map': s['map'], 'hp': [h['hp'] for h in s['party']]} for k, s in st.items()},
+                          'macro': macros[0]}
+    return finish(report, 0 if all(c['ok'] for c in report['checks']) else 1)
+
+
+def finish(report, code):
+    rep = STATE / 'reports'
+    rep.mkdir(parents=True, exist_ok=True)
+    p = rep / ('verify_%s_%s.json' % (report['variant'], report['sha1'][:8]))
+    report['result'] = 'pass' if code == 0 else 'fail'
+    p.write_text(json.dumps(report, indent=2) + '\n')
+    print('%s  (report %s)' % (report['result'].upper(), p))
+    return code
+
+
+# ------------------------------------------------------------------ generate (start menu pipeline, board item T9)
+def launcher_config():
+    sys.path.insert(0, str(HERE))
+    import launcher_config
+    return launcher_config
+
+
+def boot_check(rom, frames):
+    """Runs the ROM headless for `frames` frames on the libretro core; the picture must show something and must change."""
+    verify_env()
+    sys.path.insert(0, str(COMPANION))
+    import common
+    if not pathlib.Path(common.CORE).exists():
+        return False, 'libretro core missing: %s (set SOM_CORE)' % common.CORE
+    shots = STATE / 'harness' / 'boot'
+    shots.mkdir(parents=True, exist_ok=True)
+    a, b = shots / ('boot_%s_a.ppm' % rom.stem), shots / ('boot_%s_b.ppm' % rom.stem)
+    script = 'RUN %d\nSHOT %s\nRUN %d\nSHOT %s\nSTATE end\n' % (frames // 2, a, frames - frames // 2, b)
+    try:
+        lines = common.run_host(script, rom=rom, name='boot_' + rom.stem, timeout=300)
+    except Exception as e:                                       # noqa: BLE001
+        return False, 'host failed: %s' % str(e)[:200]
+
+    def colours(p):
+        d = p.read_bytes()
+        body = d[d.index(b'255\n') + 4:]
+        return set(body[i:i + 3] for i in range(0, min(len(body), 3 * 60000), 3)), hashlib.sha1(body).hexdigest()
+    try:
+        ca, ha = colours(a)
+        cb, hb = colours(b)
+    except Exception as e:                                       # noqa: BLE001
+        return False, 'no picture written: %s' % e
+    if not lines or lines[-1].get('frame') != frames:
+        return False, 'ran %s of %d frames' % (lines[-1].get('frame') if lines else 0, frames)
+    if len(ca) < 6 or len(cb) < 6:
+        return False, 'picture is blank (%d and %d colours)' % (len(ca), len(cb))
+    return True, '%d frames, picture colours %d/%d, %s' % (frames, len(ca), len(cb), 'animating' if ha != hb else 'static')
+
+
+def check_generated(path, mode):
+    """Header, size and variant of a generated ROM.  Returns (ok, detail)."""
+    info = inspect_rom(path)
+    want = MODES[mode]
+    problems = []
+    if info['size'] != 4 * 1024 * 1024:
+        problems.append('size %d, expected 4194304' % info['size'])
+    if info.get('title') != 'Secret of MANA':
+        problems.append('title %r' % info.get('title'))
+    if info['variant'] != want:
+        problems.append('variant %s, expected %s (%s)' % (info['variant'], want, info['reason']))
+    return (not problems), ('; '.join(problems) or 'size 4 MiB, title Secret of MANA, variant %s, hooks %s' % (info['variant'], info.get('hook_sites_hit')))
+
+
+def cmd_generate(a):
+    lc = launcher_config()
+    cfgp = pathlib.Path(a.config)
+    cfg = json.loads(sys.stdin.read() if a.config == '-' else cfgp.read_text())
+    errs = lc.validate(cfg)
+    if errs:
+        die('invalid configuration:\n  ' + '\n  '.join(errs), 2)
+    mode = cfg['mode']
+    src = inspect_rom(a.rom)
+    if src['variant'] != 'vanilla_us':
+        die('the randomizer accepts only the US v1.0 ROM (title "Secret of MANA", region 1, version 0, 2 MiB); got variant %s: %s'
+            % (src['variant'], src['reason']), 2)
+    outdir = pathlib.Path(a.out_dir or (STATE / 'gen')).resolve()
+    check_out_path(outdir)
+    out = outdir / ('%s.sfc' % cfg['key'])
+    side = out.with_suffix('.sfc.json')
+    cached = False
+    if out.exists() and side.exists() and not a.force:
+        try:
+            m = json.loads(side.read_text())
+            cached = m.get('output_sha256') == hashlib.sha256(out.read_bytes()).hexdigest() and m.get('config_key') == cfg['key']
+        except Exception:                                        # noqa: BLE001
+            cached = False
+    if not cached:
+        diff = cfg.get('difficulty') or 'casual'
+        opts = ['%s=%s' % (k, v) for k, v in sorted(cfg['options'].items())]
+        if not headless_dll().exists():
+            die('headless randomizer not built: run "som-dualscreen setup-randomizer"', 2)
+        run_generator(a.rom, src, mode, cfg['seed'], diff, opts, out)
+    ok, detail = check_generated(out, mode)
+    print('  [%s] header/size/variant: %s' % ('PASS' if ok else 'FAIL', detail))
+    if not ok:
+        die('generated ROM failed the header check; it was left at %s' % out, 1)
+    boot = None
+    if a.frames > 0:
+        t0 = time.time()
+        bok, bdetail = boot_check(out, a.frames)
+        boot = {'ok': bok, 'detail': bdetail, 'seconds': round(time.time() - t0, 1)}
+        print('  [%s] headless boot: %s (%.1f s)' % ('PASS' if bok else 'FAIL', bdetail, boot['seconds']))
+        if not bok:
+            die('generated ROM did not boot headless: %s' % bdetail, 1)
+    meta = json.loads(side.read_text())
+    meta.update(config_key=cfg['key'], config=cfg, header_ok=True, boot=boot, source_rom_sha1=src['sha1'])
+    side.write_text(json.dumps(meta, indent=2) + '\n')
+    result = {'rom': str(out), 'key': cfg['key'], 'sha256': meta['output_sha256'], 'cached': cached, 'mode': mode, 'seed': cfg['seed']}
+    if a.json:
+        print(json.dumps(result))
+    else:
+        print('%s ROM %s' % ('cached' if cached else 'generated', out))
+    return 0
+
+
+def cmd_push_random(a):
+    rom = pathlib.Path(a.rom)
+    side = rom.with_suffix(rom.suffix + '.json')
+    if not rom.is_file() or not side.is_file():
+        die('give the generated ROM written by "generate" (its .json sidecar must sit next to it)', 2)
+    meta = json.loads(side.read_text())
+    key = meta.get('config_key')
+    if not key or not meta.get('header_ok'):
+        die('this ROM was not produced and verified by "generate"', 2)
+    adb = shutil.which('adb') or die('adb not found', 2)
+    d = (a.dir or variants()['targets']['android']['rom_dir']) + '/roms/gen'
+    cmds = [[adb, '-s', a.serial, 'shell', 'mkdir', '-p', d],
+            [adb, '-s', a.serial, 'push', str(rom), '%s/%s.sfc' % (d, key)],
+            [adb, '-s', a.serial, 'push', str(side), '%s/%s.json' % (d, key)]]
+    if a.dry_run:
+        print('\n'.join(' '.join(c) for c in cmds))
+        return 0
+    for c in cmds:
+        r = subprocess.run(c, capture_output=True, text=True)
+        if r.returncode:
+            die('%s failed: %s' % (' '.join(c), (r.stdout + r.stderr).strip()))
+        print((r.stdout + r.stderr).strip() or 'ok: ' + ' '.join(c[3:]))
+    print('pushed %s to %s as %s.sfc' % (rom.name, a.serial, key))
+    return 0
+
+
+def main():
+    ap = argparse.ArgumentParser(prog='som-dualscreen', description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sp = ap.add_subparsers(dest='cmd', required=True)
+    p = sp.add_parser('inspect')
+    p.add_argument('rom')
+    p.add_argument('--json', action='store_true')
+    p.set_defaults(fn=cmd_inspect)
+    p = sp.add_parser('setup-randomizer')
+    p.set_defaults(fn=cmd_setup)
+    p = sp.add_parser('randomize')
+    p.add_argument('--mode', default='ancientcave', help='ancientcave|open|rando|bossrush|chaos')
+    p.add_argument('--seed', required=True)
+    p.add_argument('--rom', required=True, help='vanilla US v1.0 ROM')
+    p.add_argument('--out', required=True)
+    p.add_argument('--difficulty', default='casual', choices=['casual', 'hard', 'reallyhard'])
+    p.add_argument('--option', action='append', help='generator setting key=value (see somrando --list-options); repeatable')
+    p.set_defaults(fn=cmd_randomize)
+    p = sp.add_parser('package')
+    p.add_argument('--rom', required=True)
+    p.add_argument('--target', required=True, choices=['android', '3ds'])
+    p.add_argument('--out', required=True)
+    p.set_defaults(fn=cmd_package)
+    p = sp.add_parser('verify')
+    p.add_argument('rom')
+    p.set_defaults(fn=cmd_verify)
+    p = sp.add_parser('generate', help='start menu pipeline: config JSON -> validated, generated, header-checked, boot-tested ROM')
+    p.add_argument('--config', required=True, help='configuration JSON written by the start menu (sl_config_json), or - for stdin')
+    p.add_argument('--rom', required=True, help='vanilla US v1.0 ROM')
+    p.add_argument('--out-dir', help='default: <state>/gen; never inside the repository')
+    p.add_argument('--frames', type=int, default=1800, help='headless boot frames (0 skips the boot test)')
+    p.add_argument('--force', action='store_true', help='regenerate even when a verified ROM for this key exists')
+    p.add_argument('--json', action='store_true', help='print the result as one JSON line')
+    p.set_defaults(fn=cmd_generate)
+    p = sp.add_parser('push-random', help='copy a generated ROM to the app files directory of a device with adb')
+    p.add_argument('--serial', required=True, help='adb serial; there is no default on purpose')
+    p.add_argument('--rom', required=True, help='ROM written by generate (the .json sidecar must be next to it)')
+    p.add_argument('--dir', help='app files directory on the device (default: the release package of variants.json)')
+    p.add_argument('--dry-run', action='store_true')
+    p.set_defaults(fn=cmd_push_random)
+    a = ap.parse_args()
+    sys.exit(a.fn(a))
+
+
+if __name__ == '__main__':
+    main()

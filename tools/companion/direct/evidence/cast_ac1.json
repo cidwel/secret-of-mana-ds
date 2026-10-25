@@ -1,0 +1,1351 @@
+{
+ "variant": "ac1",
+ "cases": 42,
+ "mismatches": 0,
+ "results": [
+  {
+   "spell": 3,
+   "hero": 1,
+   "spirit": 0,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 419,
+    "phase80": 69,
+    "mp_paid": 145,
+    "free": 335,
+    "request": "030101ffff000100020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 148,
+    "free": 337,
+    "request": "030101ffff000100020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 4,
+   "hero": 1,
+   "spirit": 0,
+   "slot": 1,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 444,
+    "phase80": 69,
+    "mp_paid": 122,
+    "free": 259,
+    "request": "040101ffff000100020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 125,
+    "free": 261,
+    "request": "040101ffff000100020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 5,
+   "hero": 1,
+   "spirit": 0,
+   "slot": 2,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 444,
+    "phase80": 69,
+    "mp_paid": 122,
+    "free": 240,
+    "request": "050101ffff000100020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 125,
+    "free": 243,
+    "request": "050101ffff000100020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 9,
+   "hero": 1,
+   "spirit": 1,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 444,
+    "phase80": 69,
+    "mp_paid": 150,
+    "free": 339,
+    "request": "090201ffff000101020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 152,
+    "free": 341,
+    "request": "090201ffff000101020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 10,
+   "hero": 1,
+   "spirit": 1,
+   "slot": 1,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 469,
+    "phase80": 69,
+    "mp_paid": 127,
+    "free": 332,
+    "request": "0a0201ffff000101020202",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 134,
+    "free": 334,
+    "request": "0a0201ffff000101020202",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 11,
+   "hero": 1,
+   "spirit": 1,
+   "slot": 2,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 469,
+    "phase80": 69,
+    "mp_paid": 127,
+    "free": 333,
+    "request": "0b0201ffff000101020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 134,
+    "free": 335,
+    "request": "0b0201ffff000101020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 15,
+   "hero": 1,
+   "spirit": 2,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 469,
+    "phase80": 69,
+    "mp_paid": 154,
+    "free": 343,
+    "request": "0f0301ffff000102020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 157,
+    "free": 346,
+    "request": "0f0301ffff000102020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 16,
+   "hero": 1,
+   "spirit": 2,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 133,
+    "free": 199,
+    "request": "100303ffff000102040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 139,
+    "free": 202,
+    "request": "100303ffff000102040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 17,
+   "hero": 1,
+   "spirit": 2,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 133,
+    "free": 200,
+    "request": "110303ffff000102040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 139,
+    "free": 203,
+    "request": "110303ffff000102040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 21,
+   "hero": 1,
+   "spirit": 3,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 166,
+    "free": 355,
+    "request": "150401ffff000103020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 167,
+    "free": 356,
+    "request": "150401ffff000103020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 22,
+   "hero": 1,
+   "spirit": 3,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 519,
+    "phase80": 69,
+    "mp_paid": 148,
+    "free": 211,
+    "request": "160403ffff000103040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 149,
+    "free": 212,
+    "request": "160403ffff000103040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 23,
+   "hero": 1,
+   "spirit": 3,
+   "slot": 2,
+   "cls": "enemy-one",
+   "ring": {
+    "start": 519,
+    "phase80": 69,
+    "mp_paid": 148,
+    "free": 211,
+    "request": "170403ffff000103040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 149,
+    "free": 212,
+    "request": "170403ffff000103040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 27,
+   "hero": 1,
+   "spirit": 4,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 138,
+    "free": 331,
+    "request": "1b0501ffff000104020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 142,
+    "free": 332,
+    "request": "1b0501ffff000104020202",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 28,
+   "hero": 1,
+   "spirit": 4,
+   "slot": 1,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 519,
+    "phase80": 69,
+    "mp_paid": 117,
+    "free": 254,
+    "request": "1c0501ffff000104020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 120,
+    "free": 257,
+    "request": "1c0501ffff000104020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 29,
+   "hero": 1,
+   "spirit": 4,
+   "slot": 2,
+   "cls": "ally-one",
+   "ring": {
+    "start": 519,
+    "phase80": 69,
+    "mp_paid": 138,
+    "free": 296,
+    "request": "1d0501ffff000104020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 142,
+    "free": 298,
+    "request": "1d0501ffff000104020202",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 33,
+   "hero": 1,
+   "spirit": 5,
+   "slot": 0,
+   "cls": "ally-dead-one",
+   "ring": {
+    "start": 454,
+    "phase80": 67,
+    "mp_paid": 119,
+    "free": 180,
+    "request": "210602ffff000105030303",
+    "mp": [
+     60,
+     50
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 122,
+    "free": 184,
+    "request": "210602ffff000105030303",
+    "mp": [
+     60,
+     50
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 34,
+   "hero": 1,
+   "spirit": 5,
+   "slot": 1,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 122,
+    "free": 327,
+    "request": "220601ffff000105020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 125,
+    "free": 330,
+    "request": "220601ffff000105020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 35,
+   "hero": 1,
+   "spirit": 5,
+   "slot": 2,
+   "cls": "boy-only",
+   "ring": {
+    "start": 494,
+    "phase80": 69,
+    "mp_paid": 122,
+    "free": 186,
+    "request": "230600ffff000105010101",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 125,
+    "free": 191,
+    "request": "230600ffff000105010101",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 39,
+   "hero": 1,
+   "spirit": 6,
+   "slot": 0,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 444,
+    "phase80": 69,
+    "mp_paid": 150,
+    "free": 339,
+    "request": "270701ffff000106020202",
+    "mp": [
+     60,
+     55
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 152,
+    "free": 341,
+    "request": "270701ffff000106020202",
+    "mp": [
+     60,
+     55
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 40,
+   "hero": 1,
+   "spirit": 6,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 469,
+    "phase80": 69,
+    "mp_paid": 127,
+    "free": 194,
+    "request": "280703ffff000106040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 134,
+    "free": 197,
+    "request": "280703ffff000106040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 41,
+   "hero": 1,
+   "spirit": 6,
+   "slot": 2,
+   "cls": "ally-one-or-all",
+   "ring": {
+    "start": 469,
+    "phase80": 69,
+    "mp_paid": 127,
+    "free": 327,
+    "request": "290701ffff000106020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 71,
+    "mp_paid": 134,
+    "free": 328,
+    "request": "290701ffff000106020202",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 0,
+   "hero": 2,
+   "spirit": 0,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 502,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 183,
+    "request": "000103ffff000100040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 187,
+    "request": "000103ffff000100040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 1,
+   "hero": 2,
+   "spirit": 0,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 527,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 183,
+    "request": "010103ffff000100040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 187,
+    "request": "010103ffff000100040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 2,
+   "hero": 2,
+   "spirit": 0,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 527,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 184,
+    "request": "020103ffff000100040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 188,
+    "request": "020103ffff000100040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 6,
+   "hero": 2,
+   "spirit": 1,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 527,
+    "phase80": 68,
+    "mp_paid": 125,
+    "free": 191,
+    "request": "060203ffff000101040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 132,
+    "free": 195,
+    "request": "060203ffff000101040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 7,
+   "hero": 2,
+   "spirit": 1,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 125,
+    "free": 191,
+    "request": "070203ffff000101040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 132,
+    "free": 195,
+    "request": "070203ffff000101040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 8,
+   "hero": 2,
+   "spirit": 1,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 125,
+    "free": 191,
+    "request": "080203ffff000101040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 132,
+    "free": 195,
+    "request": "080203ffff000101040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 12,
+   "hero": 2,
+   "spirit": 2,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 160,
+    "free": 275,
+    "request": "0c0303ffff000102040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 165,
+    "free": 279,
+    "request": "0c0303ffff000102040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 13,
+   "hero": 2,
+   "spirit": 2,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 130,
+    "free": 196,
+    "request": "0d0303ffff000102040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 137,
+    "free": 200,
+    "request": "0d0303ffff000102040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 14,
+   "hero": 2,
+   "spirit": 2,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 130,
+    "free": 196,
+    "request": "0e0303ffff000102040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 137,
+    "free": 200,
+    "request": "0e0303ffff000102040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 18,
+   "hero": 2,
+   "spirit": 3,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 170,
+    "free": 289,
+    "request": "120403ffff000103040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 174,
+    "free": 293,
+    "request": "120403ffff000103040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 19,
+   "hero": 2,
+   "spirit": 3,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 602,
+    "phase80": 68,
+    "mp_paid": 143,
+    "free": 206,
+    "request": "130403ffff000103040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 147,
+    "free": 210,
+    "request": "130403ffff000103040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 20,
+   "hero": 2,
+   "spirit": 3,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 602,
+    "phase80": 68,
+    "mp_paid": 143,
+    "free": 207,
+    "request": "140403ffff000103040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 147,
+    "free": 211,
+    "request": "140403ffff000103040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 24,
+   "hero": 2,
+   "spirit": 4,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 115,
+    "free": 179,
+    "request": "180503ffff000104040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 117,
+    "free": 182,
+    "request": "180503ffff000104040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 25,
+   "hero": 2,
+   "spirit": 4,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 602,
+    "phase80": 68,
+    "mp_paid": 115,
+    "free": 179,
+    "request": "190503ffff000104040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 117,
+    "free": 182,
+    "request": "190503ffff000104040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 26,
+   "hero": 2,
+   "spirit": 4,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 602,
+    "phase80": 68,
+    "mp_paid": 115,
+    "free": 184,
+    "request": "1a0503ffff000104040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 117,
+    "free": 185,
+    "request": "1a0503ffff000104040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 30,
+   "hero": 2,
+   "spirit": 5,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 183,
+    "request": "1e0603ffff000105040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 187,
+    "request": "1e0603ffff000105040404",
+    "mp": [
+     60,
+     58
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 31,
+   "hero": 2,
+   "spirit": 5,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 183,
+    "request": "1f0603ffff000105040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 187,
+    "request": "1f0603ffff000105040404",
+    "mp": [
+     60,
+     56
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 32,
+   "hero": 2,
+   "spirit": 5,
+   "slot": 2,
+   "cls": "boy-only",
+   "ring": {
+    "start": 577,
+    "phase80": 68,
+    "mp_paid": 120,
+    "free": 184,
+    "request": "200600ffff000105010101",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 123,
+    "free": 189,
+    "request": "200600ffff000105010101",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 36,
+   "hero": 2,
+   "spirit": 6,
+   "slot": 0,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 527,
+    "phase80": 68,
+    "mp_paid": 138,
+    "free": 201,
+    "request": "240703ffff000106040404",
+    "mp": [
+     60,
+     55
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 142,
+    "free": 205,
+    "request": "240703ffff000106040404",
+    "mp": [
+     60,
+     55
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 37,
+   "hero": 2,
+   "spirit": 6,
+   "slot": 1,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 138,
+    "free": 201,
+    "request": "250703ffff000106040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 142,
+    "free": 205,
+    "request": "250703ffff000106040404",
+    "mp": [
+     60,
+     57
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  },
+  {
+   "spell": 38,
+   "hero": 2,
+   "spirit": 6,
+   "slot": 2,
+   "cls": "enemy-one-or-all",
+   "ring": {
+    "start": 552,
+    "phase80": 68,
+    "mp_paid": 138,
+    "free": 201,
+    "request": "260703ffff000106040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "ring_refused": null,
+   "direct": {
+    "start": 2,
+    "phase80": 70,
+    "mp_paid": 142,
+    "free": 205,
+    "request": "260703ffff000106040404",
+    "mp": [
+     60,
+     59
+    ]
+   },
+   "direct_start": "ok",
+   "ok": true
+  }
+ ]
+}

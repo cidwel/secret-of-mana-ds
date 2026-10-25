@@ -1,0 +1,22 @@
+# T12: save state slots through the real core (vanilla ROM): save, play on, load, play the same input again and get the same picture.
+LOAD @FIXTURE@
+RUN 30
+SINFO 1
+SSAVE 1
+SINFO 1
+PAD RIGHT 90
+FRAMEHASH a
+STATE a
+SSAVE 2
+PAD LEFT 40
+FRAMEHASH b
+SLOAD 1
+PAD RIGHT 90
+FRAMEHASH a_again
+STATE a_again
+SLOAD 2
+FRAMEHASH slot2_loaded_before_run
+PAD LEFT 40
+FRAMEHASH b_again
+SLOAD 3
+SINFO 3

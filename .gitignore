@@ -32,3 +32,8 @@ __pycache__/
 .venv/
 .idea/
 .vscode/
+
+# build.py
+.deps/
+.build/
+dist/

@@ -86,7 +86,7 @@ fi
 if [ -n "$CORE" ]; then
   if [ "$PLAT" = windows ]; then cp "$CORE" "$DIR/core/snes9x_widescreen_libretro.dll"; else cp "$CORE" "$DIR/core/snes9x_widescreen_libretro.so"; fi
 fi
-cat > "$DIR/core/README.txt" <<'EOF'
+[ -z "$CORE" ] && cat > "$DIR/core/README.txt" <<'EOF'
 The emulator core is not part of this folder.  som-pc runs Secret of Mana on the Snes9x widescreen libretro core of this project
 (Snes9x 1.63 plus tools/companion/widescreen/ws_snes9x.patch).  Snes9x is licensed for non-commercial use only and may not be
 redistributed commercially, so build it yourself (needs git, g++, make):

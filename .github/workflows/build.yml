@@ -1,0 +1,110 @@
+# Builds every app on each push and publishes them as a GitHub release on a v* tag.  No ROM is used: the apps read it when they run.
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  thor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android NDK and CMake
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358" "cmake;3.22.1" "platforms;android-34" > /dev/null
+      - run: python3 build.py thor
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thor
+          path: dist/secret-of-mana-ds-thor.apk
+
+  n3ds:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - run: apt-get update && apt-get install -y --no-install-recommends git python3 && git config --global --add safe.directory '*'
+      - uses: actions/checkout@v4
+      - run: python3 build.py 3ds
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 3ds
+          path: dist/secret-of-mana-ds.3dsx
+
+  pc-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gcc g++ make pkg-config libsdl2-dev
+      - run: python3 build.py pc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pc-linux
+          path: dist/som-pc-latest-linux-x86_64.tar.gz
+
+  pc-windows:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git zip make
+            mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-pkg-config mingw-w64-x86_64-python
+      - run: python build.py pc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pc-windows
+          path: dist/som-pc-latest-windows-x86_64.zip
+
+  som-ds:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            name: som-ds-windows.exe
+          - os: macos-latest
+            name: som-ds-macos
+          - os: ubuntu-22.04
+            name: som-ds-linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --windowed --name som-ds som-ds.py
+      - name: Rename
+        shell: bash
+        run: mv dist/som-ds* "dist/${{ matrix.name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/${{ matrix.name }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [thor, n3ds, pc-linux, pc-windows, som-ds]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" assets/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes "Download som-ds for your system, open it, choose your ROM and your device. Or take the app directly: secret-of-mana-ds-thor.apk (AYN Thor / Android), secret-of-mana-ds.3dsx (Nintendo 3DS), som-pc (PC). No ROM is included."

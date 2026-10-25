@@ -1,4 +1,5 @@
 #include "som_start_pages.h"
+#include "launcher/som_launcher_draw.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +17,7 @@
 #define C_CHG 0xFF7CE08Cu
 #define C_BTN 0xFF2C44A0u
 #define C_EDGE 0xFFE8ECFFu
+#define C_FOCUS 0xFFF0B840u
 
 static struct pg gpg;
 static int gp_ok, gp_dirty, page, cr_scroll, cr_lines, cr_vis;
@@ -372,21 +374,21 @@ int ssp_tap(int x, int y, int w, int h) {
 
 /* ------------------------------------------------------------------ main-screen footer */
 static void footer_rects(int w, int h, int r[2][4]) {
-  int m = scale_of(h), bh = 22 * m, y = h - bh - 6 * m, bw = (w - 8 * m * 3) / 2;
+  int m = scale_of(h), bh = 20 * m, y = h - bh - 4 * m, bw = (w - 8 * m * 3) / 2;
   r[0][0] = 8 * m; r[0][1] = y; r[0][2] = bw; r[0][3] = bh;
   r[1][0] = 16 * m + bw; r[1][1] = y; r[1][2] = bw; r[1][3] = bh;
 }
 
-void ssp_draw_footer(uint32_t *px, int stride, int w, int h, int gameplay_active) {
+void ssp_draw_footer(uint32_t *px, int stride, int w, int h, int gameplay_active, int focus) {
   int r[2][4], m = scale_of(h);
-  static const char *const lab[2] = {"X  GAMEPLAY", "Y  CREDITS"};
+  static const char *const lab[2] = {"Gameplay", "Credits"};
   footer_rects(w, h, r);
   frect(px, stride, w, h, 0, r[0][1] - 4 * m, w, h - (r[0][1] - 4 * m), C_BG);   /* covers the old one-line credit text; the credits page carries it */
   for (int i = 0; i < 2; i++) {
-    uint32_t edge = i == 0 && gameplay_active ? C_CHG : C_EDGE;
+    uint32_t edge = focus == i + 1 ? C_FOCUS : i == 0 && gameplay_active ? C_CHG : C_EDGE;
     frect(px, stride, w, h, r[i][0], r[i][1], r[i][2], r[i][3], edge);
     frect(px, stride, w, h, r[i][0] + m, r[i][1] + m, r[i][2] - 2 * m, r[i][3] - 2 * m, C_BTN);
-    pg_text(px, stride, w, h, r[i][0] + (r[i][2] - pg_text_width(lab[i], m * 2)) / 2, r[i][1] + (r[i][3] - 14 * m) / 2, lab[i], C_TXT, m * 2);
+    sl_draw_label(px, stride, w, h, r[i][0], r[i][1], r[i][2], r[i][3], lab[i], C_TXT);
   }
 }
 

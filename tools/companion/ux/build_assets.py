@@ -123,10 +123,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--src', default=str(DEFAULT_SRC))
     ap.add_argument('--out', default=str(DEFAULT_OUT))
+    ap.add_argument('--fonts-only', action='store_true',
+                    help='only the UI font (IBM Plex, SIL OFL): no Square Enix artwork, so the pack can ship in public builds')
     a = ap.parse_args()
     src, out = pathlib.Path(a.src), pathlib.Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     pk = Packer(2048, 2048)
+    if a.fonts_only:
+        add_ui_font(pk)
+        return write_pack(pk, out, 'IBM Plex Sans Condensed (SIL OFL 1.1) only; may be distributed.', str(FONT))
 
     big = Image.open(src / 'fonts/sprfont_som.png').convert('RGBA')
     bfnt = read_fnt(src / 'fonts/sprfont_som.fnt')
@@ -174,6 +179,10 @@ def main():
         pk.add(0x2010 + h, f.resize((24, 26), Image.LANCZOS))
 
     add_ui_font(pk)
+    return write_pack(pk, out, 'Square Enix artwork from the owner project; never commit.', str(src))
+
+
+def write_pack(pk, out, note, source):
     hh = max(r[2] + r[4] for r in pk.rects)
     pk.img = pk.img.crop((0, 0, pk.w, hh)); pk.h = hh
     blob = bytearray(b'SUXP')
@@ -184,11 +193,9 @@ def main():
     (out / 'som_ui_pack.bin').write_bytes(bytes(blob))
     pk.img.save(out / 'som_ui_pack_atlas.png')
     man = {'file': 'som_ui_pack.bin', 'sha256': hashlib.sha256(blob).hexdigest(), 'bytes': len(blob),
-           'atlas': [pk.w, pk.h], 'rects': len(pk.rects), 'source': str(src),
-           'note': 'Square Enix artwork from the owner project; never commit.'}
+           'atlas': [pk.w, pk.h], 'rects': len(pk.rects), 'source': source, 'note': note}
     (out / 'som_ui_pack.json').write_text(json.dumps(man, indent=1))
     print(json.dumps(man))
-
 
 if __name__ == '__main__':
     sys.exit(main())

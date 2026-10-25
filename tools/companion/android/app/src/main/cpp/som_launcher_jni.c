@@ -38,17 +38,30 @@ JNIEXPORT void JNICALL FN(setStatus)(JNIEnv *e, jclass c, jstring o, jstring g) 
 }
 
 JNIEXPORT void JNICALL FN(setView)(JNIEnv *e, jclass c, jint w, jint h) { (void)e; (void)c; sl_set_view(&L, w, h); }
-/* X and Y on the main screen open the gameplay and credits pages (Thor round 4); while a page is open it takes every button. */
+/* Footer focus on the main screen: 0 in the menu, 1 Gameplay, 2 Credits.  Down from the last entry reaches the footer, left and right move
+ * along it, up goes back and A opens the page; X and Y still open them directly.  While a page is open it takes every button. */
+static int foot;
 JNIEXPORT void JNICALL FN(key)(JNIEnv *e, jclass c, jint b) {
   (void)e; (void)c;
   if (ssp_page()) { ssp_key(b); return; }
+  if (L.screen != SL_MAIN) foot = 0;
   if (L.screen == SL_MAIN && b == SL_X) { ssp_open(SSP_GAMEPLAY); return; }
   if (L.screen == SL_MAIN && b == SL_Y) { ssp_open(SSP_CREDITS); return; }
+  if (L.screen == SL_MAIN && foot) {
+    if (b == SL_LEFT) foot = 1;
+    else if (b == SL_RIGHT) foot = 2;
+    else if (b == SL_UP || b == SL_B) foot = 0;
+    else if (b == SL_A) ssp_open(foot == 1 ? SSP_GAMEPLAY : SSP_CREDITS);
+    L.rev++;
+    return;
+  }
+  if (L.screen == SL_MAIN && b == SL_DOWN && L.cursor == sl_main_count(&L) - 1) { foot = 1; L.rev++; return; }
   sl_key(&L, b);
 }
 JNIEXPORT void JNICALL FN(tap)(JNIEnv *e, jclass c, jint x, jint y, jint w, jint h) {
   (void)e; (void)c;
   if (ssp_page()) { ssp_tap(x, y, w, h); return; }
+  foot = 0;
   if (L.screen == SL_MAIN) {
     int hit = ssp_footer_hit(x, y, w, h);
     if (hit) { ssp_open(hit == SSP_H_GAMEPLAY ? SSP_GAMEPLAY : SSP_CREDITS); return; }
@@ -80,8 +93,10 @@ JNIEXPORT jboolean JNICALL FN(render)(JNIEnv *e, jclass c, jobject bmp) {
   int stride = (int)(info.stride / 4);
   if (ssp_page()) ssp_draw(p, stride, (int)info.width, (int)info.height);
   else {
-    sl_draw(&L, p, stride, (int)info.width, (int)info.height);
-    if (L.screen == SL_MAIN) ssp_draw_footer(p, stride, (int)info.width, (int)info.height, !ssp_gameplay_default());
+    struct sl_launcher shown = L;
+    if (foot) shown.cursor = -1;                   /* the footer has the focus: no menu entry is highlighted */
+    sl_draw(&shown, p, stride, (int)info.width, (int)info.height);
+    if (L.screen == SL_MAIN) ssp_draw_footer(p, stride, (int)info.width, (int)info.height, !ssp_gameplay_default(), foot);
   }
   for (uint32_t y = 0; y < info.height; y++)
     for (uint32_t x = 0; x < info.width; x++) {

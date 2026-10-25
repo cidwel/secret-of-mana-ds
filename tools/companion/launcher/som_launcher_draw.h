@@ -10,6 +10,8 @@
 int sl_draw_load_pack(const uint8_t *blob, size_t len);   /* 0 ok, -1 not a pack */
 void sl_draw_free_pack(void);
 void sl_draw(const struct sl_launcher *L, uint32_t *px, int stride, int w, int h);
+/* One line of text centred in a device-pixel box, in the start menu's face (hi-res when the pack has it). */
+void sl_draw_label(uint32_t *px, int stride, int w, int h, int rx, int ry, int rw, int rh, const char *label, uint32_t col);
 /* The top screen: wallpaper on the main menu, otherwise a summary of the game being set up (see som_launcher_draw.c). */
 void sl_draw_top(const struct sl_launcher *L, uint32_t *px, int stride, int w, int h);
 int sl_draw_audit(int reset);                           /* texts cut or wider than their box since the last reset (tests) */

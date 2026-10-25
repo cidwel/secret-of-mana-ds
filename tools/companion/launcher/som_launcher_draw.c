@@ -140,7 +140,7 @@ static const struct { char c; uint8_t col[5]; } font5x7[] = {
 
 static const uint8_t HR_SCALE[5] = {2, 3, 4, 6, 8};
 static const struct pk_rect *hr_glyph(const struct cv *c, int ch, int mul) {
-  if (!g_pack || c->s < 2 || mul != 1 || ch < 32 || ch > 126) return NULL;
+  if (!g_pack || c->s < 2 || ch < 32 || ch > 126) return NULL;
   int k = c->s * mul;
   for (int i = 0; i < 5; i++) if (HR_SCALE[i] == k) return pk_find(g_pack, 0x4000 + i * 0x200 + ch);
   return NULL;
@@ -205,16 +205,14 @@ static void hr_draw(struct cv *c, int px_x, int y, const struct pk_rect *r, uint
     }
 }
 static int text(struct cv *c, int x, int y, const char *s, uint32_t col, int mul) {
-  int pen = x * c->s;
-  if (hr_on(c) && mul == 1) {
-    for (; *s; s++) {
-      const struct pk_rect *r = hr_glyph(c, (unsigned char)*s, 1);
-      if (r) { if (r->w > 1 || r->h > 1) hr_draw(c, pen, y, r, col); }
-      pen += adv_dev(c, (unsigned char)*s, 1);
-    }
-    return (pen - x * c->s + c->s - 1) / c->s;
+  int pen = x * c->s, hr = hr_on(c);
+  for (; *s; s++) {
+    /* the hi-res face at every multiplier the pack was rasterised for, the pixel face otherwise */
+    const struct pk_rect *r = hr ? hr_glyph(c, (unsigned char)*s, mul) : NULL;
+    if (r) { if (r->w > 1 || r->h > 1) hr_draw(c, pen, y, r, col); }
+    else game_glyph(c, pen / c->s, y, (unsigned char)*s, col, mul);
+    pen += adv_dev(c, (unsigned char)*s, mul);
   }
-  for (; *s; s++) { game_glyph(c, pen / c->s, y, (unsigned char)*s, col, mul); pen += adv_dev(c, (unsigned char)*s, mul); }
   return (pen - x * c->s + c->s - 1) / c->s;
 }
 /* text cut to maxw vp; counts a cut in the audit */
@@ -541,6 +539,13 @@ static void draw_play(struct cv *c, const struct sl_launcher *L, const struct sl
   text_center(c, m->col_x + 6, m->col_w - 12, m->head_h + 28, "Starting the game", C_TXT, 1);
   const char *p = L->rom_path, *base = strrchr(p, '/');
   text_center(c, m->col_x + 6, m->col_w - 12, m->head_h + 46, base ? base + 1 : p, C_DIM, 1);
+}
+
+void sl_draw_label(uint32_t *px, int stride, int w, int h, int rx, int ry, int rw, int rh, const char *label, uint32_t col) {
+  struct sl_metrics m;
+  sl_metrics_for(w, h, &m);
+  struct cv c = {px, stride, w, h, m.s};
+  text_center(&c, rx / m.s, rw / m.s, (ry + (rh - 11 * m.s) / 2) / m.s, label, col, 1);
 }
 
 void sl_draw(const struct sl_launcher *L, uint32_t *px, int stride, int w, int h) {

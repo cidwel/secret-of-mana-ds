@@ -3,7 +3,7 @@
 FROM devkitpro/devkitarm:latest
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git python3 openjdk-17-jdk-headless unzip curl ca-certificates make gcc g++ pkg-config libsdl2-dev zip \
+        git python3 python3-pil python3-numpy openjdk-17-jdk-headless unzip curl ca-certificates make gcc g++ pkg-config libsdl2-dev zip \
     && rm -rf /var/lib/apt/lists/*
 
 ENV ANDROID_HOME=/opt/android-sdk

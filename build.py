@@ -89,6 +89,19 @@ def ndk_build(src):
     return src / 'libretro/libs/arm64-v8a/libretro.so'
 
 
+def ui_font_pack():
+    """The menu font (IBM Plex, from the repository) as a graphics pack; without Pillow and numpy the menus keep the pixel font."""
+    try:
+        import numpy, PIL  # noqa: F401
+    except ImportError:
+        print('Pillow or numpy missing (pip install pillow numpy): the menus will use the pixel font', flush=True)
+        return None
+    out = BUILD / 'ui-pack'
+    with open(os.devnull, 'w') as quiet:
+        subprocess.run([sys.executable, COMPANION / 'ux/build_assets.py', '--fonts-only', '--out', out], check=True, stdout=quiet)
+    return out / 'som_ui_pack.bin'
+
+
 def build_thor(rando):
     plain = ndk_build(fetch('snes9x-libretro'))
     ws_src = fetch('snes9x-ws')
@@ -97,6 +110,12 @@ def build_thor(rando):
     project = COMPANION / 'android'
     gradle = project / ('gradlew.bat' if WINDOWS else 'gradlew')
     props = ['-PsomCorePath=%s' % plain, '-PsomWsCorePath=%s' % ws]
+    pack = ui_font_pack()
+    if pack:
+        props.append('-PsomUiPack=%s' % pack)
+    wallpaper = COMPANION / 'assets/som_bg.jpg'
+    if wallpaper.is_file():
+        props.append('-PsomWallpaper=%s' % wallpaper)
     if rando:
         props.append('-PsomRandoSrc=%s' % (fetch('randomizer') / 'SoMRandomizer'))
     run([gradle, '-p', project, ':app:assembleDebug', '--no-daemon'] + props, cwd=project)

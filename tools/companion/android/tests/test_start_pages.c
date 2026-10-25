@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     memset(px, 0, (size_t)w * h * 4);
     sl_init(&L, 1); sl_set_view(&L, w, h);
     sl_draw(&L, px, w, w, h);
-    ssp_draw_footer(px, w, w, h, 0);
+    ssp_draw_footer(px, w, w, h, 0, 0);
     ppm(out, "main_footer", px, w, h);
     CHECK(ssp_footer_hit(w / 4, h - 20, w, h) == SSP_H_GAMEPLAY && ssp_footer_hit(w * 3 / 4, h - 20, w, h) == SSP_H_CREDITS && ssp_footer_hit(w / 2, h / 2, w, h) == SSP_H_NONE);
     ssp_open(SSP_GAMEPLAY); ssp_draw(px, w, w, h);

@@ -36,8 +36,9 @@ int ssp_tap(int x, int y, int w, int h);
 void ssp_scroll(int rows);
 void ssp_draw(uint32_t *px, int stride, int w, int h);
 
-/* Footer of the main screen: two buttons (X GAMEPLAY, Y CREDITS) drawn over the bottom strip.  ssp_footer_hit tells what a tap opened. */
-void ssp_draw_footer(uint32_t *px, int stride, int w, int h, int gameplay_active);
+/* Footer of the main screen: Gameplay and Credits buttons over the bottom strip, opened by a tap, by X / Y, or by moving the focus down to them
+ * (focus 1 or 2 outlines that button).  ssp_footer_hit tells what a tap opened. */
+void ssp_draw_footer(uint32_t *px, int stride, int w, int h, int gameplay_active, int focus);
 int ssp_footer_hit(int x, int y, int w, int h);
 
 #endif

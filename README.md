@@ -2,6 +2,10 @@
 
 Secret of Mana with a second screen, for the **AYN Thor** (Android), the **Nintendo 3DS** and the **PC**: the ring menu, status and map on the second screen, widescreen, save states, shaders, quality-of-life options, and the Ancient Cave and randomizer modes.
 
+![Secret of Mana DS on the AYN Thor: start menu](docs/images/thor-start-menu.jpg)
+
+![In game on the AYN Thor: the game on top, map and enemies on the second screen](docs/images/thor-game.jpg)
+
 **This repository contains no game data.** You need your own Secret of Mana ROM (SNES, USA, v1.0). The apps read it on your device; it is never uploaded or built into anything.
 
 ## Quick start: the som-ds program

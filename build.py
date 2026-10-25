@@ -174,17 +174,23 @@ def build_3ds(rando):
     return out
 
 
+def msys_path(p):
+    """D:/x as /d/x for the MSYS2 tools on Windows (tar reads "D:" as a remote host); unchanged elsewhere."""
+    p = pathlib.Path(p).resolve().as_posix()
+    return '/%s%s' % (p[0].lower(), p[2:]) if WINDOWS and len(p) > 1 and p[1] == ':' else p
+
+
 def build_pc(rando):
     ws_src = fetch('snes9x-ws')
     run(['git', 'apply', COMPANION / 'widescreen/ws_snes9x.patch'], cwd=ws_src)
     run(['make', '-j%d' % (os.cpu_count() or 4)], cwd=ws_src / 'libretro')
     core = next(p for p in (ws_src / 'libretro').glob('snes9x_libretro.*') if p.suffix in ('.so', '.dll'))
-    env = dict(os.environ, SOM_PC_RELEASE=str(DIST))
+    env = dict(os.environ, SOM_PC_RELEASE=msys_path(DIST))
     if rando:
-        env['SOM_RANDO_SRC'] = str(fetch('randomizer') / 'SoMRandomizer')
+        env['SOM_RANDO_SRC'] = msys_path(fetch('randomizer') / 'SoMRandomizer')
     # on Windows plain "bash" can resolve to WSL's System32\bash.exe; use the MSYS2 one next to this Python
     bash = pathlib.Path(sys.executable).resolve().parents[2] / 'usr/bin/bash.exe' if WINDOWS else 'bash'
-    args = [bash, COMPANION / 'pc/package_release.sh', '--bundle-sdl', '--version', 'latest', '--core', core.as_posix()]
+    args = [bash, COMPANION / 'pc/package_release.sh', '--bundle-sdl', '--version', 'latest', '--core', msys_path(core)]
     if WINDOWS:
         # MSYS2 MINGW64 shell: its own gcc and SDL2
         env.setdefault('CC', 'gcc')

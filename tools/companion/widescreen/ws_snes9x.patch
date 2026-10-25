@@ -1,5 +1,5 @@
 diff --git a/gfx.cpp b/gfx.cpp
-index 375414a..1cdc80e 100644
+index 375414a..4102e0a 100644
 --- a/gfx.cpp
 +++ b/gfx.cpp
 @@ -1,3 +1,4 @@
@@ -7,7 +7,7 @@ index 375414a..1cdc80e 100644
  /*****************************************************************************\
       Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
                  This file is licensed under the Snes9x License.
-@@ -438,8 +439,594 @@ static inline void RenderScreen (bool8 sub)
+@@ -438,8 +439,613 @@ static inline void RenderScreen (bool8 sub)
  	DrawBackdrop();
  }
  
@@ -108,11 +108,16 @@ index 375414a..1cdc80e 100644
 +		 * 64 x 32 map continues them (16 columns before, 15 after the view, 3 rows below it), whatever the camera says. */
 +		/* Left and right of the map the game has nothing to show (the stock view never gets there): the side passes mirror the map at its
 +		 * edge instead (tiles flipped), so a scene that fills the view keeps going instead of ending in a band of backdrop colour. */
-+		int mapcw = mapw < 2048 ? (mapw + 7) >> 3 : 256;
++		int mapcw = mapw < 2048 ? (mapw + 7) >> 3 : 256, mapch = maph < 2048 ? (maph + 7) >> 3 : 256;
++		/* Some scenes loop the map (the Mana Fortress of the opening scrolls past forever): the game wraps the camera and streams the
++		 * map's other end in beyond the edge.  wrap bit 0 / 1 = the layer wraps horizontally / vertically, found by scoring below. */
++		int wrap = 0;
 +		auto cell = [&](int ck, int rk, int r, int c, bool mirror = false) -> int {   /* -1 = outside the map */
 +			int bxl = (((vc - ck) - (camx >> 3) + 32) & 63) + (camx >> 3) - 32;
 +			int byt = (((vr - rk) - (camy >> 3) + 16) & 31) + (camy >> 3) - 16;
 +			int by = byt + ((r - vr) & 31), bx = bxl + ((c - vc + 16) & 63) - 16, flip = 0;
++			if ((wrap & 1) && mapcw > 0 && !(mapcw & 1)) bx = ((bx % mapcw) + mapcw) % mapcw;
++			if ((wrap & 2) && mapch > 0 && !(mapch & 1)) by = ((by % mapch) + mapch) % mapch;
 +			if (mirror && mapcw > 0 && (bx < 0 || bx >= mapcw) && bx >= -mapcw && bx < 2 * mapcw)
 +			{
 +				bx = bx < 0 ? -1 - bx : 2 * mapcw - 1 - bx;
@@ -147,6 +152,20 @@ index 375414a..1cdc80e 100644
 +		static int k_last[2][2] = { { -1, -1 }, { -1, -1 } };
 +		int ck = colK, rk = rowK;
 +		bad = score(ck, rk, cmp);
++		/* A wrapped axis is taken when it brings at least 4 more lines of the view into the comparison and they match the game's
++		 * tilemap; it then stays while the map is the same and still matches (a single column past the edge proves nothing). */
++		static int wrap_last[2], wrap_map[2];
++		int mapkey = mapw * 4096 + maph + (Memory.RAM[0xDC] << 24);
++		if (wrap_map[L] != mapkey) { wrap_map[L] = mapkey; wrap_last[L] = 0; }
++		for (int w = 1; w <= 2; w++)
++		{
++			uint32 n, b;
++			wrap |= w;
++			b = score(ck, rk, n);
++			if (b * 50 <= n && (n >= cmp + 96 || ((wrap_last[L] & w) && n >= cmp))) { bad = b; cmp = n; }
++			else wrap &= ~w;
++		}
++		wrap_last[L] = wrap;
 +		if (cmp && bad * 50 <= cmp)
 +		{
 +			k_last[L][0] = ck; k_last[L][1] = rk;
@@ -602,7 +621,7 @@ index 375414a..1cdc80e 100644
  	if (IPPU.OBJChanged || IPPU.InterlaceOBJ)
  		SetupOBJ();
  
-@@ -491,6 +1078,21 @@ void S9xUpdateScreen (void)
+@@ -491,6 +1097,21 @@ void S9xUpdateScreen (void)
  		if ((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2131] & 0x3f))
  			GFX.FixedColour = BUILD_PIXEL(IPPU.XB[PPU.FixedColourRed], IPPU.XB[PPU.FixedColourGreen], IPPU.XB[PPU.FixedColourBlue]);
  
@@ -624,7 +643,7 @@ index 375414a..1cdc80e 100644
  		if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires ||
  			((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2130] & 2) && (Memory.FillRAM[0x2131] & 0x3f) && (Memory.FillRAM[0x212d] & 0x1f)))
  			// If hires (Mode 5/6 or pseudo-hires) or math is to be done
-@@ -498,6 +1100,19 @@ void S9xUpdateScreen (void)
+@@ -498,6 +1119,19 @@ void S9xUpdateScreen (void)
  			RenderScreen(TRUE);
  
  		RenderScreen(FALSE);
@@ -644,7 +663,7 @@ index 375414a..1cdc80e 100644
  	}
  	else
  	{
-@@ -510,8 +1125,15 @@ void S9xUpdateScreen (void)
+@@ -510,8 +1144,15 @@ void S9xUpdateScreen (void)
  		for (uint32 l = GFX.StartY; l <= GFX.EndY; l++, GFX.S += GFX.PPL)
  			for (int x = 0; x < IPPU.RenderedScreenWidth; x++)
  				GFX.S[x] = black;

@@ -6,7 +6,7 @@ Secret of Mana with a second screen, for the **AYN Thor** (Android), the **Ninte
 
 ## Quick start: the som-ds program
 
-1. Download `som-ds` for your system from the [latest release](https://github.com/cidwel/secret-of-mana-ds/releases/latest): `som-ds-windows.exe`, `som-ds-macos` or `som-ds-linux`.
+1. Download `som-ds` for your system from the [latest release](https://github.com/cidwel/secret-of-mana-ds/releases/latest): `som-ds-windows.exe`, `som-ds-macos.zip` (unzip it to get som-ds.app) or `som-ds-linux`.
 2. Open it, choose your ROM and your device, and press **Get it ready**:
    - **AYN Thor**: with the Thor connected over USB and USB debugging on, it installs the app and copies the ROM. Without a cable it writes the APK and the ROM to a folder, to copy by hand.
    - **Nintendo 3DS**: choose the root of the SD card. It copies the app to `3ds/secret-of-mana-ds/` and the ROM to `som/rom.sfc`. Start it from the Homebrew Launcher.

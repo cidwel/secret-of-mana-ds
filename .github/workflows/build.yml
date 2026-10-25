@@ -40,6 +40,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y gcc g++ make pkg-config libsdl2-dev
       - run: python3 build.py pc
       - uses: actions/upload-artifact@v4
@@ -69,12 +72,13 @@ jobs:
 
   som-ds:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
             name: som-ds-windows.exe
           - os: macos-latest
-            name: som-ds-macos
+            name: som-ds-macos.zip
           - os: ubuntu-22.04
             name: som-ds-linux
     runs-on: ${{ matrix.os }}
@@ -87,7 +91,9 @@ jobs:
       - run: pyinstaller --onefile --windowed --name som-ds som-ds.py
       - name: Rename
         shell: bash
-        run: mv dist/som-ds* "dist/${{ matrix.name }}"
+        run: |
+          if [ -d dist/som-ds.app ]; then (cd dist && zip -qry "${{ matrix.name }}" som-ds.app)
+          else mv dist/som-ds* "dist/${{ matrix.name }}"; fi
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}

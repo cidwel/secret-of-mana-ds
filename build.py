@@ -61,6 +61,8 @@ def fetch(name):
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
     run(['git', 'init', '-q'], cwd=dest)
+    # keep upstream LF endings on Windows, or the widescreen patch does not apply
+    run(['git', 'config', 'core.autocrlf', 'false'], cwd=dest)
     run(['git', 'fetch', '-q', '--depth', '1', url, commit], cwd=dest)
     run(['git', 'checkout', '-q', 'FETCH_HEAD'], cwd=dest)
     return dest

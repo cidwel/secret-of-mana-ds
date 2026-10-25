@@ -163,7 +163,9 @@ def build_pc(rando):
     env = dict(os.environ, SOM_PC_RELEASE=str(DIST))
     if rando:
         env['SOM_RANDO_SRC'] = str(fetch('randomizer') / 'SoMRandomizer')
-    args = ['bash', COMPANION / 'pc/package_release.sh', '--bundle-sdl', '--version', 'latest', '--core', core.as_posix()]
+    # on Windows plain "bash" can resolve to WSL's System32\bash.exe; use the MSYS2 one next to this Python
+    bash = pathlib.Path(sys.executable).resolve().parents[2] / 'usr/bin/bash.exe' if WINDOWS else 'bash'
+    args = [bash, COMPANION / 'pc/package_release.sh', '--bundle-sdl', '--version', 'latest', '--core', core.as_posix()]
     if WINDOWS:
         # MSYS2 MINGW64 shell: its own gcc and SDL2
         env.setdefault('CC', 'gcc')

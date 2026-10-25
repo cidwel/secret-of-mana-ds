@@ -66,7 +66,7 @@ cp "$C/randomizer/libsomrando/NOTICE" "$DIR/licenses/libsomrando-NOTICE.txt"
 if [ "$BUNDLE" = 1 ]; then
   if [ "$PLAT" = linux ]; then
     mkdir -p "$DIR/lib"
-    cp -L "$(ldd "$BUILD/$EXE" | awk '/libSDL2-2.0/ {print $3}' | head -1)" "$DIR/lib/"
+    cp -L "$(ldd "$BUILD/$EXE" | awk '/libSDL2-2.0/ {print $3}' | sed -n 1p)" "$DIR/lib/"
   else
     cp "${SDL2_PREFIX:?SDL2_PREFIX is needed to bundle SDL2.dll}/bin/SDL2.dll" "$DIR/"
   fi

@@ -89,16 +89,17 @@ def ndk_build(src):
     return src / 'libretro/libs/arm64-v8a/libretro.so'
 
 
-def ui_font_pack():
-    """The menu font (IBM Plex, from the repository) as a graphics pack; without Pillow and numpy the menus keep the pixel font."""
+def ui_pack():
+    """The menu graphics pack: game font, icons and portraits from tools/companion/assets/ui-src plus the IBM Plex menu face.
+    Without Pillow and numpy the app falls back to its built-in pixel font and placeholder shapes."""
     try:
         import numpy, PIL  # noqa: F401
     except ImportError:
-        print('Pillow or numpy missing (pip install pillow numpy): the menus will use the pixel font', flush=True)
+        print('Pillow or numpy missing (pip install pillow numpy): the app will use its built-in font and shapes', flush=True)
         return None
     out = BUILD / 'ui-pack'
     with open(os.devnull, 'w') as quiet:
-        subprocess.run([sys.executable, COMPANION / 'ux/build_assets.py', '--fonts-only', '--out', out], check=True, stdout=quiet)
+        subprocess.run([sys.executable, COMPANION / 'ux/build_assets.py', '--out', out], check=True, stdout=quiet)
     return out / 'som_ui_pack.bin'
 
 
@@ -110,7 +111,7 @@ def build_thor(rando):
     project = COMPANION / 'android'
     gradle = project / ('gradlew.bat' if WINDOWS else 'gradlew')
     props = ['-PsomCorePath=%s' % plain, '-PsomWsCorePath=%s' % ws]
-    pack = ui_font_pack()
+    pack = ui_pack()
     if pack:
         props.append('-PsomUiPack=%s' % pack)
     wallpaper = COMPANION / 'assets/som_bg.jpg'

@@ -24,7 +24,7 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-DEFAULT_SRC = pathlib.Path('/home/cidwel/projects/godot/doner-engine-godot/mana-magic-godot/assets')
+DEFAULT_SRC = pathlib.Path(__file__).resolve().parent.parent / 'assets' / 'ui-src'   # game font sheets, icons and portraits
 DEFAULT_OUT = pathlib.Path('/home/cidwel/.local/state/som-decomp/companion-20261017/assets')
 
 
@@ -179,7 +179,7 @@ def main():
         pk.add(0x2010 + h, f.resize((24, 26), Image.LANCZOS))
 
     add_ui_font(pk)
-    return write_pack(pk, out, 'Square Enix artwork from the owner project; never commit.', str(src))
+    return write_pack(pk, out, 'Game font, icons and portraits from tools/companion/assets/ui-src plus IBM Plex.', str(src))
 
 
 def write_pack(pk, out, note, source):

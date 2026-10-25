@@ -1,5 +1,5 @@
 diff --git a/gfx.cpp b/gfx.cpp
-index 375414a..fc9d6f0 100644
+index 375414a..1cdc80e 100644
 --- a/gfx.cpp
 +++ b/gfx.cpp
 @@ -1,3 +1,4 @@
@@ -7,7 +7,7 @@ index 375414a..fc9d6f0 100644
  /*****************************************************************************\
       Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
                  This file is licensed under the Snes9x License.
-@@ -438,8 +439,467 @@ static inline void RenderScreen (bool8 sub)
+@@ -438,8 +439,594 @@ static inline void RenderScreen (bool8 sub)
  	DrawBackdrop();
  }
  
@@ -268,6 +268,113 @@ index 375414a..fc9d6f0 100644
 +	if (last_fid != som_ws_fid) { consec = (last_fid + 1 == som_ws_fid) ? consec + 1 : 1; last_fid = som_ws_fid; }
 +	return consec <= 6;
 +}
++/* Mode 1 sky above a Mode 7 floor (Flammie): the cloud layers are 512 px tilemaps that the game streams as the heading turns, so the
++ * columns just beyond the view hold whatever was streamed there last.  A full turn is 256 heading steps ($F4) and moves a layer by
++ * s px per step (BG1 7, BG2 5: parallax), so its panorama is 256 * s px around.  Every cell seen in the view is remembered at its place
++ * on that panorama; before the side passes the columns outside the view are rewritten from that memory, so the sides show the clouds
++ * that really sit there, and they are restored afterwards.  s is learnt from two frames that turned; until then, and on a heading or
++ * scroll change that does not fit it, the sides show the tilemap as it is.  The memory starts over when a flight starts; s is kept. */
++#define SOM_SKY_COLS 1024
++static uint16 som_sky_pan[2][32][SOM_SKY_COLS];
++static uint8 som_sky_have[2][32][SOM_SKY_COLS];
++static unsigned som_sky_last_fid = 0;
++static int som_sky_s[2], som_sky_x[2], som_sky_ph = -1, som_sky_pH[2];   /* step, panorama x of the screen's left edge, last heading / scroll */
++static struct { uint8 L, r, c; uint16 w; } som_ws_sky_saved[2 * 32 * 18];
++static int som_ws_sky_n = 0;
++static void som_ws_sky_track (void)
++{
++	int h = Memory.RAM[0xF4];
++	if (som_ws_fid - som_sky_last_fid > 30)
++	{
++		memset(som_sky_have, 0, sizeof som_sky_have);   /* the steps are the game's constants: they are kept */
++		som_sky_ph = -1;
++	}
++	som_sky_last_fid = som_ws_fid;
++	for (int L = 0; L < 2; L++)
++	{
++		int H = LineData[GFX.StartY].BG[L].HOffset;
++		if (som_sky_ph >= 0)
++		{
++			int dh = (int8) (h - som_sky_ph), dH = (int16) (H - som_sky_pH[L]);
++			if (dh == 0 && dH == 0) {}
++			else if (dh != 0 && dH % dh == 0 && -dH / dh >= 1 && -dH / dh <= 32)
++			{
++				int st = -dH / dh;
++				if (st != som_sky_s[L]) { memset(som_sky_have[L], 0, sizeof som_sky_have[L]); som_sky_s[L] = st; som_sky_x[L] = H; }
++			}
++			else if (som_sky_s[L]) { memset(som_sky_have[L], 0, sizeof som_sky_have[L]); som_sky_s[L] = 0; }
++		}
++		if (som_sky_s[L])
++		{
++			int P = 256 * som_sky_s[L];
++			if (som_sky_ph >= 0) som_sky_x[L] = (((som_sky_x[L] - som_sky_s[L] * (int8) (h - som_sky_ph)) % P) + P) % P;
++			if (((som_sky_x[L] - H) & 7) != 0) { memset(som_sky_have[L], 0, sizeof som_sky_have[L]); som_sky_x[L] = ((H % P) + P) % P; }
++		}
++		som_sky_pH[L] = H;
++	}
++	som_sky_ph = h;
++}
++static int som_ws_sky_fill (void)   /* 0: a sky layer's step is not known yet (nothing rewritten) */
++{
++	som_ws_sky_n = 0;
++	if (GFX.StartY == 0 || som_ws_fid != som_sky_last_fid) som_ws_sky_track();
++	int tm = Memory.FillRAM[0x212c] | Memory.FillRAM[0x212d];
++	for (int L = 0; L < 2; L++)
++		if ((tm & (1 << L)) && PPU.BG[L].SCSize == 1 && PPU.BG[L].SCBase <= 0x7c00 && !som_sky_s[L])
++			return 0;
++	for (int L = 0; L < 2; L++)
++	{
++		if (PPU.BG[L].SCSize != 1 || PPU.BG[L].SCBase > 0x7c00 || !som_sky_s[L])
++			continue;
++		uint8 *base = Memory.VRAM + PPU.BG[L].SCBase * 2;
++		int H = LineData[GFX.StartY].BG[L].HOffset, hc = (H & 1023) >> 3, v = LineData[GFX.StartY].BG[L].VOffset;
++		int last = (H & 7) ? 32 : 31;   /* the last column the view shows */
++		int pc = 32 * som_sky_s[L], kc = som_sky_x[L] >> 3;   /* panorama columns, panorama column of view column 0 */
++		uint8 rows[32] = { 0 };
++		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) rows[((v + y) >> 3) & 31] = 1;
++		for (int r = 0; r < 32; r++)
++		{
++			if (!rows[r]) continue;
++			int empty = 0;
++			for (int i = 1; i <= last; i++)   /* column 0 is streamed in late (it may still hold the old cell) */
++			{
++				int tc = (hc + i) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31), k = (kc + i) % pc;
++				som_sky_pan[L][r][k] = base[o * 2] | (base[o * 2 + 1] << 8);
++				som_sky_have[L][r][k] = 1;
++				empty += !som_sky_pan[L][r][k];
++			}
++			/* a cell not seen yet: a sparse row (clouds) gets an empty cell rather than a stale cloud cut at the column edge; a full row
++			 * (the sky gradient band, the same tile all along, black beyond the view in the opening flight) repeats the view's edge cell */
++			int sparse = empty * 2 >= last;
++			int edge[2];
++			for (int e = 0; e < 2; e++)
++			{
++				int tc = (hc + (e ? last : 1)) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31);
++				edge[e] = base[o * 2] | (base[o * 2 + 1] << 8);
++			}
++			for (int i = -8; i <= 41; i++)
++			{
++				if (i == 0) i = last + 1;
++				int tc = (hc + i) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31), k = ((kc + i) % pc + pc) % pc;
++				int w = som_sky_have[L][r][k] ? som_sky_pan[L][r][k] : sparse ? 0 : edge[i > 0];
++				som_ws_sky_saved[som_ws_sky_n].L = L; som_ws_sky_saved[som_ws_sky_n].r = r; som_ws_sky_saved[som_ws_sky_n].c = tc;
++				som_ws_sky_saved[som_ws_sky_n++].w = base[o * 2] | (base[o * 2 + 1] << 8);
++				base[o * 2] = w & 0xff; base[o * 2 + 1] = w >> 8;
++			}
++		}
++	}
++	return 1;
++}
++static void som_ws_sky_restore (void)
++{
++	for (int k = som_ws_sky_n - 1; k >= 0; k--)
++	{
++		uint8 *base = Memory.VRAM + PPU.BG[som_ws_sky_saved[k].L].SCBase * 2;
++		int tc = som_ws_sky_saved[k].c, o = (tc >= 32 ? 0x400 : 0) + som_ws_sky_saved[k].r * 32 + (tc & 31);
++		base[o * 2] = som_ws_sky_saved[k].w & 0xff; base[o * 2 + 1] = som_ws_sky_saved[k].w >> 8;
++	}
++	som_ws_sky_n = 0;
++}
 +static void som_ws_passes (void)
 +{
 +	if (som_dbg < 0) { const char *e = getenv("SOM_WS_DBG"); som_dbg = e ? atoi(e) : 0; }
@@ -277,10 +384,12 @@ index 375414a..fc9d6f0 100644
 +	uint8 forced = Settings.BG_Forced;
 +	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) saved[y] = LineData[y];
 +	for (int i = 0; i < 128; i++) hpos[i] = PPU.OBJ[i].HPos;
-+	if (SOM_WS_M7MIX)
++	som_ws_sky_n = 0;
++	if (SOM_WS_M7MIX && !som_ws_sky_fill())
 +	{
-+		/* Mode 1 sky above a Mode 7 floor: the sides mirror the centre (libretro.cpp), but from a copy drawn without sprites, so the
-+		 * compass letters and Flammie are not mirrored into the sky.  The copy goes to the left slice, which these rows do not use otherwise. */
++		/* Sky of a flight whose scroll steps are not known (the opening flight, or before the first turn): the sky layers hold black or
++		 * stale cells beyond the view, so the sides mirror the centre (libretro.cpp) instead, from a copy drawn without sprites (the compass
++		 * letters and Flammie are not mirrored).  The copy goes to the left slice, which these rows do not use otherwise. */
 +		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) som_ws_skyfix[y] = 1;
 +		som_ws_batch_flags();
 +		som_ws_stat[2]++;
@@ -307,6 +416,7 @@ index 375414a..fc9d6f0 100644
 +		{
 +			som_ws_stat[1]++;
 +			som_ws_tilemaps_restore();
++			som_ws_sky_restore();
 +			if (!hold)
 +			{
 +				som_ws_black(0);
@@ -331,6 +441,7 @@ index 375414a..fc9d6f0 100644
 +	bool8 wuse = !(som_dbg & 64);
 +	for (int dir = -1; dir <= 1; dir += 2)
 +	{
++		int bg3_side = som_ws_bg3;
 +		if (wuse)
 +		{
 +			/* a window that touches the screen edge on this side keeps going over the whole side column; one that closes before the edge does not
@@ -339,6 +450,21 @@ index 375414a..fc9d6f0 100644
 +			PPU.Window1Left = w1 ? 0 : 1; PPU.Window1Right = w1 ? 255 : 0;
 +			PPU.Window2Left = w2 ? 0 : 1; PPU.Window2Right = w2 ? 255 : 0;
 +			S9xComputeClipWindows();
++			/* A band where the window hides every main-screen BG1/BG2 cell on this side (the log bridge of the opening: BG1/BG2 are masked
++			 * over the full width and the log is a BG3 strip) shows only BG3 there, so BG3 is drawn in this side pass too: its 256 px
++			 * tilemap wraps, so the strip carries on instead of leaving a black band. */
++			int tm = Memory.FillRAM[0x212c], tmw = Memory.FillRAM[0x212e], any = 0, hidden = 1;
++			for (int L = 0; L < 2; L++)
++			{
++				if (!(tm & (1 << L))) continue;
++				int sel = Memory.FillRAM[0x2123] >> (L * 4);
++				bool in1 = (sel & 2) && (w1 != !!(sel & 1)), in2 = (sel & 8) && (w2 != !!(sel & 4));
++				int logic = (Memory.FillRAM[0x212a] >> (L * 2)) & 3;
++				bool masked = (tmw & (1 << L)) && ((sel & 2) && (sel & 8) ? (logic == 0 ? in1 || in2 : logic == 1 ? in1 && in2 : logic == 2 ? in1 != in2 : in1 == in2) : (in1 || in2));
++				any = 1;
++				if (!masked) hidden = 0;
++			}
++			if (any && hidden && (tm & 4)) bg3_side = 1;
 +		}
 +		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++)
 +			for (int b = 0; b < 3; b++)
@@ -349,7 +475,7 @@ index 375414a..fc9d6f0 100644
 +			PPU.OBJ[i].HPos = (int16) (((h + 256) & 511) - 256);
 +		}
 +		som_m7_dx = dir * 256;
-+		Settings.BG_Forced = forced | (som_ws_bg3 ? 0 : 4) | (som_ws_obj ? 0 : 16);
++		Settings.BG_Forced = forced | (bg3_side ? 0 : 4) | (som_ws_obj ? 0 : 16);
 +		if (som_ws_fix && !som_ws_raw)
 +			Settings.BG_Forced |= (som_ws_layer_draw[0] ? 0 : 1) | (som_ws_layer_draw[1] ? 0 : 2);
 +		if (!(som_dbg & 2)) SetupOBJ();
@@ -369,6 +495,7 @@ index 375414a..fc9d6f0 100644
 +		S9xComputeClipWindows();
 +	}
 +	if (som_ws_fix) som_ws_tilemaps_restore();
++	som_ws_sky_restore();
 +	Settings.BG_Forced = forced;
 +	for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) LineData[y] = saved[y];
 +	for (int i = 0; i < 128; i++) PPU.OBJ[i].HPos = hpos[i];
@@ -475,7 +602,7 @@ index 375414a..fc9d6f0 100644
  	if (IPPU.OBJChanged || IPPU.InterlaceOBJ)
  		SetupOBJ();
  
-@@ -491,6 +951,21 @@ void S9xUpdateScreen (void)
+@@ -491,6 +1078,21 @@ void S9xUpdateScreen (void)
  		if ((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2131] & 0x3f))
  			GFX.FixedColour = BUILD_PIXEL(IPPU.XB[PPU.FixedColourRed], IPPU.XB[PPU.FixedColourGreen], IPPU.XB[PPU.FixedColourBlue]);
  
@@ -497,7 +624,7 @@ index 375414a..fc9d6f0 100644
  		if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires ||
  			((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2130] & 2) && (Memory.FillRAM[0x2131] & 0x3f) && (Memory.FillRAM[0x212d] & 0x1f)))
  			// If hires (Mode 5/6 or pseudo-hires) or math is to be done
-@@ -498,6 +973,19 @@ void S9xUpdateScreen (void)
+@@ -498,6 +1100,19 @@ void S9xUpdateScreen (void)
  			RenderScreen(TRUE);
  
  		RenderScreen(FALSE);
@@ -517,7 +644,7 @@ index 375414a..fc9d6f0 100644
  	}
  	else
  	{
-@@ -510,8 +998,15 @@ void S9xUpdateScreen (void)
+@@ -510,8 +1125,15 @@ void S9xUpdateScreen (void)
  		for (uint32 l = GFX.StartY; l <= GFX.EndY; l++, GFX.S += GFX.PPL)
  			for (int x = 0; x < IPPU.RenderedScreenWidth; x++)
  				GFX.S[x] = black;
@@ -534,7 +661,7 @@ index 375414a..fc9d6f0 100644
  }
  
 diff --git a/libretro/libretro.cpp b/libretro/libretro.cpp
-index 6060767..d2ba9ab 100644
+index 6060767..24f6a5f 100644
 --- a/libretro/libretro.cpp
 +++ b/libretro/libretro.cpp
 @@ -155,6 +155,27 @@ enum aspect_mode {
@@ -791,10 +918,10 @@ index 6060767..d2ba9ab 100644
 +                    extern uint8 som_ws_skyfix[];
 +                    if (som_ws_skyfix[sr] && !getenv("SOM_NOSKY"))
 +                    {
-+                        /* Mode 1 sky above a Mode 7 floor: the sky layers are authored for the 256 px picture only (BG2 holds black beyond it, the
-+                         * cloud layer is a few tiles), so wrapping their tilemaps shows black or half clouds.  The sides mirror the centre columns instead:
-+                         * continuous at the seam, no smear, stable from frame to frame.  The mirrored copy is the sprite-free centre that
-+                         * gfx.cpp leaves in the left slice for these rows. */
++                        /* Mode 1 sky above a Mode 7 floor whose scroll steps are not known yet (gfx.cpp): the sky layers are authored for the
++                         * 256 px picture only (BG2 holds black beyond it, the cloud layer is a few tiles), so the sides mirror the centre
++                         * columns instead: continuous at the seam, no smear, stable from frame to frame.  The mirrored copy is the sprite-free
++                         * centre that gfx.cpp leaves in the left slice for these rows. */
 +                        for (int k = 0; k < m; k++) { o[m - 1 - k] = som_ws_buf[sr * 768 + k]; o[m + 256 + k] = som_ws_buf[sr * 768 + 255 - k]; }
 +                    }
 +                }

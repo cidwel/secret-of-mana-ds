@@ -479,6 +479,14 @@ void som_ux_flammie_map_pos(const struct som_ux *ux, int *mx, int *my, int *bear
 /* Zone under Flammie: the map a landing there would enter (record C6:7780, one per 256 x 256 world units, map id in the first byte;
  * docs/flammie-world-map.md in som-decomp), named after the game's places (map ids as in the SoM randomizer's SomVanillaValues).
  * Map 8 is the "no landing" record: over open water it is the sea, over unlandable land the nearest named cell (two cells at most). */
+/* Towns and palaces on the Flammie map: the take-off position of each map (word at C6:7A80 + 2 * map id: x in the low byte, y in the high
+ * byte, 16 world units each; Potos lands at (2432, 3024), docs/flammie-world-map.md in som-decomp).  Returned in world-map pixels. */
+static const struct { uint8_t map; const char *name; } TOWNS[] = {
+  {131, "POTOS"}, {144, "PANDORA"}, {168, "KIPPO"}, {25, "GAIA'S NAVEL"}, {136, "WATER PALACE"}, {196, "WITCH CASTLE"}, {56, "SPRITE VILLAGE"},
+  {224, "MATANGO"}, {63, "MANDALA"}, {24, "TASNICA"}, {113, "GOLD CITY"}, {115, "NORTHTOWN"}, {114, "SOUTHTOWN"}, {89, "KAKKARA"},
+  {228, "TODO"}, {197, "PARADISE TOWN"}, {112, "LIGHTHOUSE"}, {47, "WIND PALACE"}, {48, "MOON PALACE"}, {61, "SHADE PALACE"},
+  {75, "ICE CASTLE"}, {90, "FIRE PALACE"}, {116, "LUMINA TOWER"},
+};
 static const char *zone_of_map(unsigned id) {
   switch (id) {
   case 16: case 131: case 159: return "POTOS";
@@ -513,7 +521,16 @@ const char *som_ux_flammie_zone(const struct som_ux *ux) {
   size_t len; const uint8_t *r = ux ? ux_rom((struct som_ux *)ux, &len) : NULL;
   if (!r || len < 0x67780u + 768u || !ux->fl_world_ok) return NULL;
   int gx = ux->fl_x >> 8 & 15, gy = ux->fl_y >> 8 & 15;
-  const char *z = zone_at(r, gx, gy);
+  const char *z = NULL;
+  /* a town or palace within 24 map pixels wins: the landing table names the region around it (Moon Palace lands in the desert) */
+  if (len >= 0x67C80u)
+    for (int i = 0, nd = 24 * 24; i < (int)(sizeof TOWNS / sizeof TOWNS[0]); i++) {
+      const uint8_t *e = r + 0x67A80u + 2u * TOWNS[i].map;
+      int dx = e[0] * 2 - ux->fl_x / 8, dy = e[1] * 2 - ux->fl_y / 8;
+      if (dx * dx + dy * dy < nd) { nd = dx * dx + dy * dy; z = TOWNS[i].name; }
+    }
+  if (z) return z;
+  z = zone_at(r, gx, gy);
   if (z) return z;
   if (ux->world_ok && ux->world[(ux->fl_y / 8) * SOM_UX_WORLD + ux->fl_x / 8] == (0xFF000000u | WORLD_TILE_RGB[176])) return "OPEN SEA";   /* tile 176: open water */
   for (int d = 1; d <= 2; d++)
@@ -526,13 +543,6 @@ const char *som_ux_flammie_zone(const struct som_ux *ux) {
   return "OPEN SEA";
 }
 
-/* Towns on the Flammie map: the take-off position of each town map (word at C6:7A80 + 2 * map id: x in the low byte, y in the high
- * byte, 16 world units each; Potos lands at (2432, 3024), docs/flammie-world-map.md in som-decomp).  Returned in world-map pixels. */
-static const struct { uint8_t map; const char *name; } TOWNS[] = {
-  {131, "POTOS"}, {144, "PANDORA"}, {168, "KIPPO"}, {25, "GAIA'S NAVEL"}, {136, "WATER PALACE"}, {196, "WITCH CASTLE"}, {56, "SPRITE VILLAGE"},
-  {224, "MATANGO"}, {63, "MANDALA"}, {24, "TASNICA"}, {113, "GOLD CITY"}, {115, "NORTHTOWN"}, {114, "SOUTHTOWN"}, {89, "KAKKARA"},
-  {228, "TODO"}, {197, "PARADISE TOWN"}, {112, "LIGHTHOUSE"},
-};
 int som_ux_flammie_town(const struct som_ux *ux, int i, int *mx, int *my, const char **name) {
   size_t len; const uint8_t *r = ux ? ux_rom((struct som_ux *)ux, &len) : NULL;
   int n = (int)(sizeof TOWNS / sizeof TOWNS[0]);

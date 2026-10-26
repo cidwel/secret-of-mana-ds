@@ -1639,12 +1639,10 @@ static void draw_world(struct cv *c, struct som_ux *ux, struct R r) {
   }
   /* trail, then arrow, in device pixels */
   double sx = (double)dw / 4096.0, sy = (double)dh / 4096.0;
-  /* towns: a dot each; the one Flammie is passing (within 24 map pixels) gets its name */
-  int near = -1, nd = 24 * 24, nt = som_ux_flammie_town(ux, 0, NULL, NULL, NULL);
+  /* towns: a dot each; the name of the one below shows in the side panel */
+  int nt = som_ux_flammie_town(ux, 0, NULL, NULL, NULL);
   for (int i = 0; i < nt; i++) {
     int tx, ty; som_ux_flammie_town(ux, i, &tx, &ty, NULL);
-    int dx = tx - ux->fl_x / 8, dy = ty - ux->fl_y / 8;
-    if (dx * dx + dy * dy < nd) { nd = dx * dx + dy * dy; near = i; }
     int x = (int)(tx * 8 * sx) + r.x * c->s, y = (int)(ty * 8 * sy) + r.y * c->s;
     for (int b = -c->s; b <= c->s; b++) for (int a = -c->s; a <= c->s; a++) dpx(c, x + a, y + b, (a == -c->s || a == c->s || b == -c->s || b == c->s) ? 0x101010u : 0xF0F0F0u);
   }
@@ -1665,15 +1663,6 @@ static void draw_world(struct cv *c, struct som_ux *ux, struct R r) {
       int neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
       if (!(neg && pos)) dpx(c, x, y, 0xF8E060u);
     }
-  if (near >= 0) {   /* name label beside the town, kept inside the map */
-    int tx, ty; const char *nm; som_ux_flammie_town(ux, near, &tx, &ty, &nm);
-    int lw = text_w(c, nm, 0) + 6, lh = 13;
-    int lx = r.x + tx * r.w / 512 + 5, ly = r.y + ty * r.h / 512 - lh - 3;
-    if (lx + lw > r.x + r.w - 2) lx = r.x + tx * r.w / 512 - 5 - lw;
-    if (ly < r.y + 2) ly = r.y + ty * r.h / 512 + 5;
-    brect(c, lx, ly, lw, lh, C_DARK, 200);
-    text(c, lx + 3, ly + 2, nm, C_YEL, 0);
-  }
 }
 
 static const char *compass8(int bearing) {

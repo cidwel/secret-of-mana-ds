@@ -2627,9 +2627,10 @@ void som_ux_draw(struct som_ux *ux, const struct som_macro *m, uint32_t *px, int
     text(&c, l.side.x + 6, y, "FLAMMIE", C_YEL, 1); y += 15;
     snprintf(b, sizeof b, "HEADING %s", compass8(bear)); text(&c, l.side.x + 6, y, b, C_TXT, 0); y += 13;
     snprintf(b, sizeof b, "%d DEG", bear); text(&c, l.side.x + 6, y, b, C_DIM, 0); y += 14;
-    if (ux->fl_world_ok) { snprintf(b, sizeof b, "X %d  Y %d", mx, my); text(&c, l.side.x + 6, y, b, C_TXT, 0); }
-    else text(&c, l.side.x + 6, y, "UNMAPPED WORLD", C_YEL, 0);
-    y += 16;
+    const char *zone = som_ux_flammie_zone(ux);
+    if (!ux->fl_world_ok) { text(&c, l.side.x + 6, y, "UNMAPPED WORLD", C_YEL, 0); y += 16; }
+    else if (zone) y += 12 * text_wrap(&c, l.side.x + 6, y, l.side.w - 12, zone, C_TXT, 0, 2) + 4;
+    else { snprintf(b, sizeof b, "X %d  Y %d", mx, my); text(&c, l.side.x + 6, y, b, C_TXT, 0); y += 16; }
     if (l.side.h > 90) {
       text_wrap(&c, l.side.x + 6, y, l.side.w - 12, "PLAY ON THE TOP SCREEN WITH THE PAD. START OPENS THE GLOBE.", C_GREY, 0, 5);
     }

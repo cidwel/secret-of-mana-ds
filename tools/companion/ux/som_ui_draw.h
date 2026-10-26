@@ -267,6 +267,7 @@ enum som_ux_mode som_ux_classify(const uint8_t *wram);
 const char *som_ux_mode_name(enum som_ux_mode m);
 /* Free-flight position on the 512x512 world map, in map pixels (units / 8); compass bearing clockwise from north in degrees. */
 void som_ux_flammie_map_pos(const struct som_ux *ux, int *mx, int *my, int *bearing_deg);
+const char *som_ux_flammie_zone(const struct som_ux *ux);   /* place under Flammie ("NORTHTOWN", "OPEN SEA"); NULL without a ROM */
 
 /* ------------------------------------------------------------------ drawing and touch */
 /* Renders the whole screen.  `m` (may be NULL) supplies the macro status for the header chip. */

@@ -448,6 +448,56 @@ void som_ux_flammie_map_pos(const struct som_ux *ux, int *mx, int *my, int *bear
   if (bearing) *bearing = (360 - (int)ux->fl_heading * 360 / 1024) % 360;
 }
 
+/* Zone under Flammie: the map a landing there would enter (record C6:7780, one per 256 x 256 world units, map id in the first byte;
+ * docs/flammie-world-map.md in som-decomp), named after the game's places (map ids as in the SoM randomizer's SomVanillaValues).
+ * Map 8 is the "no landing" record: over open water it is the sea, over unlandable land the nearest named cell (two cells at most). */
+static const char *zone_of_map(unsigned id) {
+  switch (id) {
+  case 16: case 131: case 159: return "POTOS";
+  case 23: case 144: case 145: case 170: return "PANDORA";
+  case 25: case 27: case 171: return "GAIA'S NAVEL";
+  case 168: return "KIPPO";
+  case 19: case 28: case 29: case 30: case 31: case 196: return "WITCH FOREST";
+  case 109: case 135: case 136: return "WATER PALACE";
+  case 39: case 40: case 41: case 49: case 52: case 53: case 54: case 55: case 56: case 57: case 58: case 59: case 158: return "UPPER LAND";
+  case 222: case 223: case 224: return "MATANGO";
+  case 61: case 62: case 63: case 64: return "MANDALA";
+  case 22: return "TURTLE ISLAND";
+  case 24: case 26: return "TASNICA";
+  case 113: return "GOLD CITY";
+  case 112: return "LIGHTHOUSE";
+  case 21: case 115: return "NORTHTOWN";
+  case 114: case 155: return "SOUTHTOWN";
+  case 89: case 157: return "KAKKARA";
+  case 90: return "FIRE PALACE";
+  case 67: case 68: case 69: case 70: case 84: case 85: case 86: case 87: case 88: case 92: case 93: case 94: case 95: case 96: case 97: return "KAKKARA DESERT";
+  case 75: case 76: case 77: case 78: case 80: case 81: case 83: case 156: case 194: case 197: case 228: return "ICE COUNTRY";
+  case 195: return "SUNKEN CONTINENT";
+  case 198: case 199: case 200: case 201: case 202: case 203: case 255: return "PURE LAND";
+  default: return NULL;
+  }
+}
+static const char *zone_at(const uint8_t *r, int gx, int gy) {
+  int sector = (gy >> 2) << 2 | (gx >> 2), sub = (gy & 3) << 2 | (gx & 3);
+  return zone_of_map(r[0x67780u + 3u * (unsigned)(sector * 16 + sub)]);
+}
+const char *som_ux_flammie_zone(const struct som_ux *ux) {
+  size_t len; const uint8_t *r = ux ? ux_rom((struct som_ux *)ux, &len) : NULL;
+  if (!r || len < 0x67780u + 768u || !ux->fl_world_ok) return NULL;
+  int gx = ux->fl_x >> 8 & 15, gy = ux->fl_y >> 8 & 15;
+  const char *z = zone_at(r, gx, gy);
+  if (z) return z;
+  if (ux->world_ok && ux->world[(ux->fl_y / 8) * SOM_UX_WORLD + ux->fl_x / 8] == (0xFF000000u | WORLD_TILE_RGB[176])) return "OPEN SEA";   /* tile 176: open water */
+  for (int d = 1; d <= 2; d++)
+    for (int dy = -d; dy <= d; dy++)
+      for (int dx = -d; dx <= d; dx++) {
+        if ((dx < 0 ? -dx : dx) != d && (dy < 0 ? -dy : dy) != d) continue;
+        int x = gx + dx, y = gy + dy;
+        if (x >= 0 && x < 16 && y >= 0 && y < 16 && (z = zone_at(r, x, y))) return z;
+      }
+  return "OPEN SEA";
+}
+
 int som_ux_name_hero(const struct som_ux *ux) { return ux && ux->fe_name_entry && ux->name_hero < 3 ? ux->name_hero : -1; }
 void som_ux_set_last_name(struct som_ux *ux, int hero, const char *name) {
   if (!ux || hero < 0 || hero > 2) return;

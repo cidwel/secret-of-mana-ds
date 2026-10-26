@@ -2862,8 +2862,12 @@ int som_ux_touch(struct som_ux *ux, int x, int y, int w, int h, struct som_ux_ac
     case HK_PARTY:
       if (ux->mode == SOM_UX_FIELD && t->enabled) {
         if (ux->st.hero[t->a].present && !ux->st.hero[t->a].alive) { som_ux_revive_open(ux, t->a); return 0; }
+        int again = ux->hero == t->a;
         ux->hero = t->a; ux->spirit = 0xFF;
-        if (ux->st.hero[t->a].present && ux->st.hero[t->a].alive && !ux->nav_on && t->a != ux->st.pad_hero) {   /* tap = take control of that hero */
+        if (ux->st.hero[t->a].present && ux->st.hero[t->a].alive && !ux->nav_on && t->a != ux->st.pad_hero) {
+          /* first tap selects (to see that hero's magic or items), a second tap on the selected card takes control */
+          if (!again) { som_ux_notice(ux, SOM_UX_NOTICE_INFO, "TAP AGAIN TO LEAD"); return 0; }
+          if (!strcmp(ux->notice_text, "TAP AGAIN TO LEAD")) som_ux_notice_clear(ux);
           out->kind = SOM_UX_ACT_SWITCH_HERO; out->hero = t->a;
           return 1;
         }

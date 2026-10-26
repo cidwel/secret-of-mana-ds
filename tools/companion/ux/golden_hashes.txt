@@ -1,6 +1,9 @@
 field_weapon 320x240 390bbacb8f68300a
 field_weapon 1240x1080 75c14b58f56b6f63
 field_weapon 1080x1240 dabb031fdeed9e03
+party_tap_again 320x240 44b49f02e040cfe7
+party_tap_again 1240x1080 39d083ab296eda03
+party_tap_again 1080x1240 d3d3aeeb2adfbb43
 target_ally 320x240 29f0d76cc666049e
 target_ally 1080x1240 b8d548380c0ad2c3
 field_boss 320x240 182dcaafd923f1f2

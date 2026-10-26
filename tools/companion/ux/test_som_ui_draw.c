@@ -134,7 +134,10 @@ int main(int argc, char **argv) {
   r = tap_hit(ux, 320, 240, SOM_UX_HIT_CELL, 0, &act);
   CHECK(r == 1 && act.kind == SOM_UX_ACT_CMD && act.cmd.kind == SOM_CMD_EQUIP_WEAPON && act.cmd.arg == 0);
   CHECK(!has_hit(ux, 320, 240, SOM_UX_HIT_CELL, 1));            /* round 3: a weapon never owned has no square at all */
-  r = tap_hit(ux, 320, 240, SOM_UX_HIT_PARTY, 1, &act);          /* round 3: a tap on a card takes control of that hero */
+  r = tap_hit(ux, 320, 240, SOM_UX_HIT_PARTY, 1, &act);          /* the first tap on a card only selects that hero */
+  CHECK(r == 0 && ux->hero == 1 && strstr(ux->notice_text, "TAP AGAIN"));
+  render(ux, "party_tap_again", 320, 240); render(ux, "party_tap_again", 1240, 1080); render(ux, "party_tap_again", 1080, 1240);
+  r = tap_hit(ux, 320, 240, SOM_UX_HIT_PARTY, 1, &act);          /* a second tap on the selected card takes control */
   CHECK(r == 1 && act.kind == SOM_UX_ACT_SWITCH_HERO && act.hero == 1 && ux->hero == 1);
   r = tap_hit(ux, 320, 240, SOM_UX_HIT_PARTY, 0, &act);          /* the controlled hero (pad bound to slot 0): selects only */
   CHECK(r == 0 && ux->hero == 0);
@@ -1036,8 +1039,10 @@ int main(int argc, char **argv) {
     field(); wram[0xCC48 + 2] = (uint8_t)((1 << 5) | 6); som_ux_update(ux, wram);
     som_ux_set_view(ux, SOM_UX_TAB_ITEM, 0, 0xFF);
     CHECK(has_hit(ux, 320, 240, SOM_UX_HIT_CELL, 0) && !has_hit(ux, 320, 240, SOM_UX_HIT_CELL, 5));
-    /* item 20: a card tap takes control; a dead hero's card opens the REVIVE chooser instead */
+    /* item 20: a second tap on the selected card takes control; a dead hero's card opens the REVIVE chooser instead */
     field(); som_ux_update(ux, wram);
+    r3 = tap_hit(ux, 1240, 1080, SOM_UX_HIT_PARTY, 2, &a3);
+    CHECK(r3 == 0 && ux->hero == 2);
     r3 = tap_hit(ux, 1240, 1080, SOM_UX_HIT_PARTY, 2, &a3);
     CHECK(r3 == 1 && a3.kind == SOM_UX_ACT_SWITCH_HERO && a3.hero == 2);
     /* item 15: the zone map follows the hero the pad controls, not the selected card */

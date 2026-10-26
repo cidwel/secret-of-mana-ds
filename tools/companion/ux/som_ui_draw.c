@@ -284,16 +284,16 @@ static int text_wrap(struct cv *c, int x, int y, int w, const char *s, uint32_t 
   char b[64];
   while (*s && lines < maxlines) {
     int n = 0, lw = 0, brk = -1;
-    while (s[n] && n < 60) {
+    while (s[n] && s[n] != '\n' && n < 60) {           /* '\n' forces a break */
       int a = adv_dev(c, (unsigned char)s[n], 1);
       if (lw + a > w * c->s) break;
       lw += a; if (s[n] == ' ') brk = n; n++;
     }
     int take = n;
-    if (s[n] && brk > 0) take = brk;
+    if (s[n] && s[n] != '\n' && brk > 0) take = brk;
     memcpy(b, s, (size_t)take); b[take] = 0;
     text(c, x, y + lines * (text_h(size) + 1), b, col, size);
-    s += take; while (*s == ' ') s++;
+    s += take; if (*s == '\n') s++; while (*s == ' ') s++;
     lines++;
   }
   return lines;

@@ -482,7 +482,7 @@ void som_ux_flammie_map_pos(const struct som_ux *ux, int *mx, int *my, int *bear
 /* Towns and palaces on the Flammie map: the take-off position of each map (word at C6:7A80 + 2 * map id: x in the low byte, y in the high
  * byte, 16 world units each; Potos lands at (2432, 3024), docs/flammie-world-map.md in som-decomp).  Returned in world-map pixels. */
 static const struct { uint8_t map; const char *name; } TOWNS[] = {
-  {131, "POTOS"}, {144, "PANDORA"}, {168, "KIPPO"}, {25, "GAIA'S NAVEL"}, {136, "WATER PALACE"}, {196, "WITCH CASTLE"}, {56, "SPRITE VILLAGE"},
+  {131, "POTOS"}, {144, "PANDORA"}, {168, "KIPPO"}, {25, "GAIA'S NAVEL\nEARTH PALACE"}, {136, "WATER PALACE"}, {196, "WITCH CASTLE"}, {56, "SPRITE VILLAGE"},
   {224, "MATANGO"}, {63, "MANDALA"}, {24, "TASNICA"}, {113, "GOLD CITY"}, {115, "NORTHTOWN"}, {114, "SOUTHTOWN"}, {89, "KAKKARA"},
   {228, "TODO"}, {197, "PARADISE TOWN"}, {112, "LIGHTHOUSE"}, {47, "WIND PALACE"}, {48, "MOON PALACE"}, {61, "SHADE PALACE"},
   {75, "ICE CASTLE"}, {90, "FIRE PALACE"}, {116, "LUMINA TOWER"},
@@ -491,7 +491,7 @@ static const char *zone_of_map(unsigned id) {
   switch (id) {
   case 16: case 131: case 159: return "POTOS";
   case 23: case 144: case 145: case 170: return "PANDORA";
-  case 25: case 27: case 171: return "GAIA'S NAVEL";
+  case 25: case 27: case 171: return "GAIA'S NAVEL\nEARTH PALACE";   /* the Earth Palace is inside the dwarves' cave */
   case 168: return "KIPPO";
   case 19: case 28: case 29: case 30: case 31: case 196: return "WITCH FOREST";
   case 109: case 135: case 136: return "WATER PALACE";

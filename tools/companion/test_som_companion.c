@@ -123,8 +123,11 @@ int main(void) {
 
   /* modes */
   w[0x7D] = 1; som_read_state(w, &s); assert(s.mode == SOM_MODE_RING);
+  assert(!strcmp(som_unsafe_reason(w), "CLOSE THE RING"));
   w[0xD0] = 0x81; som_read_state(w, &s); assert(s.mode == SOM_MODE_EVENT && !s.safe_to_inject);
+  assert(!strcmp(som_unsafe_reason(w), "NOT IN EVENTS"));
   w[0xD0] = 0; w[0xE6] = 0x08; som_read_state(w, &s); assert(s.mode == SOM_MODE_TRANSITION);
+  assert(!strcmp(som_unsafe_reason(w), "WAIT"));
   w[0xE6] = 0x0F; w[0x7D] = 0;
 
   /* refusals */

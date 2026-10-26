@@ -323,7 +323,7 @@ static struct som_ux_action defer; static int defer_valid, defer_t;
 static uint8_t spell_av[42];
 
 static void notice(int kind, const char *t) { som_ux_notice(ux, kind, t); }
-static void refuse(const char *what) { notice(SOM_UX_NOTICE_ERROR, what); }
+static void refuse(const char *what) { notice(SOM_UX_NOTICE_ERROR, wram && (!strcmp(what, "UNSAFE_STATE") || !strcmp(what, "unsafe-state")) ? som_unsafe_reason(wram) : what); }
 
 static void spell_states_update(void) {
   for (int id = 0; id < 42; id++) {

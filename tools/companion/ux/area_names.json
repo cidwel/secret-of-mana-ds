@@ -2,6 +2,7 @@
   "note": "Header area names. The ROM has no map-name table; a map appears here only with the stated evidence. Maps not listed show no name.",
   "evidence": {
     "doc": "documented and visited in docs/maps.md or docs/companion-device-20261017.md (map ids, exits and thumbnails)",
+    "exits": "reached only through the exits of a checked map (tools/map_dump.py first-rooms in som-decomp): 261-263 are the houses of town 144, 264-268 the rooms behind 145",
     "visual": "every map of the range was checked on the warp thumbnails (device state dir adv/sheet*.png) and on the exit graph"
   },
   "ranges": [
@@ -10,8 +11,9 @@
     {"lo": 256, "hi": 256, "name": "POTOS FALLS", "evidence": "doc", "confidence": "high"},
     {"lo": 257, "hi": 259, "name": "POTOS VILLAGE", "evidence": "doc", "confidence": "high"},
     {"lo": 16, "hi": 16, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "high"},
-    {"lo": 19, "hi": 19, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "medium"},
-    {"lo": 144, "hi": 144, "name": "PATH TO PANDORA", "evidence": "doc", "confidence": "medium"},
+    {"lo": 144, "hi": 145, "name": "PANDORA", "evidence": "visual", "confidence": "high"},
+    {"lo": 261, "hi": 263, "name": "PANDORA", "evidence": "exits", "confidence": "high"},
+    {"lo": 264, "hi": 268, "name": "PANDORA CASTLE", "evidence": "exits", "confidence": "medium"},
     {"lo": 198, "hi": 235, "name": "PURE LAND", "evidence": "visual", "confidence": "medium"}
   ]
 }

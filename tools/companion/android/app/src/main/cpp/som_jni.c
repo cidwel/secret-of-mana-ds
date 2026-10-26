@@ -103,6 +103,7 @@ static void set_hero_notice(int kind, int hero, const char *t) {   /* "GIRL" + r
 }
 static void flash_push(int spell_id) { if (nf_n < NQ) nf_id[nf_n++] = spell_id; }
 static void set_toast(const char *t) {
+  if (wram && (!strcmp(t, "UNSAFE_STATE") || !strcmp(t, "unsafe-state"))) t = som_unsafe_reason(wram);
   set_notice(!strcmp(t, "QUEUED") ? SOM_UX_NOTICE_QUEUED : !strcmp(t, "CANCELLED") ? SOM_UX_NOTICE_CANCELLED : SOM_UX_NOTICE_ERROR, t);
 }
 

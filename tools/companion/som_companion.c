@@ -40,6 +40,20 @@
 static unsigned u8(const uint8_t *w, unsigned a) { return w[a]; }
 static unsigned u16(const uint8_t *w, unsigned a) { return w[a] | (w[a + 1] << 8); }
 
+/* What the player sees instead of "UNSAFE STATE" when a command is refused: why the game cannot take it now. */
+const char *som_unsafe_reason(const uint8_t *w) {
+  struct som_state s;
+  som_read_state(w, &s);
+  switch (s.mode) {
+  case SOM_MODE_NO_GAME: return "NO GAME";
+  case SOM_MODE_TRANSITION: return "WAIT";
+  case SOM_MODE_EVENT: return "NOT IN EVENTS";
+  case SOM_MODE_RING: return "CLOSE THE RING";
+  case SOM_MODE_FIELD: break;
+  }
+  return s.pad_hero == 0xFF ? "WAIT" : "HERO IS DOWN";
+}
+
 const char *som_mode_name(enum som_mode m) {
   switch (m) {
   case SOM_MODE_NO_GAME: return "no-game";

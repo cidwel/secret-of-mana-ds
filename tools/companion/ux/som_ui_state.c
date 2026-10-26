@@ -200,10 +200,10 @@ void ux_build_world(struct som_ux *ux) {
 /* ------------------------------------------------------------------ area names
  * The ROM has no map-name table.  This table gives a name only where the evidence is good (see area_names.json, which is the source of
  * truth and is compared with this table by test_area_names.py): "doc" = the maps documented and visited in this repository, "visual" =
- * every map of the range checked on the warp thumbnails.  Every other map has no name and the header shows none. */
+ * every map of the range checked on the warp thumbnails, "exits" = reached from a checked map on the ROM's exit graph.  Every other map has no name and the header shows none. */
 static const struct { uint16_t lo, hi; const char *name; } AREA[] = {
   {128, 128, "POTOS FALLS"}, {131, 131, "POTOS VILLAGE"}, {256, 256, "POTOS FALLS"}, {257, 259, "POTOS VILLAGE"},
-  {16, 16, "PATH TO PANDORA"}, {19, 19, "PATH TO PANDORA"}, {144, 144, "PATH TO PANDORA"}, {198, 235, "PURE LAND"},
+  {16, 16, "PATH TO PANDORA"}, {144, 145, "PANDORA"}, {261, 263, "PANDORA"}, {264, 268, "PANDORA CASTLE"}, {198, 235, "PURE LAND"},
 };
 const char *som_ux_area_name(int map_id) {
   for (unsigned i = 0; i < sizeof AREA / sizeof AREA[0]; i++)

@@ -353,6 +353,7 @@ static int quick_dirty;
 
 static void set_toast(const char *t) {   /* refusals show as the UX notice chip */
   char b[32];
+  if (wram && (!strcmp(t, "UNSAFE_STATE") || !strcmp(t, "unsafe-state"))) t = som_unsafe_reason(wram);
   snprintf(b, sizeof b, "%s", t);
   for (char *p = b; *p; p++) *p = (*p == '-' || *p == '_') ? ' ' : (*p >= 'a' && *p <= 'z') ? (char)(*p - 32) : *p;
   ux_glue_notice(SOM_UX_NOTICE_ERROR, b);

@@ -77,6 +77,7 @@ struct som_state {
 
 void som_read_state(const uint8_t *wram, struct som_state *out);
 const char *som_mode_name(enum som_mode m);
+const char *som_unsafe_reason(const uint8_t *wram);   /* short notice text for an UNSAFE_STATE refusal */
 
 /* ------------------------------------------------------------------ macros */
 enum som_cmd_kind { SOM_CMD_NONE = 0, SOM_CMD_EQUIP_WEAPON, SOM_CMD_USE_ITEM, SOM_CMD_CAST_MAGIC,

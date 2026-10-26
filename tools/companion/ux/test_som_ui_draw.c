@@ -1014,6 +1014,11 @@ int main(int argc, char **argv) {
       CHECK(som_ux_game_key(g) == 0 && !g->armed);
       field(); wram[0xCC00] = 0x9B; wram[0xCC01] = 0; som_ux_update(g, wram);
       CHECK(som_ux_game_event(g) == SOM_UX_GAME_LOAD && som_ux_game_key(g) == k1);                                       /* same names: same game */
+      field(); wram[0xCC00] = 0x9B; wram[0xCC0C] = 0x9C; som_ux_update(g, wram);                                         /* the girl joins and is named */
+      CHECK(som_ux_game_event(g) == SOM_UX_GAME_RENAME && som_ux_game_key(g) != k1);
+      uint32_t k2 = som_ux_game_key(g);
+      field(); wram[0xCC00] = 0x9B; wram[0xCC0C] = 0x9D; som_ux_update(g, wram);                                         /* a set name changed: another game */
+      CHECK(som_ux_game_event(g) == SOM_UX_GAME_NONE && som_ux_game_key(g) != k2);
       som_ux_delete(g); }
     /* item 8: weapons never owned have no square; once owned (even if sold) the square stays; seen is reset by the title */
     field(); for (int t = 0; t < 8; t++) wram[0xCC54 + t] = 0xFF; wram[0xCC54] = 0x40; som_ux_update(ux, wram);

@@ -181,6 +181,7 @@ struct som_ux {
   uint8_t armed;                           /* 1 once the story flag $CF00 is set (the boy took the first sword, ring menus enabled); 0 at the title, in the name entry and in the intro.  While 0 the screen is blank outside the name entry */
   uint8_t seen_w, seen_s;                  /* bit n: weapon type n / spirit byte n was owned at least once in this playthrough */
   uint16_t seen_i;                         /* bit n: item id n */
+  uint8_t key_names[36];                   /* the hero names ($CC00, 3 x 12) behind game_key */
   uint8_t fe_saw_name, game_event;         /* name entry seen during this frontend visit; one-shot SOM_UX_GAME_* event */
   uint8_t prev_mode;
   uint32_t game_key;                       /* FNV-1a of the three hero names ($CC00..$CC23), 0 while unknown (title, name entry) */
@@ -208,7 +209,8 @@ struct som_ux {
 #define SOM_UX_F_SHOW_RADAR_ONLY_ONSCREEN 1
 /* Game identity events, read and cleared with som_ux_game_event(): the frontend (title / game select / name entry) was left for the game.
  * NEW: the name entry was visited (a new game began: reset per-game settings); LOAD: a saved game was loaded. */
-enum som_ux_game_ev { SOM_UX_GAME_NONE = 0, SOM_UX_GAME_NEW, SOM_UX_GAME_LOAD };
+enum som_ux_game_ev { SOM_UX_GAME_NONE = 0, SOM_UX_GAME_NEW, SOM_UX_GAME_LOAD,
+                      SOM_UX_GAME_RENAME /* the same game got a hero name (a hero joined): the key changed, the host keeps its data under the new key */ };
 int som_ux_game_event(struct som_ux *ux);
 uint32_t som_ux_game_key(const struct som_ux *ux);
 /* Discovered entries packed as w | s << 8 | i << 16 (persist per game; set ORs them in). */

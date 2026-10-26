@@ -18,7 +18,8 @@ final class Bindings {
 
     private Bindings(Context c) { sp = c.getSharedPreferences("som", Context.MODE_PRIVATE); }
 
-    private String pk(String what) { return what + "_" + variant + "_" + key; }
+    private String pk(String what) { return what(what, key); }
+    private String what(String what, String k) { return what + "_" + variant + "_" + k; }
 
     void load() {
         variant = Native.romVariant();
@@ -55,6 +56,11 @@ final class Bindings {
             sp.edit().remove(pk("quick")).remove(pk("seen")).apply();
             Native.quickClear();
             savedSeen = 0;
+        } else if (ev == 3 && !key.isEmpty() && !k.equals(key)) {   /* a hero joined and was named: same game, its data moves to the new key */
+            String quick = Native.quickSave();
+            sp.edit().putString(what("quick", k), quick).putInt(what("seen", k), Native.seenGet()).apply();   /* the old key stays for saves made before the join */
+            key = k;
+            savedSeen = Native.seenGet();
         } else if (!k.equals(key)) {                         /* a save was loaded (or a state): its own slots and discoveries */
             key = k;
             Native.quickLoad(sp.getString(pk("quick"), null));

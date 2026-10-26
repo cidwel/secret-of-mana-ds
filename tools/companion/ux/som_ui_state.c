@@ -398,7 +398,17 @@ void som_ux_update(struct som_ux *ux, const uint8_t *w) {
     if (w[0xCF00]) ux->armed = 1;                       /* story flag set by the event in which the boy takes the first sword: ring menus enabled (docs/wram-companion-map.md) */
     uint32_t k = 2166136261u; int any = 0;
     for (int i = 0; i < 36; i++) { unsigned g = w[0xCC00 + i]; if (g && g != 0xFF) any = 1; k = (k ^ g) * 16777619u; }
-    ux->game_key = any && ux->st.hero[0].present ? (k ? k : 1) : 0;
+    uint32_t nk = any && ux->st.hero[0].present ? (k ? k : 1) : 0;
+    if (nk && ux->game_key && nk != ux->game_key && !ux->game_event) {   /* names that were set stay as they were, a blank one got filled: same game */
+      int same = 1;
+      for (int i = 0; i < 36 && same; i += 12) {
+        int blank = 1; for (int j = 0; j < 12; j++) if (ux->key_names[i + j] && ux->key_names[i + j] != 0xFF) blank = 0;
+        if (!blank && memcmp(ux->key_names + i, w + 0xCC00 + i, 12)) same = 0;
+      }
+      if (same) ux->game_event = SOM_UX_GAME_RENAME;
+    }
+    if (nk) memcpy(ux->key_names, w + 0xCC00, 36);
+    ux->game_key = nk;
   }
 }
 

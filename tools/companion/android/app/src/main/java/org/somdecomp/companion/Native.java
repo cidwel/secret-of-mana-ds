@@ -47,7 +47,7 @@ final class Native {
     static native void quickLoad(String text);
     static native boolean quickDirty();
     static native String gameKey();                            /* hash of the three hero names, "" while unknown (title, name entry) */
-    static native int gameEvent();                             /* one-shot: 1 a new game began, 2 a saved game was loaded, 0 none */
+    static native int gameEvent();                             /* one-shot: 1 a new game began, 2 a saved game was loaded, 3 a hero joined (names changed, same game), 0 none */
     static native int seenGet();                               /* discovered weapons / spirits / items, packed */
     static native void seenSet(int packed);
     static native void quickClear();

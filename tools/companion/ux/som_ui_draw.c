@@ -2508,6 +2508,7 @@ static uint32_t redraw_hash(const struct som_ux *ux) {
   for (int i = 0; i < 3; i++) for (int k = 0; k < SOM_UX_LAST_NAME; k++) { h ^= (uint8_t)ux->name_last[i][k]; h *= 16777619u; }
   for (int i = 0; i < SOM_UX_QUICK_N; i++) { h ^= ux->flash_t[i] * 31u + ux->flash_kind[i]; h *= 16777619u; h ^= ux->quick[i].kind; h *= 16777619u; h ^= ux->quick[i].id; h *= 16777619u; }
   h ^= ux->line[0] ^ (uint32_t)ux->log_n << 8 ^ (uint32_t)ux->zone_sum; h *= 16777619u;
+  h ^= ux->fl_x ^ (uint32_t)ux->fl_y << 12 ^ (uint32_t)ux->fl_heading << 22 ^ (uint32_t)ux->trail_n << 27; h *= 16777619u;   /* Flammie map: arrow and trail */
   for (int i = 0; i < 42; i++) { h ^= ux->spell_avail[i]; h *= 16777619u; }
   h ^= (uint32_t)(ux->frame_no >> 3) * 977u * (ux->notice_t ? 1u : 0u);
   return h;

@@ -220,11 +220,39 @@ void ux_build_world(struct som_ux *ux) {
 
 /* ------------------------------------------------------------------ area names
  * The ROM has no map-name table.  This table gives a name only where the evidence is good (see area_names.json, which is the source of
- * truth and is compared with this table by test_area_names.py): "doc" = the maps documented and visited in this repository, "visual" =
- * every map of the range checked on the warp thumbnails, "exits" = reached from a checked map on the ROM's exit graph.  Every other map has no name and the header shows none. */
+ * truth and is compared with this table by test_area_names.py): "doc" = the maps documented and visited in this repository, "randomizer" =
+ * the map ids named by the SoM randomizer, grouped by place.  Boss arenas, cutscenes and credits rooms have no name.  Every other map has no name and the header shows none. */
 static const struct { uint16_t lo, hi; const char *name; } AREA[] = {
-  {128, 128, "POTOS FALLS"}, {131, 131, "POTOS VILLAGE"}, {256, 256, "POTOS FALLS"}, {257, 259, "POTOS VILLAGE"},
-  {16, 16, "PATH TO PANDORA"}, {144, 145, "PANDORA"}, {261, 263, "PANDORA"}, {264, 268, "PANDORA CASTLE"}, {198, 235, "PURE LAND"},
+  {16, 16, "PATH TO PANDORA"}, {17, 18, "JEHK CAVE"}, {19, 19, "WITCH FOREST"}, {20, 20, "EMPIRE SEWERS"}, {21, 21, "NORTHTOWN RUINS"},
+  {22, 22, "TURTLE ISLAND"}, {23, 23, "PANDORA"}, {24, 24, "TASNICA"}, {25, 25, "GAIA'S NAVEL"}, {26, 26, "TASNICA"},
+  {27, 27, "GAIA'S NAVEL"}, {28, 31, "WITCH FOREST"}, {32, 34, "KARON FERRY"}, {35, 35, "LUNA PALACE"}, {36, 37, "TASNICA"},
+  {39, 41, "UPPER LAND"}, {42, 45, "UNDERSEA SUBWAY"}, {47, 47, "WIND PALACE"}, {48, 48, "LUNA PALACE"}, {49, 49, "UPPER LAND"},
+  {51, 51, "TASNICA"}, {52, 59, "UPPER LAND"}, {61, 61, "SHADE PALACE"}, {62, 62, "JEHK CAVE"}, {63, 66, "MANDALA"},
+  {67, 70, "KAKKARA DESERT"}, {71, 71, "UNDERSEA SUBWAY"}, {73, 73, "GAIA'S NAVEL"}, {75, 75, "ICE PALACE"}, {76, 78, "ICE COUNTRY"},
+  {80, 81, "ICE COUNTRY"}, {82, 82, "NORTHTOWN CASTLE"}, {83, 83, "ICE COUNTRY"}, {84, 88, "KAKKARA DESERT"}, {89, 89, "KAKKARA"},
+  {90, 90, "FIRE PALACE"}, {92, 97, "KAKKARA DESERT"}, {98, 99, "SAND SHIP"}, {109, 109, "UNDINE'S CAVE"}, {110, 110, "LIGHTHOUSE"},
+  {112, 112, "LIGHTHOUSE"}, {113, 113, "GOLD CITY"}, {114, 114, "SOUTHTOWN"}, {115, 115, "NORTHTOWN"}, {116, 118, "LUMINA TOWER"},
+  {120, 120, "LUMINA TOWER"}, {121, 121, "TASNICA"}, {122, 123, "NORTHTOWN"}, {124, 124, "SOUTHTOWN"}, {125, 125, "GOLD CITY"},
+  {126, 126, "NORTHTOWN"}, {127, 127, "SOUTHTOWN"}, {128, 128, "POTOS FALLS"}, {129, 130, "RABITE FIELD"}, {131, 131, "POTOS VILLAGE"},
+  {132, 132, "NEKO'S HOUSE"}, {134, 134, "MATANGO CAVE"}, {135, 137, "WATER PALACE"}, {138, 138, "NORTHTOWN"}, {139, 140, "WATER PALACE"},
+  {142, 142, "WATER PALACE"}, {144, 144, "PANDORA"}, {145, 145, "PANDORA CASTLE"}, {155, 155, "SOUTHTOWN"}, {156, 156, "ICE COUNTRY"},
+  {157, 157, "KAKKARA"}, {158, 158, "UPPER LAND"}, {159, 159, "POTOS"}, {160, 165, "PANDORA RUINS"}, {167, 167, "PANDORA RUINS"},
+  {168, 168, "KIPPO"}, {170, 170, "PANDORA"}, {171, 171, "GAIA'S NAVEL"}, {194, 194, "PARADISE TOWN"}, {195, 195, "SUNKEN CONTINENT"},
+  {196, 196, "WITCH CASTLE"}, {197, 197, "PARADISE TOWN"}, {198, 203, "PURE LAND"}, {205, 212, "PURE LAND"}, {214, 221, "PURE LAND"},
+  {222, 224, "MATANGO"}, {225, 225, "PURE LAND"}, {227, 227, "PURE LAND"}, {228, 228, "TODO VILLAGE"}, {229, 229, "PURE LAND"},
+  {233, 235, "PURE LAND"}, {240, 241, "FIRE PALACE"}, {248, 251, "MANA FORTRESS"}, {255, 255, "MANA FORTRESS"}, {256, 256, "POTOS FALLS"},
+  {257, 259, "POTOS VILLAGE"}, {261, 263, "PANDORA"}, {264, 268, "PANDORA CASTLE"}, {269, 269, "EARTH PALACE"}, {270, 271, "SAND SHIP"},
+  {273, 273, "WIND PALACE"}, {274, 274, "MATANGO"}, {275, 275, "UNDINE'S CAVE"}, {276, 276, "EARTH PALACE"}, {278, 278, "UNDINE'S CAVE"},
+  {279, 279, "NEKO'S HOUSE"}, {280, 281, "KIPPO"}, {282, 282, "MATANGO"}, {283, 283, "PANDORA CASTLE"}, {284, 286, "GAIA'S NAVEL"},
+  {287, 289, "DWARF VILLAGE"}, {291, 291, "EARTH PALACE"}, {292, 297, "DWARF VILLAGE"}, {298, 299, "TODO VILLAGE"},
+  {300, 306, "WITCH CASTLE"}, {307, 307, "MATANGO CAVE"}, {308, 308, "WITCH CASTLE"}, {309, 309, "PANDORA CASTLE"},
+  {311, 311, "KILROY'S SHIP"}, {312, 314, "EARTH PALACE"}, {315, 316, "KILROY'S SHIP"}, {318, 319, "SAND SHIP"},
+  {320, 323, "MATANGO CAVE"}, {324, 324, "SAND SHIP"}, {326, 331, "FIRE PALACE"}, {332, 333, "SANTA'S HOUSE"}, {335, 335, "PARADISE TOWN"},
+  {336, 338, "MATANGO"}, {339, 339, "SAND SHIP"}, {341, 342, "MANDALA"}, {343, 344, "WITCH CASTLE"}, {345, 346, "FIRE PALACE"},
+  {348, 349, "FIRE PALACE"}, {350, 351, "LUNA PALACE"}, {352, 360, "ICE PALACE"}, {362, 363, "ICE PALACE"}, {365, 365, "ICE PALACE"},
+  {367, 375, "SHADE PALACE"}, {376, 376, "KAKKARA"}, {378, 391, "NORTHTOWN CASTLE"}, {393, 396, "LIGHTHOUSE"},
+  {400, 406, "NORTHTOWN RUINS"}, {409, 409, "NORTHTOWN RUINS"}, {412, 417, "GRAND PALACE"}, {419, 426, "GRAND PALACE"},
+  {428, 428, "GRAND PALACE"}, {448, 449, "TURTLE ISLAND"},
 };
 const char *som_ux_area_name(int map_id) {
   for (unsigned i = 0; i < sizeof AREA / sizeof AREA[0]; i++)
@@ -496,6 +524,24 @@ const char *som_ux_flammie_zone(const struct som_ux *ux) {
         if (x >= 0 && x < 16 && y >= 0 && y < 16 && (z = zone_at(r, x, y))) return z;
       }
   return "OPEN SEA";
+}
+
+/* Towns on the Flammie map: the take-off position of each town map (word at C6:7A80 + 2 * map id: x in the low byte, y in the high
+ * byte, 16 world units each; Potos lands at (2432, 3024), docs/flammie-world-map.md in som-decomp).  Returned in world-map pixels. */
+static const struct { uint8_t map; const char *name; } TOWNS[] = {
+  {131, "POTOS"}, {144, "PANDORA"}, {168, "KIPPO"}, {25, "GAIA'S NAVEL"}, {136, "WATER PALACE"}, {196, "WITCH CASTLE"}, {56, "SPRITE VILLAGE"},
+  {224, "MATANGO"}, {63, "MANDALA"}, {24, "TASNICA"}, {113, "GOLD CITY"}, {115, "NORTHTOWN"}, {114, "SOUTHTOWN"}, {89, "KAKKARA"},
+  {228, "TODO"}, {197, "PARADISE TOWN"}, {112, "LIGHTHOUSE"},
+};
+int som_ux_flammie_town(const struct som_ux *ux, int i, int *mx, int *my, const char **name) {
+  size_t len; const uint8_t *r = ux ? ux_rom((struct som_ux *)ux, &len) : NULL;
+  int n = (int)(sizeof TOWNS / sizeof TOWNS[0]);
+  if (!r || len < 0x67C80u || i < 0 || i >= n) return r && len >= 0x67C80u ? n : 0;
+  const uint8_t *e = r + 0x67A80u + 2u * TOWNS[i].map;
+  if (mx) *mx = e[0] * 2;
+  if (my) *my = e[1] * 2;
+  if (name) *name = TOWNS[i].name;
+  return n;
 }
 
 int som_ux_name_hero(const struct som_ux *ux) { return ux && ux->fe_name_entry && ux->name_hero < 3 ? ux->name_hero : -1; }

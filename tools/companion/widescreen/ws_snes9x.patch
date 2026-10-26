@@ -1,5 +1,5 @@
 diff --git a/gfx.cpp b/gfx.cpp
-index 375414a..6ca3715 100644
+index 375414a..c21663f 100644
 --- a/gfx.cpp
 +++ b/gfx.cpp
 @@ -1,3 +1,4 @@
@@ -7,7 +7,7 @@ index 375414a..6ca3715 100644
  /*****************************************************************************\
       Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
                  This file is licensed under the Snes9x License.
-@@ -438,8 +439,715 @@ static inline void RenderScreen (bool8 sub)
+@@ -438,8 +439,647 @@ static inline void RenderScreen (bool8 sub)
  	DrawBackdrop();
  }
  
@@ -288,70 +288,23 @@ index 375414a..6ca3715 100644
 +	return consec <= 6;
 +}
 +/* Mode 1 sky above a Mode 7 floor (Flammie): the cloud layers are 512 px tilemaps that the game streams as the heading turns, so the
-+ * columns just beyond the view hold whatever was streamed there last.  A full turn moves BG1 by 1792 px and BG2 by 1280 px (256 heading
-+ * steps of 7 and 5 px: parallax; measured as the distance at which the view repeats), so that is each layer's panorama.  Every cell seen
-+ * in the view is remembered at its place on that panorama, which follows the layer's own scroll (the opening flight turns in fractions of
-+ * a step; a free flight keeps the scroll still while flying straight; $F4 is not the heading, it counts frames).  Before the side passes
-+ * the columns outside the view are rewritten from that memory, so the sides show the clouds that really sit there, and they are restored
-+ * afterwards.  A scroll jump of more than 32 steps, or a flight that starts, starts the memory over. */
++ * columns beyond the view hold whatever was streamed there last.  The game streams them from two ROM tables of whole-turn panoramas: one
++ * column of 16 tile bytes (the low byte of rows 0..15; the high bytes are set once per row) per 8 px, 224 columns for BG1 at C6:5700 and
++ * 160 for BG2 at C6:4A00 (a full turn moves BG1 by 1792 px and BG2 by 1280 px: parallax), by DMA from $00:88B7 / $00:88CE in the free
++ * flights and the opening flight alike.  The side columns are drawn from those tables: rows 0..15 take the table's byte for their place on
++ * the panorama, exactly what the game would stream there, and the rows below keep the game's own cells (they are never streamed).  The
++ * place of the view's first column is found by matching the view with the table, then followed with the layer's scroll and checked
++ * against the view every frame.  When a table does not match (another ROM), the sides fall back to the cells seen in the view at their
++ * place on the panorama, and to the row's most common cell (empty sky in a cloud row) where none was seen. */
 +#define SOM_SKY_COLS 1024
 +static uint16 som_sky_pan[2][32][SOM_SKY_COLS];
 +static uint8 som_sky_have[2][32][SOM_SKY_COLS];
 +static unsigned som_sky_last_fid = 0;
 +static const int som_sky_s[2] = { 7, 5 };
++static const uint32 som_sky_tab[2] = { 0xc65700, 0xc64a00 };
 +static int som_sky_x[2], som_sky_pH[2], som_sky_ok = 0;   /* panorama x of the screen's left edge, last scroll */
-+static uint32 som_sky_pairs[2][2048];   /* horizontal neighbours seen in view (left | right << 16, + 1), an open-addressing set */
-+static uint32 som_sky_plist[2][2048];   /* the same pairs as a list */
-+static int som_sky_pn[2];
-+static void som_sky_pair_add (int L, uint32 key)
-+{
-+	for (uint32 h = (key * 2654435761u) >> 21, n = 0; n < 2048; h = (h + 1) & 2047, n++)
-+	{
-+		if (som_sky_pairs[L][h] == key) return;
-+		if (!som_sky_pairs[L][h]) { som_sky_pairs[L][h] = key; som_sky_plist[L][som_sky_pn[L]++] = key - 1; return; }
-+	}
-+}
-+static int som_sky_pair_has (int L, uint32 key)
-+{
-+	for (uint32 h = (key * 2654435761u) >> 21, n = 0; n < 2048; h = (h + 1) & 2047, n++)
-+	{
-+		if (som_sky_pairs[L][h] == key) return 1;
-+		if (!som_sky_pairs[L][h]) return 0;
-+	}
-+	return 0;
-+}
-+/* The end of a cloud cut where the view's memory stops: the shortest chain of neighbour pairs the view has shown that leads from cell
-+ * `from` (outwards: rightwards on the right, leftwards on the left) to a cell the view has shown ending a cloud (next to `fill`).  The
-+ * game builds its clouds from a few tile sequences, so this is the cloud's own end, and the rows of one cloud end alike.  Writes the
-+ * cells after `from` to out (the end cell last); returns their number, or -1 when the pairs give no end within `max` cells. */
-+static int som_sky_close (int L, int from, int fill, int right, int *out, int max)
-+{
-+	enum { N = 96 };
-+	int node[N], par[N], dep[N], nn = 0, head = 0;
-+	node[nn] = from; par[nn] = -1; dep[nn++] = 0;
-+	while (head < nn)
-+	{
-+		int cur = node[head], d = dep[head];
-+		if (d && som_sky_pair_has(L, (right ? ((uint32) cur | (uint32) fill << 16) : ((uint32) fill | (uint32) cur << 16)) + 1))
-+		{
-+			int len = d;
-+			for (int i = head; par[i] >= 0; i = par[i]) out[dep[i] - 1] = node[i];
-+			return len;
-+		}
-+		if (d < max)
-+			for (int p = 0; p < som_sky_pn[L] && nn < N; p++)
-+			{
-+				uint32 k = som_sky_plist[L][p];
-+				int a = k & 0xffff, b = k >> 16, nx = right ? (a == cur ? b : -1) : (b == cur ? a : -1);
-+				if (nx < 0 || nx == fill) continue;
-+				int dup = 0;
-+				for (int i = 0; i < nn && !dup; i++) dup = node[i] == nx;
-+				if (!dup) { node[nn] = nx; par[nn] = head; dep[nn++] = d + 1; }
-+			}
-+		head++;
-+	}
-+	return -1;
-+}
++static int som_sky_s0[2] = { -1, -1 }, som_sky_s0kc[2];   /* table column of the view's column 0 (-1: no match), at panorama column */
++static unsigned som_sky_s0fid[2];
 +static struct { uint8 L, r, c; uint16 w; } som_ws_sky_saved[2 * 32 * 18];
 +static int som_ws_sky_n = 0;
 +static void som_ws_sky_track (void)
@@ -359,9 +312,8 @@ index 375414a..6ca3715 100644
 +	if (som_ws_fid - som_sky_last_fid > 30)
 +	{
 +		memset(som_sky_have, 0, sizeof som_sky_have);   /* a new flight */
-+		memset(som_sky_pairs, 0, sizeof som_sky_pairs);
-+		som_sky_pn[0] = som_sky_pn[1] = 0;
 +		som_sky_ok = 0;
++		som_sky_s0[0] = som_sky_s0[1] = -1;
 +	}
 +	som_sky_last_fid = som_ws_fid;
 +	for (int L = 0; L < 2; L++)
@@ -374,10 +326,29 @@ index 375414a..6ca3715 100644
 +		{
 +			memset(som_sky_have[L], 0, sizeof som_sky_have[L]);
 +			som_sky_x[L] = ((H % P) + P) % P;
++			som_sky_s0[L] = -1;
 +		}
 +		som_sky_pH[L] = H;
 +	}
 +	som_sky_ok = 1;
++}
++static const uint8 *som_sky_table (int L)   /* the ROM table of layer L, or NULL */
++{
++	uint32 a = som_sky_tab[L];
++	uint8 *p = Memory.Map[(a & 0xffffff) >> MEMMAP_SHIFT];
++	if (p < (uint8 *) CMemory::MAP_LAST || (a & 0xffff) + 16 * 32 * som_sky_s[L] > 0x10000) return NULL;
++	return p + (a & 0xffff);
++}
++/* 1 when table column s0 + i holds the low bytes of tilemap column hc + i for the view's inner columns (the outer two may be streamed late) */
++static int som_sky_match (const uint8 *tab, int n, const uint8 *base, int hc, int last, int s0)
++{
++	for (int i = 2; i < last; i++)
++	{
++		int tc = (hc + i) & 63, col = (s0 + i) % n;
++		for (int r = 0; r < 16; r++)
++			if (base[((tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31)) * 2] != tab[16 * col + r]) return 0;
++	}
++	return 1;
 +}
 +static int som_ws_sky_fill (void)   /* 0: a sky layer in view is not a 512 x 256 tilemap (nothing rewritten) */
 +{
@@ -395,92 +366,53 @@ index 375414a..6ca3715 100644
 +		int H = LineData[GFX.StartY].BG[L].HOffset, hc = (H & 1023) >> 3, v = LineData[GFX.StartY].BG[L].VOffset;
 +		int last = (H & 7) ? 32 : 31;   /* the last column the view shows */
 +		int pc = 32 * som_sky_s[L], kc = som_sky_x[L] >> 3;   /* panorama columns, panorama column of view column 0 */
++		const uint8 *tab = som_sky_table(L);
++		if (tab && som_sky_s0fid[L] != som_ws_fid)   /* once a frame: where the view sits in the table */
++		{
++			som_sky_s0fid[L] = som_ws_fid;
++			int pred = som_sky_s0[L] < 0 ? -1 : ((som_sky_s0[L] + kc - som_sky_s0kc[L]) % pc + pc) % pc, s0 = -1;
++			if (pred >= 0 && som_sky_match(tab, pc, base, hc, last, pred)) s0 = pred;
++			else
++				for (int k = 0, bestd = pc; k < pc; k++)
++					if (som_sky_match(tab, pc, base, hc, last, k))
++					{
++						int d = pred < 0 ? 0 : abs(k - pred) < pc - abs(k - pred) ? abs(k - pred) : pc - abs(k - pred);
++						if (d < bestd) bestd = d, s0 = k;
++					}
++			som_sky_s0[L] = s0; som_sky_s0kc[L] = kc;
++		}
++		int s0 = tab ? som_sky_s0[L] : -1;
 +		uint8 rows[32] = { 0 };
 +		for (uint32 y = GFX.StartY; y <= GFX.EndY && y < 240; y++) rows[((v + y) >> 3) & 31] = 1;
 +		for (int r = 0; r < 32; r++)
 +		{
 +			if (!rows[r]) continue;
 +			uint16 seen[33]; int ns = 0;
-+			for (int i = 1; i <= last; i++)   /* column 0 is streamed in late (it may still hold the old cell) */
++			for (int i = 1; i <= last; i++)
 +			{
 +				int tc = (hc + i) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31), k = (kc + i) % pc;
 +				som_sky_pan[L][r][k] = seen[ns++] = base[o * 2] | (base[o * 2 + 1] << 8);
 +				som_sky_have[L][r][k] = 1;
-+				if (ns > 1) som_sky_pair_add(L, ((uint32) seen[ns - 2] | (uint32) seen[ns - 1] << 16) + 1);
 +			}
-+			/* A cell not seen yet: a cloud cut by the view's edge goes on with the layer's own cells (the game streamed it with the cells
-+			 * in view) through neighbours the view has shown, up to this row's most common cell; every other cell gets that most common one: empty in a cloud
-+			 * row, the band's tile in the sky gradient and horizon haze rows.  Beyond the view the layer holds stale or black cells (opening
-+			 * flight and a free flight: 3..66 % of them match what the view shows there later, this rule 89..95 %).  No cloud ends in a cut:
-+			 * one that runs from the view into a cell not seen is closed with its own end (som_sky_close), or else with the other end of
-+			 * its row mirrored, and a piece in the side that touches a cell not seen is dropped. */
++			if (s0 >= 0 && r >= 16) continue;   /* rows the game never streams: its own cells are right */
 +			int fill = 0, best = 0;
-+			for (int i = 0; i < ns; i++)
++			if (s0 < 0)
++				for (int i = 0; i < ns; i++)
++				{
++					int n = 0;
++					for (int j = 0; j < ns; j++) n += seen[j] == seen[i];
++					if (n > best) best = n, fill = seen[i];
++				}
++			for (int i = -8; i <= 41; i++)
 +			{
-+				int n = 0;
-+				for (int j = 0; j < ns; j++) n += seen[j] == seen[i];
-+				if (n > best) best = n, fill = seen[i];
-+			}
-+			for (int side = 0; side < 2; side++)
-+			{
-+				int pos[50], val[50], raws[50], n = 0;
-+				uint8 kn[50];
-+				int edge = seen[side ? ns - 1 : 0], cont = edge != fill, prevc = edge;
-+				for (int i = side ? last + 1 : 0; side ? i <= 41 : i >= -8; i += side ? 1 : -1, n++)
-+				{
-+					int tc = (hc + i) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31), k = ((kc + i) % pc + pc) % pc;
-+					int raw = base[o * 2] | (base[o * 2 + 1] << 8);
-+					/* the layer's own cell carries a cloud on only through a pair of neighbours the view has shown (a stale cell beyond the view
-+					 * is a piece of another cloud, or tile 0: black in the opening flight) */
-+					if (cont && (raw == fill || !som_sky_pair_has(L, side ? ((uint32) prevc | (uint32) raw << 16) + 1 : ((uint32) raw | (uint32) prevc << 16) + 1)))
-+						cont = 0;
-+					pos[n] = i; raws[n] = raw;
-+					if (i == 0) { val[n] = raw; kn[n] = 1; prevc = raw; }   /* column 0 is drawn as the game left it */
-+					else if (som_sky_have[L][r][k]) { val[n] = prevc = som_sky_pan[L][r][k]; kn[n] = 1; cont = val[n] != fill; }
-+					else if (cont) { val[n] = raw; kn[n] = 1; prevc = raw; }
-+					else { val[n] = fill; kn[n] = 0; }
-+				}
-+				/* the end cap: the far end of the view's run that reaches this side (up to 3 cells, which narrow towards the tip), mirrored */
-+				int s0 = side ? ns - 1 : 0, capn = 0, capc[3];
-+				while (side ? s0 > 0 && seen[s0 - 1] != fill : s0 < ns - 1 && seen[s0 + 1] != fill) s0 += side ? -1 : 1;
-+				for (int t = 0; t < 3; t++)
-+				{
-+					int si = side ? s0 + t : s0 - t;
-+					if (si < 0 || si >= ns || seen[si] == fill) break;
-+					capc[capn++] = seen[si] ^ 0x4000;
-+				}
-+				auto put_cap = [&](int at) -> int {   /* closes the cloud from position at outwards in cells not seen; returns the cells used */
-+					int path[12], len = som_sky_close(L, at ? val[at - 1] : edge, fill, side, path, 12), t = 0;
-+					if (len > 0)
-+						for (; t < len && at + t < n && !kn[at + t]; t++) { val[at + t] = path[t]; kn[at + t] = 1; }
-+					else
-+						for (; t < capn && at + t < n && !kn[at + t]; t++) { val[at + t] = capc[capn - 1 - t]; kn[at + t] = 1; }
-+					return t;
-+				};
-+				int j = 0;
-+				if (edge != fill && val[0] == fill && !kn[0] && pos[0] != 0) j = put_cap(0);   /* cut right at the view's edge */
-+				while (j < n)
-+				{
-+					if (val[j] == fill) { j++; continue; }
-+					int e = j;
-+					while (e + 1 < n && val[e + 1] != fill) e++;
-+					int after = e + 1 >= n || kn[e + 1], before = j == 0 || kn[j - 1];
-+					if (j == 0 && edge != fill)
-+					{
-+						if (!after) e += put_cap(e + 1);
-+					}
-+					else if (!after || !before)
-+						for (int q = j; q <= e; q++) if (pos[q] != 0) val[q] = fill;
-+					j = e + 1;
-+				}
-+				for (int q = 0; q < n; q++)
-+				{
-+					if (pos[q] == 0) continue;
-+					int tc = (hc + pos[q]) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31);
-+					som_ws_sky_saved[som_ws_sky_n].L = L; som_ws_sky_saved[som_ws_sky_n].r = r; som_ws_sky_saved[som_ws_sky_n].c = tc;
-+					som_ws_sky_saved[som_ws_sky_n++].w = raws[q];
-+					base[o * 2] = val[q] & 0xff; base[o * 2 + 1] = val[q] >> 8;
-+				}
++				if (i == 0) i = last + 1;
++				int tc = (hc + i) & 63, o = (tc >= 32 ? 0x400 : 0) + r * 32 + (tc & 31), k = ((kc + i) % pc + pc) % pc;
++				int raw = base[o * 2] | (base[o * 2 + 1] << 8), w;
++				if (s0 >= 0) w = (raw & 0xff00) | tab[16 * (((s0 + i) % pc + pc) % pc) + r];
++				else w = som_sky_have[L][r][k] ? som_sky_pan[L][r][k] : fill;
++				som_ws_sky_saved[som_ws_sky_n].L = L; som_ws_sky_saved[som_ws_sky_n].r = r; som_ws_sky_saved[som_ws_sky_n].c = tc;
++				som_ws_sky_saved[som_ws_sky_n++].w = raw;
++				base[o * 2] = w & 0xff; base[o * 2 + 1] = w >> 8;
 +			}
 +		}
 +	}
@@ -723,7 +655,7 @@ index 375414a..6ca3715 100644
  	if (IPPU.OBJChanged || IPPU.InterlaceOBJ)
  		SetupOBJ();
  
-@@ -491,6 +1199,21 @@ void S9xUpdateScreen (void)
+@@ -491,6 +1131,21 @@ void S9xUpdateScreen (void)
  		if ((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2131] & 0x3f))
  			GFX.FixedColour = BUILD_PIXEL(IPPU.XB[PPU.FixedColourRed], IPPU.XB[PPU.FixedColourGreen], IPPU.XB[PPU.FixedColourBlue]);
  
@@ -745,7 +677,7 @@ index 375414a..6ca3715 100644
  		if (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires ||
  			((Memory.FillRAM[0x2130] & 0x30) != 0x30 && (Memory.FillRAM[0x2130] & 2) && (Memory.FillRAM[0x2131] & 0x3f) && (Memory.FillRAM[0x212d] & 0x1f)))
  			// If hires (Mode 5/6 or pseudo-hires) or math is to be done
-@@ -498,6 +1221,19 @@ void S9xUpdateScreen (void)
+@@ -498,6 +1153,19 @@ void S9xUpdateScreen (void)
  			RenderScreen(TRUE);
  
  		RenderScreen(FALSE);
@@ -765,7 +697,7 @@ index 375414a..6ca3715 100644
  	}
  	else
  	{
-@@ -510,8 +1246,15 @@ void S9xUpdateScreen (void)
+@@ -510,8 +1178,15 @@ void S9xUpdateScreen (void)
  		for (uint32 l = GFX.StartY; l <= GFX.EndY; l++, GFX.S += GFX.PPL)
  			for (int x = 0; x < IPPU.RenderedScreenWidth; x++)
  				GFX.S[x] = black;
